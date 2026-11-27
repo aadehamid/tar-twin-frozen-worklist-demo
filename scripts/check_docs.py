@@ -42,7 +42,7 @@ def _iter_doc_files(repo: Path) -> list[Path]:
             if rel.suffix.lower() != ".md" or _is_excluded(rel):
                 continue
             full = repo / rel
-            if full.is_file() and full not in seen:
+            if (full.is_symlink() or full.is_file()) and full not in seen:
                 seen.add(full)
                 paths.append(full)
         return sorted(paths)
@@ -50,7 +50,7 @@ def _iter_doc_files(repo: Path) -> list[Path]:
     return sorted(
         p
         for p in repo.rglob("*.md")
-        if p.is_file() and not _is_excluded(p.relative_to(repo))
+        if (p.is_symlink() or p.is_file()) and not _is_excluded(p.relative_to(repo))
     )
 
 
@@ -139,6 +139,11 @@ def check_repo_docs(repo: Path) -> list[str]:
 
     for md_path in _iter_doc_files(repo_root):
         rel_path = md_path.relative_to(repo_root)
+        if md_path.is_symlink():
+            resolved_md = md_path.resolve()
+            if not resolved_md.is_relative_to(repo_root):
+                errors.append(f"{rel_path}: symlinked markdown file points outside repository root")
+            continue
         in_fence = False
         fence_char = ""
         fence_len = 0

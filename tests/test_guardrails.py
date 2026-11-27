@@ -253,6 +253,17 @@ class TestCheckDocs:
         assert len(errors) == 2
         assert all("scripts/guide.md" in e for e in errors)
 
+    def test_rejects_symlinked_markdown_pointing_outside_repo(self, tmp_path: Path):
+        cd = _load_module("check_docs")
+        outside = tmp_path / "secret.md"
+        outside.write_text("External \u2014 text.\n", encoding="utf-8")
+        repo = init_repo(tmp_path / "repo")
+        os.symlink(outside, repo / "docs" / "escape.md")
+        errors = cd.check_repo_docs(repo)
+        assert len(errors) == 1
+        assert "escape.md" in errors[0]
+        assert "outside repository root" in errors[0]
+
 
 class TestPrePushHook:
     def _run_hook(self, stdin_text: str, check_cmd: Path) -> subprocess.CompletedProcess[str]:
