@@ -21,3 +21,4 @@ postgres-data/
 
 # Shared agent memory (scripts/memory.sh, docs/decisions.md D17). Git ignores it; Dropbox syncs it.
 .relate-memory/
+.relate-memory.*

@@ -25,15 +25,20 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cypher_dir="$here/memory"
 tmp=""
-trap '[ -z "$tmp" ] || rm -f "$tmp"' EXIT
+init_lock=""
+trap '[ -z "$tmp" ] || rm -f "$tmp"; [ -z "$init_lock" ] || rm -rf "$init_lock"' EXIT
 
 store() {
   if [ -n "${PROJECT_MEMORY_DB:-}" ]; then
     printf '%s\n' "$PROJECT_MEMORY_DB"
     return
   fi
+  # Git exports GIT_DIR and friends inside hooks and rebases. Clear them so the
+  # path always comes from this script's own repository.
   local common
-  common="$(git -C "$here" rev-parse --path-format=absolute --git-common-dir)"
+  common="$(env -u GIT_DIR -u GIT_WORK_TREE -u GIT_COMMON_DIR -u GIT_INDEX_FILE \
+    -u GIT_OBJECT_DIRECTORY -u GIT_ALTERNATE_OBJECT_DIRECTORIES \
+    git -C "$here" rev-parse --path-format=absolute --git-common-dir)"
   if [ "$(basename "$common")" = ".git" ]; then
     printf '%s/.relate-memory\n' "$(dirname "$common")"
   else
@@ -101,28 +106,63 @@ read_query() {
     echo "memory: no memory yet at $db. Run: scripts/memory.sh init" >&2
     exit 0
   fi
+  if [ -n "$(dropbox_conflicts)" ]; then
+    echo "memory: warning: Dropbox conflicted copies in the store; results may be stale. Run: scripts/memory.sh check" >&2
+  fi
   relate query --database "$db" --read-only --mode jsonl "$@"
 }
 
 # The schema is idempotent, so every write runs it first. Its notes are noise
 # on success, so show them only when it fails.
+# Two agents creating the store at once leave Relate a broken store. The first
+# writer builds it beside the final path and renames it into place, under a
+# mkdir lock, so other writers only ever open a finished store.
+create_store() {
+  local db="$1" build attempt=0
+  init_lock="$db.init-lock"
+  until mkdir "$init_lock" 2>/dev/null; do
+    attempt=$((attempt + 1))
+    if [ "$attempt" -ge 100 ]; then
+      init_lock=""
+      echo "memory: another agent has been creating the store for 20 seconds; if none is, remove $db.init-lock" >&2
+      return 1
+    fi
+    sleep 0.2
+  done
+  if [ ! -d "$db" ]; then
+    build="$db.init.$$"
+    rm -rf "$build"
+    if ! relate query --database "$build" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
+      rm -rf "$build" "$init_lock"
+      init_lock=""
+      echo "memory: could not create the store at $db" >&2
+      return 1
+    fi
+    mv "$build" "$db"
+  fi
+  rm -rf "$init_lock"
+  init_lock=""
+}
+
 init() {
   need_relate
   refuse_on_conflicts
-  local out
+  local out db
+  db="$(store)"
+  [ -d "$db" ] || create_store "$db"
   if ! out="$(write "$cypher_dir/schema.cypher" 2>&1)"; then
     printf '%s\n' "$out" >&2
     return 1
   fi
-  local db
-  db="$(store)"
   echo "memory: store ready at $db"
 }
 
 validate() {
   python3 - "$1" <<'PY'
 import hashlib, json, re, sys
-from datetime import datetime
+from datetime import datetime, timedelta
+if sys.version_info < (3, 11):
+    sys.exit("memory: needs python3 3.11 or later; this one is " + sys.version.split()[0])
 path = sys.argv[1]
 try:
     with open(path, encoding="utf-8") as fh:
@@ -147,7 +187,10 @@ def time(obj, key, where, required=True):
     if value is None:
         return
     try:
-        valid = bool(TIME.fullmatch(value)) and datetime.fromisoformat(value).tzinfo is not None
+        parsed = datetime.fromisoformat(value) if TIME.fullmatch(value) else None
+        # Relate accepts zone offsets up to 18 hours either way.
+        valid = (parsed is not None and parsed.utcoffset() is not None
+                 and abs(parsed.utcoffset()) <= timedelta(hours=18))
     except ValueError:
         valid = False
     if not valid:
@@ -216,7 +259,7 @@ check_ids() {
   [ -d "$db" ] || return 0
   clash="$(read_query --fetch-params "m=$1" \
     'OPTIONAL MATCH (old:Episode {id: $m.episode.id})
-     WITH old WHERE old IS NOT NULL AND old.fingerprint <> $m.fingerprint
+     WITH old WHERE old IS NOT NULL AND (old.fingerprint IS NULL OR old.fingerprint <> $m.fingerprint)
      RETURN "episode id already used for different content" AS problem, old.id AS id
      UNION ALL
      UNWIND $m.facts AS f
@@ -230,14 +273,15 @@ check_ids() {
 }
 
 remember() {
-  need_relate
-  local src="${1:?usage: scripts/memory.sh remember FILE|-}"
-  tmp="$(mktemp "${TMPDIR:-/tmp}/ppc-memory.XXXXXX")"
+  local src="${1:-}"
+  [ -n "$src" ] || { echo "usage: scripts/memory.sh remember FILE|-" >&2; exit 2; }
+  tmp="$(mktemp "${TMPDIR:-/tmp}/project-memory.XXXXXX")"
   if [ "$src" = "-" ]; then cat > "$tmp"; else cat -- "$src" > "$tmp"; fi
   validate "$tmp"
+  need_relate
   refuse_on_conflicts
-  check_ids "$tmp"
   init > /dev/null
+  check_ids "$tmp"
   write "$cypher_dir/remember.cypher" --fetch-params "m=$tmp"
   python3 -c 'import json, sys; m = json.load(open(sys.argv[1])); print("memory: saved episode %s with %d fact(s)" % (m["episode"]["id"], len(m["facts"])))' "$tmp"
 }
@@ -250,7 +294,7 @@ case "$cmd" in
   remember) remember "$@" ;;
   recall)
     need_relate
-    [ -n "${*:-}" ] || { echo "usage: scripts/memory.sh recall WORDS..." >&2; exit 2; }
+    [[ "${*:-}" =~ [^[:space:]] ]] || { echo "usage: scripts/memory.sh recall WORDS..." >&2; exit 2; }
     q="$(json_string "$*")"
     read_query --param "q=$q" \
       'MATCH (f:CurrentFact) SEARCH f IN (FULLTEXT INDEX current_fact_text FOR $q LIMIT 10) SCORE AS score
@@ -282,7 +326,7 @@ case "$cmd" in
     read_query 'MATCH (f:CurrentFact) RETURN DISTINCT f.slot AS slot ORDER BY slot LIMIT 500' ;;
   brief)
     need_relate
-    n="${1:-20}"
+    n="${1-20}"
     [[ "$n" =~ ^[1-9][0-9]{0,3}$ ]] || { echo "usage: scripts/memory.sh brief [N], N from 1 to 9999" >&2; exit 2; }
     read_query --param "n=$n" \
       'MATCH (f:CurrentFact)-[:FROM]->(ep:Episode)
@@ -292,12 +336,18 @@ case "$cmd" in
   check)
     need_relate
     refuse_on_conflicts
+    db="$(store)"
+    if [ ! -d "$db" ]; then
+      echo "memory: no memory yet at $db. Run: scripts/memory.sh init" >&2
+      exit 0
+    fi
     out="$(read_query \
-      'MATCH (f:Fact)
+      'MATCH (f) WHERE f:Fact OR f:CurrentFact
        WITH f, COUNT { (f)-[:FROM]->(:Episode) } AS sources
-       WITH f.slot AS slot,
-            sum(CASE WHEN f.closedAt IS NULL THEN 1 ELSE 0 END) AS current,
-            sum(CASE WHEN (f.closedAt IS NULL) <> (f:CurrentFact) THEN 1 ELSE 0 END) AS mislabelled,
+       WITH coalesce(f.slot, "(no slot)") AS slot,
+            sum(CASE WHEN f:Fact AND f.closedAt IS NULL THEN 1 ELSE 0 END) AS current,
+            sum(CASE WHEN NOT f:Fact OR f.slot IS NULL
+                       OR (f.closedAt IS NULL) <> (f:CurrentFact) THEN 1 ELSE 0 END) AS mislabelled,
             sum(CASE WHEN sources <> 1 THEN 1 ELSE 0 END) AS badSources
        WHERE current <> 1 OR mislabelled > 0 OR badSources > 0
        RETURN slot, current, mislabelled, badSources')"

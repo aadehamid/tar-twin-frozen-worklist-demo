@@ -5,7 +5,7 @@ description: Shared project memory in a Relate graph, used by every agent throug
 
 # Project memory
 
-Every agent on this repository (Claude Code, Codex, Cursor, Gemini, Kimi, Pi and the rest) shares one memory: a Relate graph that `scripts/memory.sh` reads and writes. Run `scripts/memory.sh` with no arguments for its commands. The store is the git-ignored `.relate-memory/` folder at the root of the main checkout, so every worktree sees the same memory and Git never tracks it. Dropbox syncs it to the owner's other machines.
+Every agent on this repository (Claude Code, Codex, Cursor, Gemini, Kimi, Pi and the rest) shares one memory: a Relate graph that `scripts/memory.sh` reads and writes. Run `scripts/memory.sh` with no arguments for its commands. It needs `relate` and `python3` 3.11 or later. The store is the git-ignored `.relate-memory/` folder at the root of the main checkout, so every worktree sees the same memory and Git never tracks it. Dropbox syncs it to the owner's other machines.
 
 Memory supplements the record. Decisions are on the record only in `docs/decisions.md`; a memory points at that record and never replaces it.
 
@@ -56,7 +56,7 @@ The command validates the episode before it writes anything, writes it in one tr
 
 ## Dropbox and other machines
 
-Agents on every machine that syncs this folder read the same memory. Relate's writer lock holds only on one machine, so save from one machine at a time. When saves from two machines collide, Dropbox leaves conflicted copies in the store, and `scripts/memory.sh` exits 4 instead of saving. Stop there and tell the owner; a person chooses which copy wins.
+Agents on every machine that syncs this folder read the same memory. Relate's writer lock holds only on one machine, so save from one machine at a time. When saves from two machines collide, Dropbox leaves conflicted copies in the store, and `scripts/memory.sh` exits 4 instead of saving. Stop there and tell the owner; a person chooses which copy wins. Reads still answer while conflicted copies exist, with a warning. The scan looks for the English `conflicted copy` name, so a Dropbox set to another language names the copies in a way it misses.
 
 ## What memory must hold
 

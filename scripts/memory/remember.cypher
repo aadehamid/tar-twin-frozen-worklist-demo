@@ -11,7 +11,7 @@
 // between check and write. A guard that matches divides by zero, which fails
 // the statement and rolls back the transaction.
 OPTIONAL MATCH (old:Episode {id: $m.episode.id})
-WITH old WHERE old IS NOT NULL AND old.fingerprint <> $m.fingerprint
+WITH old WHERE old IS NOT NULL AND (old.fingerprint IS NULL OR old.fingerprint <> $m.fingerprint)
 RETURN 1 / 0 AS episode_id_already_used_for_different_content;
 
 UNWIND $m.facts AS f
