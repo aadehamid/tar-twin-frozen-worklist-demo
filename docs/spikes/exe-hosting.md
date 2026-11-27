@@ -20,16 +20,24 @@ Authenticated requests use a VM token signed locally with the scoped key, namesp
 |---|---|---|
 | H1 | Docker works for the login user | `docker run --rm hello-world` exits 0 without sudo, and `docker compose version` reports v2 |
 | H2 | The proxy reaches ports 8000, 8001 and 8002 | An authenticated GET to each port returns 200 and the echo body names that port |
-| H3 | Private by default | An unauthenticated GET with curl's default `Accept` returns 401 on each port, and the echo server logs no request for it |
+| H3 | Private by default | An unauthenticated GET with curl's default `Accept` returns 401 on each port. The echo log is read successfully before and after, and it gains no lines at all during H3 |
 | H4 | Identity headers arrive | The authenticated request carries exactly one `X-ExeDev-Email`, equal to the account email, and one non-empty `X-ExeDev-UserID` |
-| H5 | Forged identity headers are replaced | An authenticated request that also sends `X-ExeDev-Email: forged@example.com`, `X-ExeDev-UserID: usr_forged` and `X-ExeDev-Token-Ctx: forged` reaches the server with only the real values. No header value contains `forged` |
+| H5 | Forged identity headers are replaced | An authenticated request that also sends `X-ExeDev-Email: forged@example.com`, `X-ExeDev-UserID: usr_forged` and `X-ExeDev-Token-Ctx: forged` reaches the server with exactly one of each header, equal to the email, user ID and ctx seen in H4. No header value contains `forged` |
 | H6 | The proxy strips the token | No `X-Exedev-Authorization` or `Authorization` header reaches the server |
 | H7 | Source address of proxy traffic | RECORD the peer address over 5 requests per port and the `X-Forwarded-For` value. Then RECORD the peer address the server sees for a request from a Docker container on the default bridge. The result decides the edge trust rule (see section 4) |
 | H8 | Idle memory of Neo4j and Postgres | Start `neo4j:5-community` with heap 768 MB and page cache 384 MB, and `postgres:16` with `shared_buffers` 128 MB, both with no published ports. After 3 minutes idle, `docker stats` shows Neo4j at or below 1.5 GB and Postgres at or below 300 MB, the hosting.md budget. Also RECORD `free -m` before and after |
-| H9 | Database ports stay closed | With H8 running, an authenticated GET to the proxy on 7474 and 5432 doesn't reach Neo4j or Postgres, and `ss -tlnp` on the VM shows no listener on 0.0.0.0 for 7474, 7687 or 5432 |
-| H11 | Loopback-only listener | Added after H7 showed proxy traffic arrives from 127.0.0.1. A second echo server bound to 127.0.0.1:8003 returns 200 to an authenticated proxy request with peer 127.0.0.1, and a container on the default bridge can't connect to it at 172.17.0.1:8003 |
+| H9 | Database ports stay closed | With H8 running, an authenticated GET through the proxy to 7474, 7687 and 5432 returns 502. `ss -tlnH` shows no listener on any address, loopback included, for 7474, 7687 or 5432, and `docker port` shows no mapping for either database container. Each command must exit 0 for the check to count |
+| H11 | Loopback-only listener | Added after H7 showed proxy traffic arrives from 127.0.0.1. A second echo server bound to 127.0.0.1:8003 returns 200 to an authenticated proxy request with peer 127.0.0.1. A control container on the default bridge reaches the VM's 0.0.0.0 echo server at 172.17.0.1:8001 (proving the container and network work), and then gets connection refused (curl exit 7) at 172.17.0.1:8003 |
 | H12 | Peer seen behind a published port | RECORD the peer address an echo server inside a container sees when the proxy reaches it through `-p 127.0.0.1:8004:8004`, and when another container on the same bridge calls it directly. This tells us whether bridge mode can tell proxy traffic from container traffic |
-| H10 | Clean up | After the run, no spike containers, volumes or echo processes are left on the VM |
+| H10 | Clean up | After the run, the named spike containers and their anonymous volumes are gone (`docker rm -fv` by name only, no global prune), the echo processes are stopped and the spike directory is removed. Each verification command must exit 0 |
+
+H13 is a gate, not part of this run. It needs a second exe.dev account, so Hamid runs it before the VM is shared with anyone:
+
+| ID | Check | Pass condition |
+|---|---|---|
+| H13 | What a Web-only participant can reach | Hamid shares the VM with a second account he controls, with `share add tar-frozen-work-list <email>` and no `--root`. Signed in as that account in a browser: the edge's port returns the landing page, and the IMPACT Web and twin routes under it work, with the participant's own email in `X-ExeDev-Email`. Port 9999 (Shelley) and every other port in 3000 to 9999 is refused. If any other port answers, Shelley is turned off on the VM and the check is repeated before anyone else is invited |
+
+Why H13 matters. exe.dev had an incident in which Web share recipients could reach every proxied port, Shelley included, rather than only the shared one. It says the problem is fixed ([exe.dev security note](https://exe.dev/security/over-sharing)). The owner token used in this run can't show what a Web-only user sees, so H2 to H6 say nothing about participants.
 
 Not covered here. A public site (`share set-public`) changes the threat, because anyone can send forged headers without a login. The scoped key can't change sharing, and the plan keeps the VM private until phase 8. Phase 8 repeats H5 against a public share before any wider access.
 
