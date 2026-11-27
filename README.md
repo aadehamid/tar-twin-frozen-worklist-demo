@@ -61,6 +61,7 @@ compose.yml           Postgres, Neo4j, both services
 - [docs/design.md](docs/design.md) covers the architecture, components, graph model, data flows, AI matching, the Relate browser graph, extension to 4.1 and 4.2, testing and build phases.
 - [docs/scenario-spec.md](docs/scenario-spec.md) covers Unit 200, the turnaround event, the candidate work list, the problems planted in the data and the demo walkthrough.
 - [docs/verification.md](docs/verification.md) covers how everything is checked as it is written: schemas, SHACL engineering rules in Neo4j, property tests, and a Quint (TLA) model of the sync, review and freeze workflow.
+- [docs/matching-showcase.md](docs/matching-showcase.md) covers which equipment references plain code resolves, where AI tells similar names apart, how code checks the AI, and how the demo compares the two.
 - [docs/interactive-planning.md](docs/interactive-planning.md) covers planning mode: roles, the exercise clock, injects, the debrief, and the checks it must pass.
 - [docs/hosting.md](docs/hosting.md) covers the exe.dev VM for team exercises: what runs where, the 4 GB memory budget, sign-in, deploys, backups and the hosting checks.
 - [docs/decisions.md](docs/decisions.md) records the technology choices and the reasons for them.

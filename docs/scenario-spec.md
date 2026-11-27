@@ -126,6 +126,8 @@ The equipment field is free text, as it is in IMPACT Web during the code freeze.
 | Description only | 20% | "feed eff exchanger middle shell", "south charge pump", "recycle compressor" |
 | Vague or wrong | 10% | "HP loop", "unit 200 general", a tag that exists in Unit 300, a retired tag |
 
+Each request also gets a difficulty class and its true tag (or "none") in an answer key, which the matching showcase scores against. The classes are in [matching-showcase.md](matching-showcase.md) section 3.
+
 Expected match results (targets):
 
 | Stage | Match rate |
@@ -171,7 +173,7 @@ The demo also shows the counts the data produces (hours bundled, items removed, 
 The order follows the 3.1 slide in the MVP proposal.
 
 1. **IMPACT Web (1 min).** Open TAR-200-2028. Show 200 candidate requests, the free-text equipment field and the banner saying the twin reads this system and never writes to it.
-2. **Match rate (2 min).** In the twin, run sync. Match rate shows about 70% from exact and rule matches. Run the AI matcher. Open three proposals in the review queue: one clean accept, one where the AI cites DEXPI neighbours to pick E-201B over E-201A, and one wrong-unit tag that gets rejected. Open the mapping trace for one messy entry, "feed eff exchanger middle shell", and show each step from the raw IMPACT Web text to E-201B in the twin. Match rate after review passes the gate.
+2. **Match rate (2 min).** In the twin, run sync. Match rate shows about 70% from exact and rule matches. Run the AI matcher. Open three proposals in the review queue: one clean accept, one where the AI cites DEXPI neighbours to pick E-201B over E-201A, and one wrong-unit tag that gets rejected. Open the mapping trace for one messy entry, "feed eff exchanger middle shell", and show each step from the raw IMPACT Web text to E-201B in the twin. In the Matching lab, show the three-mode comparison by difficulty class, and quote the numbers from the run rather than the ones we expect. Match rate after review passes the gate.
 3. **Scope on the plant (2 min).** The plot plan fills with job markers. Click a job on E-201B. The graph panel runs Cypher in the browser and draws the chain: work request, E-201B, nozzles and piping, block valves, ENV-200-02, and every other job inside it. The P&ID viewer highlights the same envelope on sheet 200-PID-002.
 4. **Shared-cost clusters (1.5 min).** Show the isolation, scaffold and access clusters. Hours and cost are counted once per cluster, and the total drops against the summed estimate. Show the 9 duplicate pairs found at the challenge.
 5. **Cut line (1.5 min).** Set the DRB budget target. The plant colours above and below the line by location. Move one item across the line and watch the cluster saving change, because pulling one job out of a shared setup doesn't save the shared cost.
