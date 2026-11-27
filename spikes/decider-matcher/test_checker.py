@@ -62,7 +62,7 @@ def test_bad_sum_rejected():
     assert check(r, C1)["reason"] == "tag probabilities do not sum to 1"
 
 
-@pytest.mark.parametrize("conf", [1.2, -0.1, float("inf"), "0.9", None])
+@pytest.mark.parametrize("conf", [1.2, -0.1, float("inf"), "0.9", None, 10**309])
 def test_bad_confidence_rejected(conf):
     assert check(resp("E-201B", "F-E201B-1", conf=conf), C1)["outcome"] == "rejected"
 
@@ -121,3 +121,19 @@ def test_runner_summary_on_failures():
     s = summarize(rows, expect_prefix="perplexity/pplx-decider-v1.3")
     assert s["D1"] is False and s["D2"] is False and s["D4"] is False
     assert s["correct_of_3"]["C1"] == 0
+
+
+def test_huge_json_int_probability_rejected_without_raising():
+    r = json.loads(json.dumps(resp("E-201B", "F-E201B-1")).replace('"confidence": 0.9', '"confidence": 1' + "0" * 309, 1))
+    assert check(r, C1)["outcome"] == "rejected"
+    r = resp("E-201B", "F-E201B-1")
+    r["answers"]["tag"]["probabilities"]["E-201A"] = 10**309
+    assert check(r, C1)["outcome"] == "rejected"
+
+
+def test_cost_normalization():
+    from summary import cost_of
+    assert cost_of({"usage": {"cost": 0.002}}) == 0.002
+    for bad in [{}, {"usage": None}, {"usage": {"cost": "abc"}}, {"usage": {"cost": True}},
+                {"usage": {"cost": float("nan")}}, {"usage": {"cost": 10**309}}, None]:
+        assert cost_of(bad) is None

@@ -14,7 +14,8 @@ HIGH = 0.8  # provisional, set in phase 4
 
 
 def _num01(x):
-    return isinstance(x, (int, float)) and not isinstance(x, bool) and math.isfinite(x) and 0 <= x <= 1
+    # Bounds before isfinite: math.isfinite(10**309) raises OverflowError on huge JSON ints.
+    return isinstance(x, (int, float)) and not isinstance(x, bool) and 0 <= x <= 1 and math.isfinite(x)
 
 
 def _answer(resp, name, opts):

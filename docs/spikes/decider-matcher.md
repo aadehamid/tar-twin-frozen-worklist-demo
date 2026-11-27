@@ -99,8 +99,8 @@ pytest spikes/decider-matcher
 | D3 | RECORD | 12 proposals, all band `high`, and 6 abstentions. No rejections. Each proposal's evidence fact belonged to the picked tag |
 | D4 | PASS | Every case right in 3 of 3 runs, C4 and C5 included |
 | D5 | PASS | Same verdict in every run of every case. The top probability didn't move at all across runs |
-| D7 | RECORD | Median 0.31 s, worst 0.44 s. Cost $0, since the v1.3 endpoint is free |
-| D8 | PASS | All 18 pairs present, all 200, and the replay matches. `pytest spikes/decider-matcher` runs 35 tests, all passing |
+| D7 | RECORD | Median 0.31 s, worst 0.46 s. Cost $0, since the v1.3 endpoint is free |
+| D8 | PASS | All 18 pairs present, all 200, and the replay matches. `pytest spikes/decider-matcher` runs 38 tests, all passing |
 | D9 | PASS (manual) | The search found nothing |
 | D10 | RECORD | No 429s, so the fallback run wasn't needed |
 

@@ -3,7 +3,18 @@
 rows: list of (case, run, http_status, response_json).
 Gates use structured verdict fields only, never reason text.
 """
+import math
+
 from checker import check, usable
+
+
+def cost_of(data):
+    """Optional telemetry. Return a finite non-negative cost, or None when unavailable."""
+    usage = data.get("usage") if isinstance(data, dict) else None
+    c = usage.get("cost") if isinstance(usage, dict) else None
+    if isinstance(c, bool) or not isinstance(c, (int, float)) or not 0 <= c < 1e6 or not math.isfinite(c):
+        return None
+    return float(c)
 
 
 def _top_p(data):

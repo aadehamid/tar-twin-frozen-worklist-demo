@@ -10,7 +10,7 @@ import httpx  # not urllib: urllib cannot tunnel through an https:// HTTPS_PROXY
 
 from cases import CASES
 from decider import request
-from summary import summarize
+from summary import cost_of, summarize
 
 MODEL = os.environ.get("DECIDER_MODEL", "perplexity/pplx-decider-v1.3:free")
 # Prefix the served `model` field must start with. Set it when running the v1.2 fallback (D10).
@@ -53,9 +53,8 @@ recorded, rows = [], []
 for case in CASES:
     for run in range(RUNS):
         status, data, secs, retried = post(request(MODEL, case))
-        usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
         recorded.append({"case": case["id"], "run": run, "status": status, "retried_429": retried,
-                         "response": data, "latency_s": round(secs, 3), "cost": usage.get("cost")})
+                         "response": data, "latency_s": round(secs, 3), "cost": cost_of(data)})
         rows.append((case, run, status, data))
         print(case["id"], run, status, f"{secs:.2f}s", flush=True)
 
@@ -72,7 +71,8 @@ results = {
     "D5": {"status": "PASS" if s["D5"] else "FAIL", "verdict_signatures": s["verdict_signatures"],
            "top_p_spread": s["top_p_spread"]},
     "D7": {"status": "RECORD", "latency_median_s": statistics.median(lat), "latency_max_s": max(lat),
-           "cost_usd_total": round(sum(r["cost"] or 0 for r in recorded), 6)},
+           "cost_usd_total": round(sum(r["cost"] for r in recorded if r["cost"] is not None), 6),
+           "calls_without_cost": sum(r["cost"] is None for r in recorded)},
     "D10": {"status": "RECORD", "calls_retried_after_429": sum(r["retried_429"] for r in recorded)},
 }
 json.dump(recorded, open(os.path.join(HERE, f"recorded{SUFFIX}.json"), "w"), indent=1)
