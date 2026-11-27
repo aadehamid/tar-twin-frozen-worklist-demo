@@ -32,6 +32,7 @@ Short records of the choices behind the design. Each one says what we chose, why
 - **Decision.** The plant model is authored as DEXPI P&IDs with [pyDEXPI](https://github.com/process-intelligence-research/pyDEXPI) and loaded into Neo4j from its graph export.
 - **Why.** DEXPI is the open standard for P&ID data exchange, and the client's P&IDs could reach the twin in this form. pyDEXPI reads and writes it, renders SVG and exports to NetworkX.
 - **Revisit if.** The SVG render of generated sheets fails in the phase 0 spike. We then render our own SVG from the DEXPI topology and keep DEXPI as the data source.
+- **Status.** The phase 0 spike passed on 2026-11-26. pyDEXPI built, validated and rendered sheet 200-PID-002 ([spike](spikes/dexpi-sheet.md)), so the fallback isn't needed.
 
 ## D6. A separate plot-plan layer
 

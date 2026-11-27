@@ -11,7 +11,7 @@ FACTS = {
     "F-E201C-2": ("E-201C", "Feed side inlet from E-201B. Feed side outlet to charge heater H-201 inlet."),
     "F-E201C-3": ("E-201C", "Effluent side inlet from reactor R-202 outlet."),
     "F-D202-1": ("D-202", "HP separator. Inlet from air cooler A-201. Inside isolation envelope ENV-200-02."),
-    "F-R202-1": ("R-202", "Main hydrotreating reactor. Inlet from charge heater H-201."),
+    "F-R202-1": ("R-202", "Main hydrotreating reactor. Inlet from guard reactor R-201. Quench gas between the beds."),
     "F-PSV2104-1": ("PSV-2104", "Relief valve on D-202 nozzle N7, A side (south) of the vessel."),
     "F-PSV2105-1": ("PSV-2105", "Relief valve on D-202 nozzle N8, B side (north) of the vessel."),
 }

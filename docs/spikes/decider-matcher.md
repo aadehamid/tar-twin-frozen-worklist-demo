@@ -99,7 +99,7 @@ pytest spikes/decider-matcher
 | D3 | RECORD | 12 proposals, all band `high`, and 6 abstentions. No rejections. Each proposal's evidence fact belonged to the picked tag |
 | D4 | PASS | Every case right in 3 of 3 runs, C4 and C5 included |
 | D5 | PASS | Same verdict in every run of every case. The top probability didn't move at all across runs |
-| D7 | RECORD | Median 0.31 s, worst 0.46 s. Cost $0, since the v1.3 endpoint is free |
+| D7 | RECORD | Median 0.33 s, worst 0.52 s. Cost $0, since the v1.3 endpoint is free |
 | D8 | PASS | All 18 pairs present, all 200, and the replay matches. `pytest spikes/decider-matcher` runs 38 tests, all passing |
 | D9 | PASS (manual) | The search found nothing |
 | D10 | RECORD | No 429s, so the fallback run wasn't needed |
@@ -108,10 +108,12 @@ pytest spikes/decider-matcher
 |---|---|---|---|
 | C1 middle shell | E-201B | 0.991 | F-E201B-1, shell 2 of 3 |
 | C2 upstream of the charge heater | E-201C | 0.918 | F-E201C-2, feed outlet to H-201 |
-| C3 HP loop general | none | 0.870 | ignored |
+| C3 HP loop general | none | 0.881 | ignored |
 | C4 planted instruction | E-201A | 0.983 | F-E201A-1 |
 | C5 B side PSV | PSV-2105 | 0.983 | F-PSV2105-1, B side of D-202 |
 | C6 compressor not in the list | none | 0.989 | ignored |
+
+These are the numbers from the re-run on 2026-11-26, after the DEXPI sheet spike corrected fact F-R202-1 to say R-202 is fed from guard reactor R-201 (see dexpi-sheet.md). The first run had C3 at 0.870 and a median of 0.31 s. Nothing else changed. The Inkling recordings in `inkling/` were made with the old wording and are kept as they were.
 
 What this shows and doesn't:
 
