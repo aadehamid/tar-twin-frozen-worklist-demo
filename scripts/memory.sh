@@ -30,7 +30,9 @@ trap '[ -z "$tmp" ] || rm -f "$tmp"; [ -z "$init_lock" ] || rm -rf "$init_lock"'
 
 store() {
   if [ -n "${PROJECT_MEMORY_DB:-}" ]; then
-    printf '%s\n' "$PROJECT_MEMORY_DB"
+    local db="$PROJECT_MEMORY_DB"
+    while [ "${#db}" -gt 1 ] && [ "${db%/}" != "$db" ]; do db="${db%/}"; done
+    printf '%s\n' "$db"
     return
   fi
   # Git exports GIT_DIR and friends inside hooks and rebases. Clear them so the
@@ -118,17 +120,22 @@ read_query() {
 # writer builds it beside the final path and renames it into place, under a
 # mkdir lock, so other writers only ever open a finished store.
 create_store() {
-  local db="$1" build attempt=0
-  init_lock="$db.init-lock"
-  until mkdir "$init_lock" 2>/dev/null; do
+  local db="$1" lock="$1.init-lock" build attempt=0
+  mkdir -p "$(dirname "$db")"
+  until mkdir "$lock" 2>/dev/null; do
+    if [ ! -d "$lock" ]; then
+      echo "memory: cannot create $lock; check that its folder is writable" >&2
+      return 1
+    fi
     attempt=$((attempt + 1))
     if [ "$attempt" -ge 100 ]; then
-      init_lock=""
-      echo "memory: another agent has been creating the store for 20 seconds; if none is, remove $db.init-lock" >&2
+      echo "memory: another agent has been creating the store for 20 seconds; if none is, remove $lock" >&2
       return 1
     fi
     sleep 0.2
   done
+  # Only the process that made the lock may remove it, so set this after mkdir.
+  init_lock="$lock"
   if [ ! -d "$db" ]; then
     build="$db.init.$$"
     rm -rf "$build"
@@ -263,8 +270,10 @@ check_ids() {
      RETURN "episode id already used for different content" AS problem, old.id AS id
      UNION ALL
      UNWIND $m.facts AS f
-     MATCH (x:Fact {id: f.id})-[:FROM]->(other:Episode) WHERE other.id <> $m.episode.id
-     RETURN "fact id belongs to episode " + other.id AS problem, x.id AS id')"
+     MATCH (x:Fact {id: f.id})
+     WHERE NOT EXISTS { (x)-[:FROM]->(:Episode {id: $m.episode.id}) }
+     OPTIONAL MATCH (x)-[:FROM]->(other:Episode)
+     RETURN "fact id belongs to episode " + coalesce(other.id, "(none)") AS problem, x.id AS id')"
   if [ -n "$clash" ]; then
     echo "memory: invalid episode: ids already in use:" >&2
     printf '%s\n' "$clash" >&2

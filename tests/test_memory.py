@@ -267,11 +267,33 @@ class WithRelate(Base):
         self.assertIn("episode id already used for different content", stderr)
         self.assertEqual(len(self.rows("history", SLOT)), 1)
 
+    def test_orphan_fact_id_is_not_reused(self):
+        self.assertEqual(self.run_memory("init").returncode, 0)
+        self.cypher("CREATE (:Fact {id: 'f1', text: 'written by hand'})")
+        stderr = self.rejected(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "Merged on?")]))
+        self.assertIn("fact id belongs to episode (none)", stderr)
+        p = self.run_cypher_script(dict(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "Raced.")]),
+                                        fingerprint="x"))
+        self.assertIn("by zero", p.stdout + p.stderr)
+
+    def test_trailing_slash_and_missing_parent_are_handled(self):
+        for db in (self.db + "/", os.path.join(self.tmp.name, "new", "dir", "memory")):
+            with self.subTest(db):
+                start = time.monotonic()
+                p = self.run_memory("init", env=dict(self.env, PROJECT_MEMORY_DB=db))
+                self.assertEqual(p.returncode, 0, p.stderr)
+                self.assertLess(time.monotonic() - start, 10)
+                self.assertTrue(os.path.isdir(db.rstrip("/")))
+                self.assertFalse(os.path.exists(db.rstrip("/") + ".init-lock"))
+
     def test_episode_without_a_fingerprint_is_not_reused(self):
         self.assertEqual(self.run_memory("init").returncode, 0)
         self.cypher("CREATE (:Episode {id: 'e1', text: 'written by hand'})")
         stderr = self.rejected(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "Merged on?")]))
         self.assertIn("episode id already used for different content", stderr)
+        p = self.run_cypher_script(dict(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "Raced.")]),
+                                        fingerprint="x"))
+        self.assertIn("by zero", p.stdout + p.stderr)
 
     def run_cypher_script(self, payload):
         # Run remember.cypher straight through relate, past the script's own
@@ -308,7 +330,8 @@ class WithRelate(Base):
             "open but unlabelled": "MATCH (f:Fact {id: 'f1'}) REMOVE f:CurrentFact",
             "no source episode": "MATCH (f:Fact {id: 'f1'})-[r:FROM]->() DELETE r",
             "two source episodes": "MATCH (f:Fact {id: 'f1'}) CREATE (f)-[:FROM]->(:Episode {id: 'e9'})",
-            "current label without Fact": "CREATE (:CurrentFact {id: 'y', slot: 'stray/slot', text: 't'})",
+            "current label without Fact": "MATCH (ep:Episode {id: 'e1'}) CREATE (:CurrentFact {id: 'y', slot: 'corrupt/slot', text: 't'})-[:FROM]->(ep)",
+            "superseded fact keeps its label": "MATCH (ep:Episode {id: 'e1'}) CREATE (:Fact:CurrentFact {id: 'old', slot: 'corrupt/slot', text: 't', closedAt: datetime()})-[:FROM]->(ep)",
             "fact without a slot": "MATCH (ep:Episode {id: 'e1'}) CREATE (:Fact:CurrentFact {id: 'z', text: 't'})-[:FROM]->(ep)",
         }
         for name, statement in corruptions.items():
@@ -320,6 +343,9 @@ class WithRelate(Base):
                 p = self.run_memory("check")
                 self.assertEqual(p.returncode, 1, name + ": " + p.stdout + p.stderr)
                 self.assertIn("slots without exactly one current fact", p.stderr)
+                if name in ("current label without Fact", "superseded fact keeps its label"):
+                    # These keep one current Fact and one source, so only the label check can catch them.
+                    self.assertIn('"current":1,"mislabelled":1,"badSources":0', p.stderr)
 
     def test_locked_store_is_retried(self):
         self.assertEqual(self.run_memory("init").returncode, 0)

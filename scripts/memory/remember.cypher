@@ -15,7 +15,8 @@ WITH old WHERE old IS NOT NULL AND (old.fingerprint IS NULL OR old.fingerprint <
 RETURN 1 / 0 AS episode_id_already_used_for_different_content;
 
 UNWIND $m.facts AS f
-MATCH (:Fact {id: f.id})-[:FROM]->(other:Episode) WHERE other.id <> $m.episode.id
+MATCH (x:Fact {id: f.id})
+WHERE NOT EXISTS { (x)-[:FROM]->(:Episode {id: $m.episode.id}) }
 RETURN 1 / 0 AS fact_id_belongs_to_another_episode;
 
 MERGE (ep:Episode {id: $m.episode.id})
