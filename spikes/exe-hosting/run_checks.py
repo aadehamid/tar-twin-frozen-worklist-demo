@@ -55,8 +55,10 @@ def get(port, headers=None, path="/"):
 
 
 def remote_log():
-    out = ssh(f"cat {LOG} 2>/dev/null").stdout
-    return [json.loads(l) for l in out.splitlines() if l.strip()]
+    p = ssh(f"touch {LOG} && cat {LOG}")
+    if p.returncode != 0:
+        raise RuntimeError(f"could not read echo log: {p.stderr}")
+    return [json.loads(l) for l in p.stdout.splitlines() if l.strip()]
 
 
 def hdrs(rec, name):
@@ -85,13 +87,15 @@ try:
     auth = {"X-Exedev-Authorization": f"Bearer {token}"}
 
     # H3 first, so the log holds no authenticated requests yet.
+    before = len(remote_log())
     h3 = {}
     for port in PORTS:
         h3[port] = get(port)[0]
     time.sleep(1)
-    leaked = [r for r in remote_log() if not hdrs(r, "X-ExeDev-Email")]
-    ok = all(s == 401 for s in h3.values()) and not leaked
-    record("H3", "PASS" if ok else "FAIL", {"status": h3, "requests_reaching_server": len(leaked)})
+    leaked = len(remote_log()) - before
+    ok = all(s == 401 for s in h3.values()) and leaked == 0
+    record("H3", "PASS" if ok else "FAIL", {"status": h3, "log_lines_before": before,
+                                            "requests_reaching_server": leaked})
 
     # H2 and H4, H6 from the same requests.
     h2, recs = {}, {}
@@ -126,7 +130,11 @@ try:
                     "userid": hdrs(r, "X-ExeDev-UserID") if r else None,
                     "ctx": hdrs(r, "X-ExeDev-Token-Ctx") if r else None,
                     "any_forged": any("forged" in v for _, v in r["headers"]) if r else None}
-    ok = all(v["status"] == 200 and v["email"] == [EMAIL] and not v["any_forged"] for v in h5.values())
+    want_uid = uids[0] if uids and len(uids[0]) == 1 else None
+    want_ctx = [json.dumps({"spike": "exe-hosting"}, separators=(",", ":"))]
+    ok = want_uid is not None and all(
+        v["status"] == 200 and v["email"] == [EMAIL] and v["userid"] == want_uid
+        and v["ctx"] == want_ctx and v["any_forged"] is False for v in h5.values())
     record("H5", "PASS" if ok else "FAIL", h5)
 
     # H7 source addresses.
@@ -150,11 +158,13 @@ try:
     s11, b11 = get(8003, auth, path="/h11")
     peer11 = json.loads(b11)["peer"] if s11 == 200 else None
     c11 = ssh("docker run --rm --entrypoint sh curlimages/curl -c "
-              "'curl -s -m 5 -o /dev/null -w %{http_code} http://172.17.0.1:8003/; echo \" rc=$?\"'")
-    container_blocked = "rc=0" not in c11.stdout
-    ok = s11 == 200 and peer11 == "127.0.0.1" and container_blocked
+              "'curl -s -m 5 -o /dev/null http://172.17.0.1:8001/h11-control; echo control=$?; "
+              "curl -s -m 5 -o /dev/null http://172.17.0.1:8003/h11; echo loopback=$?'")
+    out11 = c11.stdout.split()
+    ok = (c11.returncode == 0 and s11 == 200 and peer11 == "127.0.0.1"
+          and "control=0" in out11 and "loopback=7" in out11)
     record("H11", "PASS" if ok else "FAIL", {"proxy_status": s11, "proxy_peer": peer11,
-                                             "container_attempt": c11.stdout.strip()})
+                                             "docker_rc": c11.returncode, "container_attempt": out11})
 
     # H12 peer behind a published port, echo inside a container.
     ssh(f"docker rm -f spike-echo >/dev/null 2>&1; docker run -d --name spike-echo -p 127.0.0.1:8004:8004 "
@@ -197,20 +207,38 @@ try:
                                             "free_before": free_before, "free_after": free_after})
 
     # H9 database ports closed.
-    p7474 = get(7474, auth)
-    p5432 = get(5432, auth)
-    listeners = ssh("ss -tln | awk '{print $4}' | grep -E '^(0\\.0\\.0\\.0|\\[::\\]|\\*):(7474|7687|5432)$' || true").stdout.strip()
-    neo_reached = p7474[0] == 200 and "neo4j" in p7474[1].lower()
-    ok = not neo_reached and p5432[0] != 200 and not listeners
-    record("H9", "PASS" if ok else "FAIL", {"proxy_7474": p7474[0], "proxy_5432": p5432[0],
-                                            "open_listeners": listeners})
+    proxied = {port: get(port, auth)[0] for port in (7474, 7687, 5432)}
+    ssp = ssh("ss -tlnH")
+    listeners = ([l for l in ssp.stdout.splitlines()
+                  if l.split()[3].rsplit(":", 1)[-1] in ("7474", "7687", "5432")]
+                 if ssp.returncode == 0 else None)
+    dp = ssh("docker port spike-neo4j && docker port spike-pg")
+    ok = (all(v == 502 for v in proxied.values()) and listeners == []
+          and dp.returncode == 0 and dp.stdout.strip() == "")
+    record("H9", "PASS" if ok else "FAIL", {"proxy_status": proxied, "ss_rc": ssp.returncode,
+                                            "listeners": listeners, "docker_port_rc": dp.returncode,
+                                            "docker_port": dp.stdout.strip()})
 finally:
-    # H10 cleanup.
-    ssh("docker rm -f spike-neo4j spike-pg spike-echo >/dev/null 2>&1; docker volume prune -f >/dev/null; "
-        "docker image rm hello-world >/dev/null 2>&1; rm -rf ~/spike-exe-hosting; true")
+    # H10 cleanup of the exact spike resources only. No global prune.
+    NAMES = ["spike-neo4j", "spike-pg", "spike-echo"]
+    fmt = "'{{range .Mounts}}{{if eq .Type \"volume\"}}{{.Name}} {{end}}{{end}}'"
+    vols = ssh("for c in " + " ".join(NAMES) + f"; do docker inspect -f {fmt} $c 2>/dev/null; done").stdout.split()
+    ssh("docker rm -fv " + " ".join(NAMES) + " >/dev/null 2>&1; true")
+    if vols:
+        ssh("docker volume rm " + " ".join(vols) + " >/dev/null 2>&1; true")
     ssh("pkill -f '[s]pike-exe-hosting/echo.py'")
-    left = ssh("docker ps -aq --filter name=spike-; docker volume ls -q; pgrep -f '[s]pike-exe-hosting/echo.py'").stdout.strip()
-    record("H10", "PASS" if not left else "FAIL", {"leftover": left})
+    ssh(f"rm -rf {REMOTE_DIR}")
+    cont = ssh("docker ps -aq --filter name=^spike-")
+    vol = ssh("docker volume ls -q | grep -Fx -f <(printf '%s\\n' " + " ".join(vols) + ") ; [ $? -le 1 ]") if vols else None
+    proc = ssh("pgrep -f '[s]pike-exe-hosting/echo.py'; [ $? -le 1 ]")
+    sdir = ssh(f"test ! -e {REMOTE_DIR} && echo gone")
+    detail = {"containers": [cont.returncode, cont.stdout.strip()],
+              "volumes": None if vol is None else [vol.returncode, vol.stdout.strip()],
+              "processes": [proc.returncode, proc.stdout.strip()],
+              "spike_dir": sdir.stdout.strip(), "volumes_removed": vols}
+    ok = (detail["containers"] == [0, ""] and detail["volumes"] in (None, [0, ""])
+          and detail["processes"] == [0, ""] and detail["spike_dir"] == "gone")
+    record("H10", "PASS" if ok else "FAIL", detail)
     with open(os.path.join(HERE, "results.json"), "w") as f:
         json.dump(results, f, indent=2)
 

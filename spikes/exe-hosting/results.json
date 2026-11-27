@@ -14,6 +14,7 @@
         "8001": 401,
         "8002": 401
       },
+      "log_lines_before": 0,
       "requests_reaching_server": 0
     }
   },
@@ -142,7 +143,11 @@
     "detail": {
       "proxy_status": 200,
       "proxy_peer": "127.0.0.1",
-      "container_attempt": "000 rc=7"
+      "docker_rc": 0,
+      "container_attempt": [
+        "control=0",
+        "loopback=7"
+      ]
     }
   },
   "H12": {
@@ -159,25 +164,48 @@
   "H8": {
     "status": "PASS",
     "detail": {
-      "neo4j_mib": 992.9,
-      "postgres_mib": 22.89,
+      "neo4j_mib": 986.3,
+      "postgres_mib": 22.95,
       "ready": true,
-      "free_before": "               total        used        free      shared  buff/cache   available\nMem:            3902         280        1429           0        2249        3621\nSwap:              0           0           0\n",
-      "free_after": "               total        used        free      shared  buff/cache   available\nMem:            3902        1288         322          14        2367        2613\nSwap:              0           0           0\n"
+      "free_before": "               total        used        free      shared  buff/cache   available\nMem:            3902         289        1421           0        2252        3612\nSwap:              0           0           0\n",
+      "free_after": "               total        used        free      shared  buff/cache   available\nMem:            3902        1278         329          14        2369        2623\nSwap:              0           0           0\n"
     }
   },
   "H9": {
     "status": "PASS",
     "detail": {
-      "proxy_7474": 502,
-      "proxy_5432": 502,
-      "open_listeners": ""
+      "proxy_status": {
+        "7474": 502,
+        "7687": 502,
+        "5432": 502
+      },
+      "ss_rc": 0,
+      "listeners": [],
+      "docker_port_rc": 0,
+      "docker_port": ""
     }
   },
   "H10": {
     "status": "PASS",
     "detail": {
-      "leftover": ""
+      "containers": [
+        0,
+        ""
+      ],
+      "volumes": [
+        0,
+        ""
+      ],
+      "processes": [
+        0,
+        ""
+      ],
+      "spike_dir": "gone",
+      "volumes_removed": [
+        "cf954be34b05093a2d2066103a80fbceff6bcc969ad9d44602f2090ebc9ae8be",
+        "276efc3645b719d38dd24515a5214f6e397d98a6a9554e3bacbeb981967a46f1",
+        "06527787e5f4c5bbd111fcbb9ee89bb9cb61dce853b2e733a2b8a901c74a5160"
+      ]
     }
   }
 }

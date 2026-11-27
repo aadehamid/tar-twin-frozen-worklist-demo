@@ -81,6 +81,6 @@ Short records of the choices behind the design. Each one says what we chose, why
 
 ## D14. Trust identity from loopback only
 
-- **Decision.** The edge runs in host network mode, listens on 127.0.0.1 only, and passes the exe.dev identity headers only when the peer is 127.0.0.1. The apps listen on loopback ports outside the proxy's range.
-- **Why.** The phase 0 spike showed the exe.dev proxy connects over loopback and replaces client-sent `X-ExeDev-*` headers, and that containers can't reach the host's loopback ([spike results](spikes/exe-hosting.md)). A peer-address rule on loopback is simple to test.
+- **Decision.** The edge runs in host network mode, listens on 127.0.0.1:8000 only, routes both apps by path, and passes the exe.dev identity headers only when the peer is 127.0.0.1. The apps stay on the Compose bridge network with loopback-only Docker mappings outside the proxy's range.
+- **Why.** The phase 0 spike showed the exe.dev proxy connects over loopback and replaces client-sent `X-ExeDev-*` headers, and that containers can't reach the host's loopback ([spike results](spikes/exe-hosting.md)). A peer-address rule on loopback is simple to test. One port avoids depending on how exe.dev handles alternate ports for Web shares, after its over-sharing incident ([exe.dev security note](https://exe.dev/security/over-sharing)).
 - **Revisit if.** exe.dev changes how the proxy connects, the site goes public, or anything other than our stack and exe.dev's agent runs on the host.

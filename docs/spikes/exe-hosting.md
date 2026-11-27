@@ -1,6 +1,6 @@
 # Spike: exe.dev hosting checks
 
-Status: run on 26 November 2026. All pass checks passed. Raw output is in `spikes/exe-hosting/results.json`.
+Status: run on 26 November 2026. All pass checks passed on the final run, after the checks were tightened in review. Gate H13 is still to run. Raw output is in `spikes/exe-hosting/results.json`.
 
 VM: `tar-frozen-work-list` on Hamid's exe.dev Personal plan. The sandbox reaches it with an SSH key scoped to this one VM (`ssh-key add --vm`), so the spike can't touch other VMs, sharing or billing.
 
@@ -47,26 +47,29 @@ Not covered here. A public site (`share set-public`) changes the threat, because
 |---|---|---|
 | H1 | PASS | `exedev` is in the docker group. Docker 29.1.3, Compose 2.40.3 |
 | H2 | PASS | 200 on 8000, 8001 and 8002 |
-| H3 | PASS | 401 on all three ports, and nothing reached the echo server |
+| H3 | PASS | 401 on all three ports. The echo log read cleanly and gained no lines |
 | H4 | PASS | One `X-ExeDev-Email` (aadehamid@gmail.com) and one `X-ExeDev-UserID` per request. The token's `ctx` arrived as `X-ExeDev-Token-Ctx` |
-| H5 | PASS | The forged email, user ID and ctx were replaced on all three ports. No header value contained `forged` |
+| H5 | PASS | On all three ports the server saw exactly one email, user ID and ctx, each equal to the H4 values. No header value contained `forged` |
 | H6 | PASS | No token header reached the server |
 | H7 | RECORD | Every proxy request came from 127.0.0.1. `X-Forwarded-For` held the sandbox's public address, listed twice. A container on the default bridge calling the host came from 172.17.0.2 |
-| H11 | PASS | A server bound to 127.0.0.1:8003 answered through the proxy with peer 127.0.0.1. A container calling 172.17.0.1:8003 got connection refused |
+| H11 | PASS | A server bound to 127.0.0.1:8003 answered through the proxy with peer 127.0.0.1. The control container reached 172.17.0.1:8001 (curl exit 0) and was refused at 172.17.0.1:8003 (curl exit 7) |
 | H12 | RECORD | Behind `-p 127.0.0.1:8004:8004`, the containerized server saw proxy traffic from the bridge gateway 172.17.0.1. A second container calling it directly came from its own address, 172.17.0.3 |
 | H8 | PASS | After 3 minutes idle: Neo4j 993 MiB, Postgres 23 MiB. VM memory used went from 280 MiB to 1,288 MiB with 2.6 GB still available |
-| H9 | PASS | The proxy returned 502 on 7474 and 5432, and nothing listened on 0.0.0.0 for 7474, 7687 or 5432 |
-| H10 | PASS | No spike containers, volumes, processes or files left. The pulled images stay as a cache |
+| H9 | PASS | 502 through the proxy on 7474, 7687 and 5432. `ss` showed no listener on those ports on any address, and `docker port` showed no mapping for either database |
+| H10 | PASS | The named spike containers and their anonymous volumes were removed by name, the echo processes stopped and the spike directory removed. All verification commands exited 0. The pulled images stay as a cache |
 
 Two things the run turned up that the checks didn't ask about:
 
 - The VM's own disk is 25 GB with 17 GB free, not the 100 GB account allowance. hosting.md now says so.
 - The first runs failed on the harness, not on exe.dev. `pkill -f` matched the SSH shell that ran it, and a stray second copy of the runner removed the databases mid-measurement. Both are fixed in `run_checks.py`.
+- Earlier versions of the cleanup ran a global `docker volume prune`. The VM was new and held nothing else, but the runner now removes only the spike's own containers and volumes by name.
+- exe.dev's agent, Shelley, listens on 127.0.0.1:9999, inside the proxy's range.
 
 ## 4. What the results decide
 
-- H5 passed, so the proxy is a trustworthy source of identity for a private VM.
-- H7 and H11 show the proxy connects over loopback. The edge runs in host network mode and listens on 127.0.0.1 only. A container can't open a connection to the host's loopback, so the rule "pass identity only when the peer is 127.0.0.1" can't be met by container traffic. This replaces the bridge-address rule in hosting.md.
+- H5 passed for requests made with the owner's VM token. The proxy replaced every forged `X-ExeDev-*` header. That supports trusting the proxy's identity headers on a private VM. It says nothing yet about what a Web-only participant can reach, which is gate H13.
+- H7 and H11 show the proxy connects over loopback, and a container on the bridge network can't open a connection to the host's loopback. So the edge runs in host network mode, listens on 127.0.0.1:8000 only, and passes identity only when the peer is 127.0.0.1. That rule can't be met by traffic from a bridge-network container. It does trust host processes, which hosting.md's threat model already covers. This replaces the bridge-address rule in hosting.md.
+- The edge serves both apps by path on that one port rather than on three ports. Web shares may only reach one port, and an earlier exe.dev incident let them reach all of them ([exe.dev security note](https://exe.dev/security/over-sharing)). One port is correct either way, and H13 confirms which.
 - H12 shows bridge mode would also work, since proxy traffic arrives from the gateway and containers come from their own addresses. We don't use it, because any host process reaching the published port also shows up as the gateway, and the loopback rule is simpler to test.
 - H8 passed with room to spare. Neo4j sits under its 1.5 GB budget at idle, and Postgres is far below 300 MB. The budget in hosting.md stays, because load, n10s and SHACL will raise Neo4j's use. The phase 7 soak test is the real check.
 

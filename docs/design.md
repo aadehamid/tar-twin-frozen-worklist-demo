@@ -52,7 +52,7 @@ The twin can only reach IMPACT Web through its public API, the same way it would
 ### 3.3 Deployment
 
 - `compose.yml` runs Postgres, Neo4j, the IMPACT Web service and the twin service. Each service serves its built front end, following the template.
-- Two front ends on two ports, for example `:8001` for IMPACT Web and `:8002` for the twin, so the audience sees two separate systems.
+- Two front ends under two paths on one port, `/impactweb/` for IMPACT Web and `/twin/` for the twin, each with its own look, so the audience sees two separate systems. Locally they run on two ports as usual. One port on the VM is explained in [hosting.md](hosting.md) section 1.
 - In local development, Neo4j Browser is available on `:7474` for architects who want to query the twin directly. On the hosted VM it is not exposed (see [hosting.md](hosting.md)).
 - Development without Docker is also supported: a local Postgres, a local Neo4j and `uv run` for each service.
 - Hosted team exercises run on one exe.dev VM. See [hosting.md](hosting.md).
