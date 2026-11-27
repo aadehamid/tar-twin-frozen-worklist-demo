@@ -35,11 +35,11 @@ H13 is a gate, not part of this run. It needs a second exe.dev account, so Hamid
 
 | ID | Check | Pass condition |
 |---|---|---|
-| H13 | What a Web-only participant can reach | Hamid shares the VM with a second account he controls, with `share add tar-frozen-work-list <email>` and no `--root`. Signed in as that account in a browser: the edge's port returns the landing page, and the IMPACT Web and twin routes under it work, with the participant's own email in `X-ExeDev-Email`. Port 9999 (Shelley) and every other port in 3000 to 9999 is refused. If any other port answers, Shelley is turned off on the VM and the check is repeated before anyone else is invited |
+| H13 | What a Web-only participant can reach | Hamid shares the VM with a second account he controls, with `share add tar-frozen-work-list <email>` and no `--root`. Signed in as that account in a browser: the edge's port returns the landing page, and the IMPACT Web and twin routes under it work, with the participant's own email in `X-ExeDev-Email`. Port 9999 (Shelley), 18001, 18002 and every other port in 3000 to 9999 is refused. If any other port answers, Shelley is turned off on the VM and the check is repeated before anyone else is invited |
 
 Why H13 matters. exe.dev had an incident in which Web share recipients could reach every proxied port, Shelley included, rather than only the shared one. It says the problem is fixed ([exe.dev security note](https://exe.dev/security/over-sharing)). The owner token used in this run can't show what a Web-only user sees, so H2 to H6 say nothing about participants.
 
-Not covered here. A public site (`share set-public`) changes the threat, because anyone can send forged headers without a login. The scoped key can't change sharing, and the plan keeps the VM private until phase 8. Phase 8 repeats H5 against a public share before any wider access.
+Not covered here. A public site (`share set-public`) changes the threat, because anyone can send forged headers without a login. The scoped key can't change sharing, and the site is never made public ([hosting.md](../hosting.md) section 3). Wider access only ever means more Web-only shares, each gated by H13 and the identity checks in hosting.md section 6.
 
 ## 3. Results
 
@@ -54,7 +54,7 @@ Not covered here. A public site (`share set-public`) changes the threat, because
 | H7 | RECORD | Every proxy request came from 127.0.0.1. `X-Forwarded-For` held the sandbox's public address, listed twice. A container on the default bridge calling the host came from 172.17.0.2 |
 | H11 | PASS | A server bound to 127.0.0.1:8003 answered through the proxy with peer 127.0.0.1. The control container reached 172.17.0.1:8001 (curl exit 0) and was refused at 172.17.0.1:8003 (curl exit 7) |
 | H12 | RECORD | Behind `-p 127.0.0.1:8004:8004`, the containerized server saw proxy traffic from the bridge gateway 172.17.0.1. A second container calling it directly came from its own address, 172.17.0.3 |
-| H8 | PASS | After 3 minutes idle: Neo4j 993 MiB, Postgres 23 MiB. VM memory used went from 280 MiB to 1,288 MiB with 2.6 GB still available |
+| H8 | PASS | After 3 minutes idle: Neo4j 986 MiB, Postgres 23 MiB. VM memory used went from 289 MiB to 1,278 MiB with 2.6 GB still available |
 | H9 | PASS | 502 through the proxy on 7474, 7687 and 5432. `ss` showed no listener on those ports on any address, and `docker port` showed no mapping for either database |
 | H10 | PASS | The named spike containers and their anonymous volumes were removed by name, the echo processes stopped and the spike directory removed. All verification commands exited 0. The pulled images stay as a cache |
 
