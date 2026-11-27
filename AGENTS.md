@@ -16,7 +16,7 @@ This repository holds the 3.1 Frozen Work List turnaround digital twin demo (syn
 
 ## Project boundaries
 
-- **Synthetic data only.** Invent every tag, name, person, cost, and hour estimate. Keep client, consultant, site, and real people names out of code, data, docs, and commits.
+- **Synthetic data only.** Invent every Unit 200 tag, equipment name, scenario persona, cost, and hour estimate. Keep client, consultant, real site, and workshop participant names out of code, data, docs, and commits. Governance references to the repository owner in project docs are allowed.
 - **Validation before code.** Write acceptance criteria and failing checks before writing implementation code ([CONTRIBUTING.md](CONTRIBUTING.md)).
 - **Write-through is demo only.** IMPACT Web stays the system of record. The twin writes only through `POST /api/v1/twin/change-requests` under `TWIN_RAISE_TOKEN` when the exercise `twin_write_through` switch is on ([docs/decisions.md](docs/decisions.md) D9, [docs/design.md](docs/design.md) section 5.8).
 - **Release-one scope.** Keep 4.1 (work packages) and 4.2 (execution plan and logistics) to schema slots only. Label focus-area brief value figures as unvalidated assumptions.
