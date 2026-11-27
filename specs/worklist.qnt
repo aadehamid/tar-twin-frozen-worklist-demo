@@ -16,17 +16,21 @@ module worklist {
   type Change = { item: int, base: int, target: int, delta: int, status: str }
   type Match = { state: str, method: str, by: str }
   type Sync = { id: int, lo: int, hi: int, frozen: bool, copy: int -> int }
-  type IwState = { hours: int -> int, version: int -> int, drb: int -> bool, frozen: bool,
-                   copy: int -> int, changes: int -> Change, pos: int -> int, len: int }
+  type Fin = { on: bool, lo: int, hi: int }
+  type IwState = { hours: int -> int, version: int -> int, drb: int -> bool, drb_ver: int -> int,
+                   frozen: bool, copy: int -> int, changes: int -> Change, pos: int -> int, len: int }
 
   // IMPACT Web
   var iw_hours: int -> int            // live estimate per request, 0 means not on the list
   var iw_version: int -> int          // bumps on every committed edit
   var iw_drb: int -> bool             // final DRB accept on the current version
+  var iw_drb_ver: int -> int          // the version the DRB accepted, -1 if never
   var iw_frozen: bool
   var iw_copy: int -> int             // the frozen copy, written once at freeze
   var iw_changes: int -> Change       // change requests after freeze, status none until raised
-  var iw_pos: int -> int              // the change feed: position of each approved change, 1-based, 0 if not in it
+  // The approval rows of design.md's change_feed. The real feed also carries edits, decisions
+  // and the freeze record; only approvals turn into change events, so only they are modelled.
+  var iw_pos: int -> int              // feed position of each approved change, 1-based, 0 if not in it
   var iw_len: int                     // feed length
 
   // Twin
@@ -46,9 +50,13 @@ module worklist {
   var g_prev_baseline: int -> int
   var g_prev_has_baseline: bool
   var g_freeze_hours: int -> int      // live hours at the moment of freeze
+  var g_freeze_ok: int -> bool        // at freeze, whether the DRB accepted the current version
+  var g_prev_cursor: int
+  var g_fin: Fin                      // the window of the sync that just finished, on = false otherwise
 
-  val iw_state: IwState = { hours: iw_hours, version: iw_version, drb: iw_drb, frozen: iw_frozen,
-                            copy: iw_copy, changes: iw_changes, pos: iw_pos, len: iw_len }
+  val iw_state: IwState = { hours: iw_hours, version: iw_version, drb: iw_drb, drb_ver: iw_drb_ver,
+                            frozen: iw_frozen, copy: iw_copy, changes: iw_changes, pos: iw_pos, len: iw_len }
+  pure val NO_FIN: Fin = { on: false, lo: 0, hi: 0 }
 
   pure def max(a: int, b: int): int = if (a > b) a else b
   pure def sumDelta(cs: Set[int], chg: int -> Change): int = cs.fold(0, (acc, c) => acc + chg.get(c).delta)
@@ -60,16 +68,18 @@ module worklist {
   def logIds(lo: int, hi: int): Set[int] = CHANGES.filter(c => iw_pos.get(c) > lo and iw_pos.get(c) <= hi)
   val approved = CHANGES.filter(c => iw_changes.get(c).status == "approved")
 
-  action ghost(actor: str): bool = all {
+  action ghost(actor: str, fin: Fin): bool = all {
     g_actor' = actor,
+    g_fin' = fin,
+    g_prev_cursor' = tw_cursor,
     g_prev_iw' = iw_state,
     g_prev_baseline' = tw_baseline,
     g_prev_has_baseline' = tw_has_baseline,
   }
 
   action iw_unchanged = all {
-    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_frozen' = iw_frozen,
-    iw_copy' = iw_copy, iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
+    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver,
+    iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
   }
 
   action tw_unchanged = all {
@@ -82,6 +92,7 @@ module worklist {
     iw_hours' = ITEMS.mapBy(i => 0),
     iw_version' = ITEMS.mapBy(i => 0),
     iw_drb' = ITEMS.mapBy(i => false),
+    iw_drb_ver' = ITEMS.mapBy(i => -1),
     iw_frozen' = false,
     iw_copy' = ITEMS.mapBy(i => 0),
     iw_changes' = CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none" }),
@@ -98,12 +109,16 @@ module worklist {
     tw_ready' = false,
     g_actor' = "init",
     g_prev_iw' = { hours: ITEMS.mapBy(i => 0), version: ITEMS.mapBy(i => 0),
-                   drb: ITEMS.mapBy(i => false), frozen: false, copy: ITEMS.mapBy(i => 0),
+                   drb: ITEMS.mapBy(i => false), drb_ver: ITEMS.mapBy(i => -1), frozen: false,
+                   copy: ITEMS.mapBy(i => 0),
                    changes: CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none" }),
                    pos: CHANGES.mapBy(c => 0), len: 0 },
     g_prev_baseline' = ITEMS.mapBy(i => 0),
     g_prev_has_baseline' = false,
     g_freeze_hours' = ITEMS.mapBy(i => 0),
+    g_freeze_ok' = ITEMS.mapBy(i => false),
+    g_prev_cursor' = 0,
+    g_fin' = NO_FIN,
   }
 
   // IMPACT Web steps
@@ -114,16 +129,17 @@ module worklist {
     iw_hours' = iw_hours.set(i, h),
     iw_version' = iw_version.set(i, iw_version.get(i) + 1),
     iw_drb' = iw_drb.set(i, false),
-    iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
-    tw_unchanged, ghost("iw"), g_freeze_hours' = g_freeze_hours,
+    iw_drb_ver' = iw_drb_ver, iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
+    tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   action iw_drb_accept(i: int): bool = all {
     not(iw_frozen), iw_hours.get(i) > 0, not(iw_drb.get(i)),
     iw_drb' = iw_drb.set(i, true),
+    iw_drb_ver' = iw_drb_ver.set(i, iw_version.get(i)),
     iw_hours' = iw_hours, iw_version' = iw_version, iw_frozen' = iw_frozen, iw_copy' = iw_copy,
     iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
-    tw_unchanged, ghost("iw"), g_freeze_hours' = g_freeze_hours,
+    tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   // Freeze copies the DRB-accepted requests. Nothing about the twin's gate is consulted.
@@ -131,9 +147,12 @@ module worklist {
     not(iw_frozen),
     iw_frozen' = true,
     iw_copy' = ITEMS.mapBy(i => if (iw_drb.get(i)) iw_hours.get(i) else 0),
-    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb,
+    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver,
     iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len,
-    tw_unchanged, ghost("iw"), g_freeze_hours' = iw_hours,
+    tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = iw_hours,
+    // What freeze ought to copy, worked out apart from the copy itself: the requests whose
+    // current version is the one the DRB accepted.
+    g_freeze_ok' = ITEMS.mapBy(i => iw_drb_ver.get(i) == iw_version.get(i)),
   }
 
   // After freeze every change is a change request against the request's current version.
@@ -141,9 +160,9 @@ module worklist {
     iw_frozen, iw_changes.get(c).status == "none", iw_hours.get(i) + d >= 0,
     iw_changes' = iw_changes.set(c, { item: i, base: iw_version.get(i),
                                       target: iw_hours.get(i) + d, delta: d, status: "pending" }),
-    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_frozen' = iw_frozen,
-    iw_copy' = iw_copy, iw_pos' = iw_pos, iw_len' = iw_len,
-    tw_unchanged, ghost("iw"), g_freeze_hours' = g_freeze_hours,
+    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver,
+    iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_pos' = iw_pos, iw_len' = iw_len,
+    tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   // Approval commits only if the request is still at the change's base version.
@@ -157,17 +176,17 @@ module worklist {
       iw_version' = iw_version.set(ch.item, iw_version.get(ch.item) + 1),
       iw_pos' = iw_pos.set(c, iw_len + 1),
       iw_len' = iw_len + 1,
-      iw_drb' = iw_drb, iw_frozen' = iw_frozen, iw_copy' = iw_copy,
-      tw_unchanged, ghost("iw"), g_freeze_hours' = g_freeze_hours,
+      iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver, iw_frozen' = iw_frozen, iw_copy' = iw_copy,
+      tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
     }
   }
 
   action iw_reject(c: int): bool = all {
     iw_changes.get(c).status == "pending",
     iw_changes' = iw_changes.set(c, { ...iw_changes.get(c), status: "rejected" }),
-    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_frozen' = iw_frozen,
-    iw_copy' = iw_copy, iw_pos' = iw_pos, iw_len' = iw_len,
-    tw_unchanged, ghost("iw"), g_freeze_hours' = g_freeze_hours,
+    iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver,
+    iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_pos' = iw_pos, iw_len' = iw_len,
+    tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   // Twin steps. Each one reads IMPACT Web and leaves it as it was.
@@ -180,7 +199,7 @@ module worklist {
     tw_syncs' = tw_syncs + 1,
     tw_baseline' = tw_baseline, tw_has_baseline' = tw_has_baseline, tw_cursor' = tw_cursor,
     tw_events' = tw_events, tw_growth' = tw_growth, tw_match' = tw_match, tw_ready' = tw_ready,
-    iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   // Finishing applies the feed entries it read. Events are keyed by change ID, so an entry two
@@ -199,7 +218,7 @@ module worklist {
       tw_growth' = tw_growth + sumDelta(fresh, iw_changes),
       tw_cursor' = max(tw_cursor, s.hi),
       tw_syncs' = tw_syncs, tw_match' = tw_match, tw_ready' = tw_ready,
-      iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+      iw_unchanged, ghost("twin", { on: true, lo: s.lo, hi: s.hi }), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
     }
   }
 
@@ -209,7 +228,7 @@ module worklist {
     tw_baseline' = tw_baseline, tw_has_baseline' = tw_has_baseline, tw_cursor' = tw_cursor,
     tw_events' = tw_events, tw_growth' = tw_growth, tw_inflight' = tw_inflight,
     tw_syncs' = tw_syncs, tw_ready' = tw_ready,
-    iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   // Code accepts on its own only exact and high-scoring rule matches, and says so in the trace.
@@ -219,7 +238,7 @@ module worklist {
     tw_baseline' = tw_baseline, tw_has_baseline' = tw_has_baseline, tw_cursor' = tw_cursor,
     tw_events' = tw_events, tw_growth' = tw_growth, tw_inflight' = tw_inflight,
     tw_syncs' = tw_syncs, tw_ready' = tw_ready,
-    iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   action tw_review_accept(i: int): bool = all {
@@ -229,7 +248,7 @@ module worklist {
     tw_events' = tw_events, tw_growth' = tw_growth, tw_inflight' = tw_inflight,
     tw_syncs' = tw_syncs, tw_ready' = tw_ready,
     iw_unchanged, // review_accept only reads IMPACT Web
-    ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   action tw_review_reject(i: int): bool = all {
@@ -238,7 +257,7 @@ module worklist {
     tw_baseline' = tw_baseline, tw_has_baseline' = tw_has_baseline, tw_cursor' = tw_cursor,
     tw_events' = tw_events, tw_growth' = tw_growth, tw_inflight' = tw_inflight,
     tw_syncs' = tw_syncs, tw_ready' = tw_ready,
-    iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   action tw_mark_ready = all {
@@ -247,7 +266,7 @@ module worklist {
     tw_baseline' = tw_baseline, tw_has_baseline' = tw_has_baseline, tw_cursor' = tw_cursor,
     tw_events' = tw_events, tw_growth' = tw_growth, tw_inflight' = tw_inflight,
     tw_syncs' = tw_syncs, tw_match' = tw_match,
-    iw_unchanged, ghost("twin"), g_freeze_hours' = g_freeze_hours,
+    iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
   action step = any {
@@ -288,12 +307,21 @@ module worklist {
   val BaselineFixed = g_prev_has_baseline implies (tw_has_baseline and tw_baseline == g_prev_baseline)
 
   // Freeze is exact. The twin baseline equals IMPACT Web's frozen copy.
-  val FreezeExact = tw_has_baseline implies (iw_frozen and tw_baseline == iw_copy)
+  // And the frozen copy is exactly the DRB-accepted current requests at the moment of freeze.
+  val FreezeExact = and {
+    tw_has_baseline implies (iw_frozen and tw_baseline == iw_copy),
+    iw_frozen implies iw_copy == ITEMS.mapBy(i => if (g_freeze_ok.get(i)) g_freeze_hours.get(i) else 0),
+  }
 
   // Nothing missed. The feed holds each approved change once. The twin has exactly one event
   // for each feed entry it has read up to, and none for anything else, however syncs overlap.
-  // So once a sync catches up with the feed, every approved change is one event.
+  // And a sync that finishes applies the whole window it read: its cursor reaches the end it
+  // read, and every entry in the window is an event. So a sync that starts after an approval
+  // and finishes turns it into exactly one event. A sync already in flight may miss it, and
+  // the model doesn't claim a sync will ever run.
   val NothingMissed = and {
+    g_fin.on implies (tw_cursor == max(g_prev_cursor, g_fin.hi)
+                      and logIds(g_fin.lo, g_fin.hi).forall(c => tw_events.get(c) == 1)),
     iw_len == approved.size(),
     CHANGES.forall(c => (iw_pos.get(c) > 0) iff approved.contains(c)),
     approved.forall(c => iw_pos.get(c) <= iw_len),
@@ -330,6 +358,12 @@ module worklist {
   // Witnesses. Each must be reachable, or the rules above could hold only because the steps
   // that would break them never run.
   val ObsOverlap = tw_inflight.size() >= 2
+  // Two syncs in flight that both read the same approved change.
+  val ObsOverlapSameChange = tw_inflight.exists(a => tw_inflight.exists(b => a.id != b.id
+    and logIds(a.lo, a.hi).intersect(logIds(b.lo, b.hi)).size() > 0))
+  // The DRB accepted a request, an edit then cleared that decision, and freeze left it out.
+  val ObsStaleDrbExcluded = iw_frozen and ITEMS.exists(i => iw_drb_ver.get(i) >= 0
+    and not(g_freeze_ok.get(i)) and g_freeze_hours.get(i) > 0 and iw_copy.get(i) == 0)
   val ObsLateAddSynced = CHANGES.exists(c => tw_events.get(c) == 1 and iw_changes.get(c).delta > 0
     and iw_copy.get(iw_changes.get(c).item) == 0)
   // The replay example for phase 4: one request frozen, a late add on the other one synced.

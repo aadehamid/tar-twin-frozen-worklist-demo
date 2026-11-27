@@ -36,7 +36,7 @@ APALACHE_TGZ_SHA256 = "8ac8488422c30d552735bae11b92a2d014d8e02e8608702acc08f9a2d
 
 RULES = ["ReadOnly", "BaselineFixed", "FreezeExact", "NothingMissed", "HumansDecide",
          "GrowthAddsUp", "Gate"]
-WITNESSES = ["ObsOverlap", "ObsLateAddSynced", "ObsNegativeGrowth", "ObsStaleChangeBlocked",
+WITNESSES = ["ObsOverlap", "ObsOverlapSameChange", "ObsStaleDrbExcluded", "ObsLateAddSynced", "ObsNegativeGrowth", "ObsStaleChangeBlocked",
              "ObsAiReviewed", "ObsReady", "ObsFrozenNotReadyWithGrowth"]
 # The small instance TLC can search completely: one request, two hour values, two syncs.
 SMALL = [("pure val ITEMS = Set(1, 2)", "pure val ITEMS = Set(1)"),
@@ -193,6 +193,24 @@ def main():
     sys.exit(1 if failed or len(results["checks"]) < 7 else 0)
 
 
+def ends_with_late_add(path):
+    """The trace's last state has a frozen request in the baseline and a synced change event for
+    a request that wasn't in the frozen copy, with a positive delta."""
+    def m(v):
+        return {int(k["#bigint"]): x for k, x in v["#map"]}
+    def n(v):
+        return int(v["#bigint"]) if isinstance(v, dict) else v
+    states = json.loads(path.read_text()).get("states", [])
+    if len(states) < 2:
+        return False
+    s = states[-1]
+    base, copy, events, changes = m(s["tw_baseline"]), m(s["iw_copy"]), m(s["tw_events"]), m(s["iw_changes"])
+    frozen_item = any(n(h) > 0 for h in base.values())
+    late = any(n(events[c]) == 1 and n(ch["delta"]) > 0 and n(copy[n(ch["item"])]) == 0
+               for c, ch in changes.items())
+    return bool(s["tw_has_baseline"]) and frozen_item and late
+
+
 def run_all(work, a):
     q = setup(work)
     text = SPEC.read_text()
@@ -231,10 +249,15 @@ def run_all(work, a):
         s = q.run(f"simulate reach {w}", "run", str(full), "--invariant", f"not({w})", *sim)
         wit[w] = {"tlc_small": t["outcome"] == "violation", "simulator_full": s["outcome"] == "violation",
                   "tlc_trace_states": t.get("trace_states")}
+    # The trace goes to a new file in the run folder, and is published only if this run
+    # produced it and it ends where it should.
+    fresh = work / "trace-late-add.itf.json"
+    tr = q.run("trace late add", "run", str(full), "--invariant", "not(ObsLateAddWithFrozenItem)",
+               "--out-itf", str(fresh), *sim)
+    trace_ok = tr["outcome"] == "violation" and fresh.exists() and ends_with_late_add(fresh)
     itf = HERE / "trace-late-add.itf.json"
-    q.run("trace late add", "run", str(full), "--invariant", "not(ObsLateAddWithFrozenItem)",
-          "--out-itf", str(itf), *sim)
-    trace_ok = itf.exists() and len(json.loads(itf.read_text()).get("states", [])) > 1
+    if trace_ok:
+        shutil.copy(fresh, itf)
     check("Q6", all(v["tlc_small"] and v["simulator_full"] for v in wit.values()) and trace_ok,
           witnesses=wit, late_add_trace=itf.name if trace_ok else None)
 

@@ -22,19 +22,19 @@
   "Q3": {
    "pass": true,
    "max_steps": 10,
-   "seconds": 399.3
+   "seconds": 419.2
   },
   "Q4": {
    "pass": true,
-   "small_states": 58717,
+   "small_states": 73087,
    "small_depth": 17,
-   "small_seconds": 14.6
+   "small_seconds": 11.7
   },
   "Q5": {
    "pass": true,
    "samples": 20000,
    "max_steps": 30,
-   "seconds": 14.2
+   "seconds": 10.6
   },
   "Q6": {
    "pass": true,
@@ -43,6 +43,16 @@
      "tlc_small": true,
      "simulator_full": true,
      "tlc_trace_states": 3
+    },
+    "ObsOverlapSameChange": {
+     "tlc_small": true,
+     "simulator_full": true,
+     "tlc_trace_states": 6
+    },
+    "ObsStaleDrbExcluded": {
+     "tlc_small": true,
+     "simulator_full": true,
+     "tlc_trace_states": 6
     },
     "ObsLateAddSynced": {
      "tlc_small": true,
@@ -87,7 +97,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 8,
-     "apalache_seconds": 14.7
+     "apalache_seconds": 14.5
     },
     "Q-M2": {
      "rule": "BaselineFixed",
@@ -96,7 +106,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 8,
-     "apalache_seconds": 14.7
+     "apalache_seconds": 15.2
     },
     "Q-M3": {
      "rule": "FreezeExact",
@@ -104,8 +114,8 @@
      "typechecks": true,
      "tlc_small": "violation",
      "apalache_full": "violation",
-     "tlc_trace_states": 6,
-     "apalache_seconds": 11.3
+     "tlc_trace_states": 5,
+     "apalache_seconds": 12.1
     },
     "Q-M4": {
      "rule": "NothingMissed",
@@ -114,7 +124,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 6,
-     "apalache_seconds": 12.8
+     "apalache_seconds": 13.6
     },
     "Q-M5": {
      "rule": "NothingMissed",
@@ -123,7 +133,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 8,
-     "apalache_seconds": 22.6
+     "apalache_seconds": 24.4
     },
     "Q-M6": {
      "rule": "HumansDecide",
@@ -132,7 +142,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 8,
-     "apalache_seconds": 13.3
+     "apalache_seconds": 13.9
     },
     "Q-M7": {
      "rule": "GrowthAddsUp",
@@ -141,7 +151,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 5,
-     "apalache_seconds": 12.3
+     "apalache_seconds": 12.6
     },
     "Q-M8": {
      "rule": "Gate",
@@ -150,7 +160,7 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 5,
-     "apalache_seconds": 11.0
+     "apalache_seconds": 11.5
     },
     "Q-M9": {
      "rule": "GrowthAddsUp",
@@ -159,7 +169,34 @@
      "tlc_small": "violation",
      "apalache_full": "violation",
      "tlc_trace_states": 6,
-     "apalache_seconds": 12.8
+     "apalache_seconds": 13.2
+    },
+    "Q-M10": {
+     "rule": "NothingMissed",
+     "what": "a sync finishes without applying the window it read",
+     "typechecks": true,
+     "tlc_small": "violation",
+     "apalache_full": "violation",
+     "tlc_trace_states": 6,
+     "apalache_seconds": 13.3
+    },
+    "Q-M11": {
+     "rule": "FreezeExact",
+     "what": "freeze copies every live request, DRB-accepted or not",
+     "typechecks": true,
+     "tlc_small": "violation",
+     "apalache_full": "violation",
+     "tlc_trace_states": 3,
+     "apalache_seconds": 11.1
+    },
+    "Q-M12": {
+     "rule": "FreezeExact",
+     "what": "an edit keeps the DRB decision, so freeze copies a version the DRB never saw",
+     "typechecks": true,
+     "tlc_small": "violation",
+     "apalache_full": "violation",
+     "tlc_trace_states": 6,
+     "apalache_seconds": 11.8
     }
    }
   }
@@ -169,10 +206,10 @@
    "label": "typecheck full",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.9,
    "outcome": "error",
    "tail": []
   },
@@ -180,10 +217,10 @@
    "label": "typecheck small",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.8,
    "outcome": "error",
    "tail": []
   },
@@ -191,20 +228,20 @@
    "label": "apalache AllRules",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "AllRules",
     "--max-steps",
     "10"
    ],
    "exit": 0,
-   "seconds": 399.3,
+   "seconds": 419.2,
    "outcome": "ok",
    "tail": [
-    "[ok] No violation found (396851ms).",
+    "[ok] No violation found (416736ms).",
     "You may increase --max-steps.",
     "Use --verbosity to produce more (or less) output.",
-    "Nov 27, 2026 7:04:49 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:22:12 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2"
    ],
@@ -214,31 +251,31 @@
    "label": "tlc AllRules small",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "AllRules",
     "--backend",
     "tlc"
    ],
    "exit": 0,
-   "seconds": 14.6,
+   "seconds": 11.7,
    "outcome": "ok",
    "tail": [
-    "Finished in 05s at (2026-11-27 07:11:37)",
+    "Finished in 04s at (2026-11-27 07:29:17)",
     "",
-    "[ok] No violation found (6207ms).",
-    "Nov 27, 2026 7:11:28 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[ok] No violation found (4785ms).",
+    "Nov 27, 2026 7:29:11 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2"
    ],
-   "distinct_states": 58717,
+   "distinct_states": 73087,
    "depth": 17
   },
   {
    "label": "simulate AllRules",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "AllRules",
     "--max-samples",
@@ -247,22 +284,22 @@
     "30"
    ],
    "exit": 0,
-   "seconds": 14.2,
+   "seconds": 10.6,
    "outcome": "ok",
    "tail": [
-    "[ok] No violation found (11756ms at 1701 traces/second).",
+    "[ok] No violation found (8578ms at 2332 traces/second).",
     "Checked invariants: AllRules",
-    "Trace length statistics: max=31, min=12, average=13.99",
+    "Trace length statistics: max=31, min=12, average=13.96",
     "You may increase --max-samples and --max-steps.",
     "Use --verbosity to produce more (or less) output.",
-    "Use --seed=0xe31deab149d46c37 --backend=rust to reproduce."
+    "Use --seed=0xe055398bafc33869 --backend=rust to reproduce."
    ]
   },
   {
    "label": "tlc reach ObsOverlap",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsOverlap)",
     "--backend",
@@ -273,8 +310,8 @@
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (806ms).",
-    "Nov 27, 2026 7:11:57 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (914ms).",
+    "Nov 27, 2026 7:29:33 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -286,7 +323,7 @@
    "label": "simulate reach ObsOverlap",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsOverlap)",
     "--max-samples",
@@ -295,14 +332,110 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 1.8,
+   "seconds": 2.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (46ms at 65 traces/second).",
+    "[violation] Found an issue (53ms at 94 traces/second).",
     "  \u274c not(ObsOverlap)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0xe9012bc2310a4636 --backend=rust to reproduce.",
+    "Use --seed=0x2ee7d63191ea90da --backend=rust to reproduce.",
+    "error: Invariant violated"
+   ]
+  },
+  {
+   "label": "tlc reach ObsOverlapSameChange",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
+    "--invariant",
+    "not(ObsOverlapSameChange)",
+    "--backend",
+    "tlc"
+   ],
+   "exit": 1,
+   "seconds": 7.9,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (934ms).",
+    "Nov 27, 2026 7:29:43 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "depth": 6,
+   "trace_states": 6
+  },
+  {
+   "label": "simulate reach ObsOverlapSameChange",
+   "args": [
+    "run",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
+    "--invariant",
+    "not(ObsOverlapSameChange)",
+    "--max-samples",
+    "20000",
+    "--max-steps",
+    "30"
+   ],
+   "exit": 1,
+   "seconds": 1.9,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (55ms at 109 traces/second).",
+    "  \u274c not(ObsOverlapSameChange)",
+    "Use --verbosity=3 to show executions.",
+    "Use --seed=0xa18bbb7fec8713b0 --backend=rust to reproduce.",
+    "error: Invariant violated"
+   ]
+  },
+  {
+   "label": "tlc reach ObsStaleDrbExcluded",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
+    "--invariant",
+    "not(ObsStaleDrbExcluded)",
+    "--backend",
+    "tlc"
+   ],
+   "exit": 1,
+   "seconds": 7.7,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (879ms).",
+    "Nov 27, 2026 7:29:53 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "depth": 6,
+   "trace_states": 6
+  },
+  {
+   "label": "simulate reach ObsStaleDrbExcluded",
+   "args": [
+    "run",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
+    "--invariant",
+    "not(ObsStaleDrbExcluded)",
+    "--max-samples",
+    "20000",
+    "--max-steps",
+    "30"
+   ],
+   "exit": 1,
+   "seconds": 2.0,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (77ms at 896 traces/second).",
+    "  \u274c not(ObsStaleDrbExcluded)",
+    "Use --verbosity=3 to show executions.",
+    "Use --seed=0xfcb8e8d853b8884 --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -310,19 +443,19 @@
    "label": "tlc reach ObsLateAddSynced",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsLateAddSynced)",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.8,
+   "seconds": 7.7,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (808ms).",
-    "Nov 27, 2026 7:12:07 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (874ms).",
+    "Nov 27, 2026 7:30:03 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -334,7 +467,7 @@
    "label": "simulate reach ObsLateAddSynced",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsLateAddSynced)",
     "--max-samples",
@@ -343,14 +476,14 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 1.7,
+   "seconds": 2.0,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (55ms at 55 traces/second).",
+    "[violation] Found an issue (57ms at 105 traces/second).",
     "  \u274c not(ObsLateAddSynced)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0x5c193958ddb3c69b --backend=rust to reproduce.",
+    "Use --seed=0x564835b4a35d1cc --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -358,7 +491,7 @@
    "label": "tlc reach ObsNegativeGrowth",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsNegativeGrowth)",
     "--backend",
@@ -369,8 +502,8 @@
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1071ms).",
-    "Nov 27, 2026 7:12:16 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (933ms).",
+    "Nov 27, 2026 7:30:12 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -382,7 +515,7 @@
    "label": "simulate reach ObsNegativeGrowth",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsNegativeGrowth)",
     "--max-samples",
@@ -391,14 +524,14 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 1.9,
+   "seconds": 2.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (63ms at 143 traces/second).",
+    "[violation] Found an issue (93ms at 914 traces/second).",
     "  \u274c not(ObsNegativeGrowth)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0x93de8b5d2032c3d5 --backend=rust to reproduce.",
+    "Use --seed=0x3378019992a01705 --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -406,19 +539,19 @@
    "label": "tlc reach ObsStaleChangeBlocked",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsStaleChangeBlocked)",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.6,
+   "seconds": 7.9,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (788ms).",
-    "Nov 27, 2026 7:12:26 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (853ms).",
+    "Nov 27, 2026 7:30:23 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -430,7 +563,7 @@
    "label": "simulate reach ObsStaleChangeBlocked",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsStaleChangeBlocked)",
     "--max-samples",
@@ -443,10 +576,10 @@
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (52ms at 404 traces/second).",
+    "[violation] Found an issue (78ms at 654 traces/second).",
     "  \u274c not(ObsStaleChangeBlocked)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0x95aae2fcd026ad95 --backend=rust to reproduce.",
+    "Use --seed=0xa6a80b564fb82db6 --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -454,19 +587,19 @@
    "label": "tlc reach ObsAiReviewed",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsAiReviewed)",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 10.2,
+   "seconds": 8.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1945ms).",
-    "Nov 27, 2026 7:12:36 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1224ms).",
+    "Nov 27, 2026 7:30:32 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -478,7 +611,7 @@
    "label": "simulate reach ObsAiReviewed",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsAiReviewed)",
     "--max-samples",
@@ -487,14 +620,14 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 3.0,
+   "seconds": 2.0,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (144ms at 771 traces/second).",
+    "[violation] Found an issue (72ms at 708 traces/second).",
     "  \u274c not(ObsAiReviewed)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0x9d4e2f04edda1115 --backend=rust to reproduce.",
+    "Use --seed=0x74068f10f20b7432 --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -502,19 +635,19 @@
    "label": "tlc reach ObsReady",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsReady)",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 11.6,
+   "seconds": 8.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (2383ms).",
-    "Nov 27, 2026 7:12:50 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1258ms).",
+    "Nov 27, 2026 7:30:42 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -526,7 +659,7 @@
    "label": "simulate reach ObsReady",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsReady)",
     "--max-samples",
@@ -535,14 +668,14 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 3.0,
+   "seconds": 2.0,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (84ms at 226 traces/second).",
+    "[violation] Found an issue (61ms at 393 traces/second).",
     "  \u274c not(ObsReady)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0xd1d95dab787f1726 --backend=rust to reproduce.",
+    "Use --seed=0x556f58b9a5bd1619 --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -550,31 +683,31 @@
    "label": "tlc reach ObsFrozenNotReadyWithGrowth",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/small.qnt",
     "--invariant",
     "not(ObsFrozenNotReadyWithGrowth)",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 10.1,
+   "seconds": 7.9,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1641ms).",
-    "Nov 27, 2026 7:13:04 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (903ms).",
+    "Nov 27, 2026 7:30:53 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
    ],
-   "depth": 7,
+   "depth": 6,
    "trace_states": 6
   },
   {
    "label": "simulate reach ObsFrozenNotReadyWithGrowth",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsFrozenNotReadyWithGrowth)",
     "--max-samples",
@@ -583,14 +716,14 @@
     "30"
    ],
    "exit": 1,
-   "seconds": 2.9,
+   "seconds": 2.0,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (100ms at 60 traces/second).",
+    "[violation] Found an issue (53ms at 57 traces/second).",
     "  \u274c not(ObsFrozenNotReadyWithGrowth)",
     "Use --verbosity=3 to show executions.",
-    "Use --seed=0xecb9e92ad3f98683 --backend=rust to reproduce.",
+    "Use --seed=0x1d1667332b2f2cbf --backend=rust to reproduce.",
     "error: Invariant violated"
    ]
   },
@@ -598,23 +731,23 @@
    "label": "trace late add",
    "args": [
     "run",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/worklist.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/worklist.qnt",
     "--invariant",
     "not(ObsLateAddWithFrozenItem)",
     "--out-itf",
-    "/tmp/decrun/quint-wt/spikes/quint-worklist/trace-late-add.itf.json",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/trace-late-add.itf.json",
     "--max-samples",
     "20000",
     "--max-steps",
     "30"
    ],
    "exit": 1,
-   "seconds": 2.5,
+   "seconds": 2.1,
    "outcome": "violation",
    "tail": [
     "}",
     "",
-    "[violation] Found an issue (163ms at 1202 traces/second).",
+    "[violation] Found an issue (88ms at 705 traces/second).",
     "  \u274c not(ObsLateAddWithFrozenItem)",
     "Use --verbosity=3 to show executions.",
     "error: Invariant violated"
@@ -624,10 +757,10 @@
    "label": "typecheck Q-M1",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M1.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M1.qnt"
    ],
    "exit": 0,
-   "seconds": 2.5,
+   "seconds": 1.9,
    "outcome": "error",
    "tail": []
   },
@@ -635,19 +768,19 @@
    "label": "tlc Q-M1",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M1-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M1-small.qnt",
     "--invariant",
     "ReadOnly",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 10.0,
+   "seconds": 8.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1711ms).",
-    "Nov 27, 2026 7:13:22 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1101ms).",
+    "Nov 27, 2026 7:31:07 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -659,19 +792,19 @@
    "label": "apalache Q-M1",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M1.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M1.qnt",
     "--invariant",
     "ReadOnly",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 14.7,
+   "seconds": 14.5,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (11716ms).",
+    "[violation] Found an issue (11920ms).",
     "  \u274c ReadOnly",
-    "Nov 27, 2026 7:13:32 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:31:15 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -682,10 +815,10 @@
    "label": "typecheck Q-M2",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M2.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M2.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.9,
    "outcome": "error",
    "tail": []
   },
@@ -693,19 +826,19 @@
    "label": "tlc Q-M2",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M2-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M2-small.qnt",
     "--invariant",
     "BaselineFixed",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.8,
+   "seconds": 8.2,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1159ms).",
-    "Nov 27, 2026 7:13:48 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1212ms).",
+    "Nov 27, 2026 7:31:31 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -717,19 +850,19 @@
    "label": "apalache Q-M2",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M2.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M2.qnt",
     "--invariant",
     "BaselineFixed",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 14.7,
+   "seconds": 15.2,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (12136ms).",
+    "[violation] Found an issue (12565ms).",
     "  \u274c BaselineFixed",
-    "Nov 27, 2026 7:13:56 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:31:39 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -740,10 +873,10 @@
    "label": "typecheck Q-M3",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M3.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M3.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.8,
    "outcome": "error",
    "tail": []
   },
@@ -751,43 +884,43 @@
    "label": "tlc Q-M3",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M3-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M3-small.qnt",
     "--invariant",
     "FreezeExact",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.5,
+   "seconds": 7.7,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (883ms).",
-    "Nov 27, 2026 7:14:12 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (826ms).",
+    "Nov 27, 2026 7:31:56 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
    ],
-   "depth": 6,
-   "trace_states": 6
+   "depth": 5,
+   "trace_states": 5
   },
   {
    "label": "apalache Q-M3",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M3.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M3.qnt",
     "--invariant",
     "FreezeExact",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 11.3,
+   "seconds": 12.1,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (8862ms).",
+    "[violation] Found an issue (9589ms).",
     "  \u274c FreezeExact",
-    "Nov 27, 2026 7:14:20 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:32:04 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -798,10 +931,10 @@
    "label": "typecheck Q-M4",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M4.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M4.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.9,
    "outcome": "error",
    "tail": []
   },
@@ -809,19 +942,19 @@
    "label": "tlc Q-M4",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M4-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M4-small.qnt",
     "--invariant",
     "NothingMissed",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.6,
+   "seconds": 7.8,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (949ms).",
-    "Nov 27, 2026 7:14:33 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (871ms).",
+    "Nov 27, 2026 7:32:18 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -833,19 +966,19 @@
    "label": "apalache Q-M4",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M4.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M4.qnt",
     "--invariant",
     "NothingMissed",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 12.8,
+   "seconds": 13.6,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (10431ms).",
+    "[violation] Found an issue (11004ms).",
     "  \u274c NothingMissed",
-    "Nov 27, 2026 7:14:40 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:32:26 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -856,10 +989,10 @@
    "label": "typecheck Q-M5",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M5.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M5.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.8,
    "outcome": "error",
    "tail": []
   },
@@ -867,19 +1000,19 @@
    "label": "tlc Q-M5",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M5-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M5-small.qnt",
     "--invariant",
     "NothingMissed",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 8.0,
+   "seconds": 8.1,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1227ms).",
-    "Nov 27, 2026 7:14:55 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1315ms).",
+    "Nov 27, 2026 7:32:41 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -891,19 +1024,19 @@
    "label": "apalache Q-M5",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M5.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M5.qnt",
     "--invariant",
     "NothingMissed",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 22.6,
+   "seconds": 24.4,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (20153ms).",
+    "[violation] Found an issue (21702ms).",
     "  \u274c NothingMissed",
-    "Nov 27, 2026 7:15:03 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:32:49 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -914,7 +1047,7 @@
    "label": "typecheck Q-M6",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M6.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M6.qnt"
    ],
    "exit": 0,
    "seconds": 1.8,
@@ -925,43 +1058,43 @@
    "label": "tlc Q-M6",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M6-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M6-small.qnt",
     "--invariant",
     "HumansDecide",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 8.1,
+   "seconds": 8.0,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (1173ms).",
-    "Nov 27, 2026 7:15:27 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (1136ms).",
+    "Nov 27, 2026 7:33:15 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
    ],
-   "depth": 9,
+   "depth": 8,
    "trace_states": 8
   },
   {
    "label": "apalache Q-M6",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M6.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M6.qnt",
     "--invariant",
     "HumansDecide",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 13.3,
+   "seconds": 13.9,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (10851ms).",
+    "[violation] Found an issue (11180ms).",
     "  \u274c HumansDecide",
-    "Nov 27, 2026 7:15:35 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:33:23 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -972,10 +1105,10 @@
    "label": "typecheck Q-M7",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M7.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M7.qnt"
    ],
    "exit": 0,
-   "seconds": 1.8,
+   "seconds": 2.0,
    "outcome": "error",
    "tail": []
   },
@@ -983,19 +1116,19 @@
    "label": "tlc Q-M7",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M7-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M7-small.qnt",
     "--invariant",
     "GrowthAddsUp",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.7,
+   "seconds": 7.8,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (865ms).",
-    "Nov 27, 2026 7:15:50 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (774ms).",
+    "Nov 27, 2026 7:33:39 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -1007,19 +1140,19 @@
    "label": "apalache Q-M7",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M7.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M7.qnt",
     "--invariant",
     "GrowthAddsUp",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 12.3,
+   "seconds": 12.6,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (9885ms).",
+    "[violation] Found an issue (9973ms).",
     "  \u274c GrowthAddsUp",
-    "Nov 27, 2026 7:15:58 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:33:47 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -1030,10 +1163,10 @@
    "label": "typecheck Q-M8",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M8.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M8.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.8,
    "outcome": "error",
    "tail": []
   },
@@ -1041,19 +1174,19 @@
    "label": "tlc Q-M8",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M8-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M8-small.qnt",
     "--invariant",
     "Gate",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.5,
+   "seconds": 7.7,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (854ms).",
-    "Nov 27, 2026 7:16:12 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (898ms).",
+    "Nov 27, 2026 7:34:01 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -1065,19 +1198,19 @@
    "label": "apalache Q-M8",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M8.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M8.qnt",
     "--invariant",
     "Gate",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 11.0,
+   "seconds": 11.5,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (8678ms).",
+    "[violation] Found an issue (8990ms).",
     "  \u274c Gate",
-    "Nov 27, 2026 7:16:20 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:34:09 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -1088,10 +1221,10 @@
    "label": "typecheck Q-M9",
    "args": [
     "typecheck",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M9.qnt"
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M9.qnt"
    ],
    "exit": 0,
-   "seconds": 1.7,
+   "seconds": 1.8,
    "outcome": "error",
    "tail": []
   },
@@ -1099,19 +1232,19 @@
    "label": "tlc Q-M9",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M9-small.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M9-small.qnt",
     "--invariant",
     "GrowthAddsUp",
     "--backend",
     "tlc"
    ],
    "exit": 1,
-   "seconds": 7.5,
+   "seconds": 7.7,
    "outcome": "violation",
    "tail": [
     "",
-    "[violation] Found an issue (878ms).",
-    "Nov 27, 2026 7:16:32 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "[violation] Found an issue (841ms).",
+    "Nov 27, 2026 7:34:23 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
@@ -1123,25 +1256,199 @@
    "label": "apalache Q-M9",
    "args": [
     "verify",
-    "/tmp/decrun/quintrun3/quint-spike-w8y0wpg3/Q-M9.qnt",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M9.qnt",
     "--invariant",
     "GrowthAddsUp",
     "--max-steps",
     "10"
    ],
    "exit": 1,
-   "seconds": 12.8,
+   "seconds": 13.2,
    "outcome": "violation",
    "tail": [
-    "[violation] Found an issue (10403ms).",
+    "[violation] Found an issue (10647ms).",
     "  \u274c GrowthAddsUp",
-    "Nov 27, 2026 7:16:40 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "Nov 27, 2026 7:34:30 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
     "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
     "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
     "error: found a counterexample"
    ],
    "trace_states": 5
+  },
+  {
+   "label": "typecheck Q-M10",
+   "args": [
+    "typecheck",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M10.qnt"
+   ],
+   "exit": 0,
+   "seconds": 1.8,
+   "outcome": "error",
+   "tail": []
+  },
+  {
+   "label": "tlc Q-M10",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M10-small.qnt",
+    "--invariant",
+    "NothingMissed",
+    "--backend",
+    "tlc"
+   ],
+   "exit": 1,
+   "seconds": 7.6,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (875ms).",
+    "Nov 27, 2026 7:34:45 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "depth": 7,
+   "trace_states": 6
+  },
+  {
+   "label": "apalache Q-M10",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M10.qnt",
+    "--invariant",
+    "NothingMissed",
+    "--max-steps",
+    "10"
+   ],
+   "exit": 1,
+   "seconds": 13.3,
+   "outcome": "violation",
+   "tail": [
+    "[violation] Found an issue (10592ms).",
+    "  \u274c NothingMissed",
+    "Nov 27, 2026 7:34:53 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "trace_states": 5
+  },
+  {
+   "label": "typecheck Q-M11",
+   "args": [
+    "typecheck",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M11.qnt"
+   ],
+   "exit": 0,
+   "seconds": 1.9,
+   "outcome": "error",
+   "tail": []
+  },
+  {
+   "label": "tlc Q-M11",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M11-small.qnt",
+    "--invariant",
+    "FreezeExact",
+    "--backend",
+    "tlc"
+   ],
+   "exit": 1,
+   "seconds": 7.9,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (864ms).",
+    "Nov 27, 2026 7:35:08 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "depth": 4,
+   "trace_states": 3
+  },
+  {
+   "label": "apalache Q-M11",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M11.qnt",
+    "--invariant",
+    "FreezeExact",
+    "--max-steps",
+    "10"
+   ],
+   "exit": 1,
+   "seconds": 11.1,
+   "outcome": "violation",
+   "tail": [
+    "[violation] Found an issue (8440ms).",
+    "  \u274c FreezeExact",
+    "Nov 27, 2026 7:35:16 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "trace_states": 2
+  },
+  {
+   "label": "typecheck Q-M12",
+   "args": [
+    "typecheck",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M12.qnt"
+   ],
+   "exit": 0,
+   "seconds": 1.9,
+   "outcome": "error",
+   "tail": []
+  },
+  {
+   "label": "tlc Q-M12",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M12-small.qnt",
+    "--invariant",
+    "FreezeExact",
+    "--backend",
+    "tlc"
+   ],
+   "exit": 1,
+   "seconds": 7.8,
+   "outcome": "violation",
+   "tail": [
+    "",
+    "[violation] Found an issue (821ms).",
+    "Nov 27, 2026 7:35:29 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "depth": 6,
+   "trace_states": 6
+  },
+  {
+   "label": "apalache Q-M12",
+   "args": [
+    "verify",
+    "/tmp/decrun/quintrun4/quint-spike-3knrrntw/Q-M12.qnt",
+    "--invariant",
+    "FreezeExact",
+    "--max-steps",
+    "10"
+   ],
+   "exit": 1,
+   "seconds": 11.8,
+   "outcome": "violation",
+   "tail": [
+    "[violation] Found an issue (9196ms).",
+    "  \u274c FreezeExact",
+    "Nov 27, 2026 7:35:37 AM com.google.protobuf.GeneratedMessage warnPre22Gencode",
+    "WARNING: Vulnerable protobuf generated type in use: io.grpc.reflection.v1alpha.ServerReflectionRequest",
+    "As of 2022/09/29 (release 21.7) makeExtensionsImmutable should not be called from protobuf gencode. If you are seeing this message, your gencode is vulnerable to a denial of service attack. You should regenerate your code using protobuf 25.6 or later. Use the latest version that meets your needs. However, if you understand the risks and wish to continue with vulnerable gencode, you can set the system property `-Dcom.google.protobuf.use_unsafe_pre22_gencode` on the command line to silence this warning. You also can set `-Dcom.google.protobuf.error_on_unsafe_pre22_gencode` to throw an error instead. See security vulnerability: https://github.com/protocolbuffers/protobuf/security/advisories/GHSA-h4h5-3hr4-j3g2",
+    "error: found a counterexample"
+   ],
+   "trace_states": 4
   }
  ],
- "total_seconds": 736.0
+ "total_seconds": 830.4
 }

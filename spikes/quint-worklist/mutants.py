@@ -7,7 +7,7 @@ MUTANTS = [
      "what": "a twin review step changes the IMPACT Web request it matched",
      "old": "    iw_unchanged, // review_accept only reads IMPACT Web\n",
      "new": "    all { iw_hours' = iw_hours.set(i, iw_hours.get(i) + 1), iw_version' = iw_version,\n"
-            "          iw_drb' = iw_drb, iw_frozen' = iw_frozen, iw_copy' = iw_copy,\n"
+            "          iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver, iw_frozen' = iw_frozen, iw_copy' = iw_copy,\n"
             "          iw_changes' = iw_changes, iw_pos' = iw_pos, iw_len' = iw_len },\n"},
     {"id": "Q-M2", "rule": "BaselineFixed",
      "what": "a sync applies approved change deltas to the baseline",
@@ -44,6 +44,22 @@ MUTANTS = [
      "what": "approval skips the base version check, so a stale change overwrites a newer one",
      "old": "      iw_version.get(ch.item) == ch.base,\n",
      "new": ""},
+    {"id": "Q-M10", "rule": "NothingMissed",
+     "what": "a sync finishes without applying the window it read",
+     "old": "      tw_events' = CHANGES.mapBy(c => if (ids.contains(c)) 1 else tw_events.get(c)),\n"
+            "      tw_growth' = tw_growth + sumDelta(fresh, iw_changes),\n"
+            "      tw_cursor' = max(tw_cursor, s.hi),\n",
+     "new": "      tw_events' = tw_events,\n"
+            "      tw_growth' = tw_growth,\n"
+            "      tw_cursor' = tw_cursor,\n"},
+    {"id": "Q-M11", "rule": "FreezeExact",
+     "what": "freeze copies every live request, DRB-accepted or not",
+     "old": "    iw_copy' = ITEMS.mapBy(i => if (iw_drb.get(i)) iw_hours.get(i) else 0),\n",
+     "new": "    iw_copy' = iw_hours,\n"},
+    {"id": "Q-M12", "rule": "FreezeExact",
+     "what": "an edit keeps the DRB decision, so freeze copies a version the DRB never saw",
+     "old": "    iw_drb' = iw_drb.set(i, false),\n",
+     "new": "    iw_drb' = iw_drb,\n"},
 ]
 
 
