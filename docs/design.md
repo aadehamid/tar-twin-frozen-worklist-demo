@@ -137,7 +137,7 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 2. **Rules.** Known aliases and patterns, for example "feed/eff exch A" to `E-201A`, or "charge pump south" to `P-201B`, from a small alias table.
 3. **Fuzzy.** rapidfuzz scoring against tag descriptions within the work request's area, if one is given.
 4. **AI.** Anything left below the confidence threshold goes to the AI matcher (section 6). Code gathers the candidates and their DEXPI facts first, and code checks the AI's answer afterwards. The split, and how the demo shows it, is in [matching-showcase.md](matching-showcase.md).
-5. **Review.** The compatibility check (work type against equipment class) runs first. Exact matches, and rule matches above the auto-accept threshold, that pass it are accepted by the system and say so in the trace. Every other match, and every AI proposal however confident, lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
+5. **Review.** Code accepts a match on its own only when the text yields exactly one tag, that tag is active, in Unit 200 and passes the compatibility check (work type against equipment class), and, for an alias, the rule scores above the auto-accept threshold. The trace says so. A tag that fails these gets a `Finding` in the trace and is left out of the candidates. Every other match, and every AI proposal however confident, lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
 6. **Match rate.** The share of active scope items with an accepted match, reported per site, per area and per source group. The gate threshold (default 95 percent) is a setting.
 
 ### 5.4 Mapping trace
