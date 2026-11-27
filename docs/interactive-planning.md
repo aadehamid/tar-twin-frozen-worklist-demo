@@ -141,7 +141,7 @@ Every fit-to-frame, challenge and DRB decision records the request version it wa
 - **Cut-line options are twin-local.** A saved option is a `CutLineRun` against a named scope version: a budget, the ranking rule and the above and below sets. It doesn't change any request. It isn't the set-level what-if (31-f3), which changes estimates and stays out of release one.
 - **Checks on both sides.** IMPACT Web checks its own fields when they're saved (required fields, craft hours add up, valid driver and source group). It can't check work type against equipment class, because its equipment field is free text. The twin does that after sync. The compatibility check runs before any match is accepted, including exact matches. An incompatible item, like a bundle pull on a pump, gets a `Finding` node with the reason and sits in the review queue. No `RESOLVES_TO` link is accepted for it.
 - **Every item ends in one of four match outcomes:** matched, unresolved, unit general, or incompatible.
-- **Synthetic data only.** All typed text (requests, comments, custom injects) passes a filter for real company names, real tag patterns and personal details before it is stored or sent to the matcher. A hit blocks the save with a message. The filter fails closed: if it can't run, the text is not sent out. In planning mode, matching of participant-typed text is rules-only or local-model by default, so no typed text leaves the host. The facilitator can turn on the outside model for an exercise.
+- **Synthetic data only.** All typed text (requests, comments, custom injects) passes a filter for real company names, real tag patterns and personal details before it is stored or sent to the matcher. A hit blocks the save with a message. The filter fails closed: if it can't run, the text is not sent out. In planning mode, matching of participant-typed text is rules-only by default, so no typed text leaves the host. (A local model would also work, but it doesn't fit the hosted VM.) The facilitator can turn on the outside model for an exercise.
 - **Value figures** stay labeled as the brief's unvalidated defaults wherever they appear, including the debrief report.
 
 ## 5. Validation for this mode (decided before any code)
@@ -174,7 +174,7 @@ Following [CONTRIBUTING.md](../CONTRIBUTING.md), these checks are written before
 
 ## 6. Hosting
 
-On one laptop the whole team can't reach it. Team exercises need a small cloud VM or a host inside the client's network, with HTTPS and named logins. On a shared host, the demo logins are turned off and Neo4j Browser is not exposed. Where to host it is an open question for Hamid.
+Team exercises run on one exe.dev VM, with sign-in through exe.dev and roles from `exercise_membership`. Demo logins are off and Neo4j Browser is not exposed. See [hosting.md](hosting.md).
 
 ## 7. Sync freshness
 
