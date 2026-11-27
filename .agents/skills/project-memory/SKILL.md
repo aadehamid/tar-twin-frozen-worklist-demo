@@ -1,0 +1,73 @@
+---
+name: project-memory
+description: Shared project memory in a Relate graph, used by every agent through scripts/memory.sh. Use to recall what earlier sessions learned before starting work, and to save a decision, owner preference, correction or hard-won finding before a session ends.
+---
+
+# Project memory
+
+Every agent on this repository (Claude Code, Codex, Cursor, Gemini, Kimi, Pi and the rest) shares one memory: a Relate graph that `scripts/memory.sh` reads and writes. Run `scripts/memory.sh` with no arguments for its commands. The store is the git-ignored `.relate-memory/` folder at the root of the main checkout, so every worktree sees the same memory and Git never tracks it. Dropbox syncs it to the owner's other machines.
+
+Memory supplements the record. Decisions are on the record only in `docs/decisions.md`; a memory points at that record and never replaces it.
+
+## Recall first
+
+At session start, and before work on a topic earlier sessions may have touched:
+
+```bash
+scripts/memory.sh brief                 # most recent current facts
+scripts/memory.sh recall freeze         # full-text search over current facts
+scripts/memory.sh about d9              # current facts about one entity
+scripts/memory.sh history memory/setup  # every value a slot has held, newest first
+```
+
+Results are JSON lines. Each row names the `agent`, the `episode` id and the `evidence` text the fact came from; quote that evidence when you rely on a memory. When a memory conflicts with the repository, the repository wins: save a correction.
+
+## Save before you finish
+
+Save when the session produced something a later session needs and cannot find by reading the repo: an owner preference or ruling, a correction to an earlier memory, a gotcha that cost time, where some work stopped. Code structure, git history and anything already in a document stay out; the repo already holds them.
+
+1. Run `scripts/memory.sh slots` and reuse an existing slot when the new fact answers the same question. A slot is `<entity>/<aspect>`, such as `memory/setup` or `phase-1/status`. A slot holds one current fact: the latest one written. Writing a new fact into a slot closes the old one and links the two, so a correction is just a new fact in the old slot. One episode holds at most one fact per slot.
+2. Write one episode as JSON and pipe it in:
+
+```bash
+scripts/memory.sh remember - <<'JSON'
+{
+  "episode": {"id": "2026-11-27-claude-code-memory-setup", "session": "feat/relate-project-memory",
+              "agent": "claude-code", "kind": "handoff", "at": "2026-11-27T19:00:00Z",
+              "text": "Set up shared Relate memory (D17) on branch feat/relate-project-memory."},
+  "mentions": [{"key": "d17", "name": "D17"}, {"key": "file:scripts/memory.sh", "name": "scripts/memory.sh"}],
+  "facts": [
+    {"id": "2026-11-27-claude-code-memory-setup-1", "slot": "memory/setup",
+     "text": "Shared Relate memory lives in .relate-memory/ and is written only through scripts/memory.sh (D17).",
+     "about": ["d17", "file:scripts/memory.sh"], "validFrom": "2026-11-27T19:00:00Z"}
+  ]
+}
+JSON
+```
+
+- `agent` names the tool that wrote it (`claude-code`, `codex`, `cursor`, `gemini`, `kimi`, `pi`).
+- `kind` is `decision`, `preference`, `correction`, `finding`, `handoff` or `tool_call`.
+- `at` is the time you learned it and `validFrom` (optional, defaults to `at`) is when it became true. Both are datetimes with a zone, such as `2026-11-27T10:00:00Z`.
+- Ids are stable and unique: date, agent and a short slug. Re-running the same episode changes nothing.
+- Entity keys are lowercase and stable: `d9`, `unit-200`, `impact-web`, `owner`, `file:scripts/check.sh`.
+- Each fact is one self-contained sentence that names its source document when one exists.
+
+The command validates the episode before it writes anything, writes it in one transaction, and prints `memory: saved episode …`. An episode id names one episode and a fact id belongs to one episode: reusing either for different content is rejected, so a new save gets new ids. `scripts/memory.sh check` fails unless every slot holds exactly one current fact.
+
+## Dropbox and other machines
+
+Agents on every machine that syncs this folder read the same memory. Relate's writer lock holds only on one machine, so save from one machine at a time. When saves from two machines collide, Dropbox leaves conflicted copies in the store, and `scripts/memory.sh` exits 4 instead of saving. Stop there and tell the owner; a person chooses which copy wins.
+
+## What memory must hold
+
+Memory is read by every agent, so it holds only what any agent may see. Secrets, tokens such as `TWIN_RAISE_TOKEN`, credentials and `.env` values stay out. The project boundaries in `AGENTS.md` apply to memory too: client, consultant, real site and workshop participant names stay out, and every Unit 200 tag, name, cost and hour estimate in a memory is synthetic. Dates in `text` follow the project's `America/Chicago` rule; `at` and `validFrom` stay datetimes with a zone.
+
+## Serving memory over MCP
+
+An agent that prefers tools to shell commands can read the store over MCP, read-only, beside the writers:
+
+```bash
+relate serve --mcp stdio --database "$(scripts/memory.sh path)" --read-only=live
+```
+
+Writes still go through `scripts/memory.sh remember`, so validation and supersession always run.
