@@ -34,10 +34,11 @@ APALACHE_URL = f"https://github.com/apalache-mc/apalache/releases/download/v{APA
 # The digest GitHub records for the release asset apalache.tgz.
 APALACHE_TGZ_SHA256 = "8ac8488422c30d552735bae11b92a2d014d8e02e8608702acc08f9a2d8a9abb2"
 
-RULES = ["ReadOnly", "BaselineFixed", "FreezeExact", "NothingMissed", "HumansDecide",
+RULES = ["WorkflowOnly", "ReadOnlyMode", "BaselineFixed", "FreezeExact", "NothingMissed", "HumansDecide",
          "GrowthAddsUp", "Gate"]
 WITNESSES = ["ObsOverlap", "ObsOverlapSameChange", "ObsStaleDrbExcluded", "ObsLateAddSynced", "ObsNegativeGrowth", "ObsStaleChangeBlocked",
-             "ObsAiReviewed", "ObsReady", "ObsFrozenNotReadyWithGrowth"]
+             "ObsAiReviewed", "ObsReady", "ObsFrozenNotReadyWithGrowth",
+             "ObsTwinRaisedSynced", "ObsReadOnlyGrowth"]
 # The small instance TLC can search completely: one request, two hour values, two syncs.
 SMALL = [("pure val ITEMS = Set(1, 2)", "pure val ITEMS = Set(1)"),
          ("pure val HOURS = Set(0, 4, 8)", "pure val HOURS = Set(0, 4)"),

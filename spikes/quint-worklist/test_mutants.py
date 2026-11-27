@@ -17,7 +17,7 @@ def test_each_mutant_changes_the_spec_once(m):
 
 
 def test_every_rule_has_a_mutant():
-    rules = {"ReadOnly", "BaselineFixed", "FreezeExact", "NothingMissed", "HumansDecide",
+    rules = {"WorkflowOnly", "ReadOnlyMode", "BaselineFixed", "FreezeExact", "NothingMissed", "HumansDecide",
              "GrowthAddsUp", "Gate"}
     assert rules <= RULES
     assert rules == {m["rule"] for m in mutants.MUTANTS}

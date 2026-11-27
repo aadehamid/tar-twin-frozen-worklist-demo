@@ -9,21 +9,22 @@ A working demo of the 3.1 Frozen Work List MVP from the turnaround (TAR) digital
 The 3.1 MVP ships five things in release one. The demo walks through each of them on one screen flow:
 
 1. **Tag registry and match rate.** Scope items in IMPACT Web name their equipment in free text, because a code freeze stops IMPACT Web from adding a tag lookup. The twin resolves each item to an equipment tag and reports the match rate per site. Weak matches go to a review queue. A mapping trace shows every step from the IMPACT Web entry to the equipment in the twin.
-2. **IMPACT Web read.** The twin reads each work request's description, driver, RIPT score and estimate. It never writes back.
+2. **IMPACT Web read, and change requests raised from the twin.** The twin reads each work request's description, driver, RIPT score and estimate. After freeze, a planner can raise a change request from the twin. It goes through IMPACT Web's own change request step, as that planner, and waits for the DRB there. That is the only write, and the IMPACT Web code doesn't change. Write-through is a demo choice; the real write-back boundary is still open (see [D9](docs/decisions.md)).
 3. **Scope on the plant.** Jobs appear on a 2D plot plan. Jobs that share scaffold, isolation or access are grouped, and each group is costed once.
 4. **Cut line by location.** A budget target splits scope above and below the line, shown on the plant, ready for the DRB review.
 5. **Frozen baseline.** The list is snapshotted at freeze. Every later add or delete is logged with hours and a reason, and scope growth after freeze is tracked in man-hours.
 
 ## Two modes
 
-- **Demo mode** runs the scripted 10-minute walkthrough on seeded data.
+- **Demo mode** runs the scripted 11-minute walkthrough on seeded data.
 - **Planning mode** lets a team rehearse a Unit 200 turnaround. People log in with roles (TA manager, planner, source groups, DRB), raise and challenge requests in IMPACT Web, and watch the twin respond, while a facilitator moves the clock and adds surprises. See [docs/interactive-planning.md](docs/interactive-planning.md).
 
 ## How it works
 
 ```
-                 read only, no write-back
- IMPACT Web  ───────────────────────────────►  Digital twin
+                 reads every change; after freeze, the twin
+                 can raise a pending change request (D9)
+ IMPACT Web  ◄─────────────────────────────►  Digital twin
  (mock, Postgres)        sync job               (Neo4j)
        ▲                                           ▲   │
        │ planners raise and                        │   │ Cypher export
@@ -73,7 +74,7 @@ Two rules from [CONTRIBUTING.md](CONTRIBUTING.md) apply to every change. First, 
 ## Ground rules
 
 - **All data is synthetic.** Unit 200, its tags and its people are invented. No client data, screens or tags appear anywhere in this repo.
-- **The twin never writes to IMPACT Web.** Change data at the source and the twin picks it up on the next sync.
+- **The twin only writes to IMPACT Web through IMPACT Web's own workflow.** It can raise a change request after freeze, as the signed-in planner, and nothing else. It can't approve, edit a request, or touch the freeze or the frozen copy. Each exercise has a switch that turns this off, and then the twin is read only. This is a demo choice ([D9](docs/decisions.md)). Every other change is made at the source and the twin picks it up on the next sync.
 - **Value figures are the focus-area brief's default assumptions** and are labeled as unvalidated wherever they appear.
 - **Out of scope for release one:** set-level what-if (31-f3) and remote estimating (31-f6). They wait for standardized Phase 3 estimates and craft-level actual hours.
 

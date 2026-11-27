@@ -54,11 +54,12 @@ The calculations get property tests that run on thousands of generated inputs:
 
 ## 4. Formal specs (Quint)
 
-The workflow is where bugs would hurt credibility most: a change slipping past the log, a baseline that moves, or the twin writing to IMPACT Web. It is specified in Quint, which is built on TLA, the same logic as TLA+, and can be checked with the Apalache or TLC model checkers ([Quint FAQ](https://quint.sh/faq)).
+The workflow is where bugs would hurt credibility most: a change slipping past the log, a baseline that moves, or the twin writing to IMPACT Web outside its workflow. It is specified in Quint, which is built on TLA, the same logic as TLA+, and can be checked with the Apalache or TLC model checkers ([Quint FAQ](https://quint.sh/faq)).
 
 `specs/worklist.qnt` models IMPACT Web, the twin, the sync, the review queue and freeze as one state machine. The model checker checks every reachable state, up to a bound, against these rules:
 
-- **Read only.** No step lets the twin change IMPACT Web state.
+- **Workflow only.** A twin step leaves IMPACT Web as it was, or, with write-through on and the list frozen, raises exactly one pending change request from the twin, against the request's current version and hours, and changes nothing else. The twin never approves, edits a request, or touches the freeze, the frozen copy or the feed ([D9](decisions.md)).
+- **Read-only mode.** With an exercise's write-through switch off, no change request comes from the twin.
 - **Baseline fixed.** After freeze, the baseline never changes.
 - **Nothing missed.** Every approved change after freeze shows up as exactly one change event once a sync that starts after the approval finishes, however syncs overlap or repeat. A sync that finishes applies the whole window it read. The model doesn't claim that a sync will ever run.
 - **Freeze is exact.** Freeze copies exactly the requests whose current version the DRB accepted, at their hours at that moment, and the twin baseline always equals that copy, whichever order a freeze and an edit arrive in.
@@ -66,7 +67,7 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 - **Growth adds up.** In IMPACT Web, a request's live hours equal its live hours at the moment of freeze plus every approved change delta. That holds for requests left out of the frozen copy too. In the twin, scope growth equals the sum of the deltas of the change events it has applied. The two agree once a sync catches up. Pending and rejected changes add nothing.
 - **Gate.** The twin can't mark the baseline ready for use if the match rate on frozen items is below the gate. The freeze itself doesn't depend on the gate.
 
-The [phase 0 spike](spikes/quint-worklist.md) wrote the first version of this spec. Apalache found no broken rule in any trace up to 10 steps, TLC walked every state of a smaller instance, and both caught all twelve seeded bugs. One seeded bug first slipped through because its rule read the same setting the bug changed, so rules now state what's allowed in their own words. Review by a second model then found that Nothing missed and Freeze is exact were too weak to catch a sync that drops its window or a freeze that copies unaccepted requests. Both rules were tightened, with three more seeded bugs to prove it.
+The [phase 0 spike](spikes/quint-worklist.md) wrote the first version of this spec. Apalache found no broken rule in any trace up to 10 steps, TLC walked every state of a smaller instance, and both caught all twelve seeded bugs. One seeded bug first slipped through because its rule read the same setting the bug changed, so rules now state what's allowed in their own words. Review by a second model then found that Nothing missed and Freeze is exact were too weak to catch a sync that drops its window or a freeze that copies unaccepted requests. Both rules were tightened, with three more seeded bugs to prove it. The write-through change then replaced Read only with Workflow only and added Read-only mode, with five more seeded bugs, and the full run passed again with all seventeen caught.
 
 From phase 4 the spec also covers exercises, the clock, roles, concurrent editors and the change process from [interactive-planning.md](interactive-planning.md).
 

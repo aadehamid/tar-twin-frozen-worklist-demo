@@ -17,7 +17,7 @@ What the demo does not try to prove is whether the client's real data will match
 | MVP item | Requirement IDs | What the demo does |
 |---|---|---|
 | Tag registry and match rate | 31-d1, 31-n5 | Resolves free-text equipment references to tags, scores each match, reports match rate per site and per area, and sends weak matches to a review queue |
-| IMPACT Web read | 31-d3 | Reads work requests through the IMPACT Web API on a schedule. No writes back |
+| IMPACT Web read and write-through | 31-d3 | Reads work requests through the IMPACT Web API on a schedule. After freeze, a planner can raise a change request from the twin through IMPACT Web's own change request step (section 5.8, demo only, [D9](decisions.md)) |
 | Scope on the model, shared-cost clusters | 31-f1, 31-f2 | Places jobs on a 2D plot plan and groups jobs that share scaffold, isolation or access |
 | Cut line by location | 31-f5 | Ranks scope against a budget target and shows above and below the line on the plant |
 | Frozen baseline and change log | 31-n1 | Snapshots the list at freeze, logs each later add or delete with hours, reason and source group, and tracks scope growth |
@@ -26,7 +26,7 @@ What the demo does not try to prove is whether the client's real data will match
 
 - Set-level what-if (31-f3), which waits for standardized Phase 3 estimates (31-d8).
 - Remote estimating (31-f6), which waits for craft-level actual hours (31-n6).
-- Any write-back to IMPACT Web.
+- Any write to IMPACT Web other than raising a change request through its own workflow, and any change to IMPACT Web's code.
 - 3D. The demo is 2D. The plot-plan layer is built so a 3D view can read it later.
 
 The demo can show one "wave 2" screen that previews 31-f3 with fixed data, clearly labeled as a preview.
@@ -47,7 +47,7 @@ The demo can show one "wave 2" screen that previews 31-f3 with fixed data, clear
 
 ### 3.2 Why two services
 
-The twin can only reach IMPACT Web through its public API, the same way it would reach a real export or integration. That keeps the code-freeze constraint and the read-only rule honest: there is no shared database and no back door. Each mock sits behind a client interface in the twin (`ImpactWebClient`, `CmmsClient`), so a real connector can replace it without touching twin logic.
+The twin can only reach IMPACT Web through its public API, the same way it would reach a real export or integration. That keeps the code-freeze constraint and the write rule honest: there is no shared database and no back door. The one write the twin makes, raising a change request, goes through the same API endpoint a planner's own form uses (section 5.8). Each mock sits behind a client interface in the twin (`ImpactWebClient`, `CmmsClient`), so a real connector can replace it without touching twin logic.
 
 ### 3.3 Deployment
 
@@ -123,13 +123,13 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 3. It renders each sheet to SVG with pyDEXPI and stores the file path on the `PidSheet` node.
 4. It loads the plot-plan layer and computes isolation envelopes.
 
-### 5.2 Scope sync (read only)
+### 5.2 Scope sync
 
 1. The twin scheduler calls `GET /api/v1/changes?exercise_id=…&after_seq=…` on IMPACT Web every 60 seconds, and on demand from "sync now". Only one sync runs per exercise at a time.
 2. It upserts `ScopeItem` nodes keyed on exercise, request ID and version, and stores the last sequence number it applied in the same Neo4j transaction, so a crash mid-sync resumes cleanly. Replaying a sync changes nothing.
 3. When the feed shows a freeze, the twin reads the frozen copy (`GET /api/v1/freezes/{id}/items`) and builds the baseline from it.
 4. Approved change requests become `ChangeEvent` nodes, unique on change request ID. Pending and rejected ones are mirrored but don't count toward growth.
-5. The twin never calls a write endpoint on IMPACT Web. The IMPACT Web API gives the twin's service account a read-only role, and a test checks it.
+5. The sync never writes. The twin's service account has a read-only role, and a test checks it. The only write the twin makes is the change request in section 5.8, which runs as the signed-in user, not the service account.
 
 ### 5.3 Matching
 
@@ -175,6 +175,19 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 - Relate's read-only mode starts empty and refuses every write, so the browser copy can't be seeded and then switched to read-only. Instead the store stays private to the worker. The worker seeds once, from the twin's own export endpoint, and after that runs only the panel's named queries with string parameters, refusing any other Cypher text. Neo4j stays the master. The worker has no connection to it ([spike](spikes/relate-wasm.md)).
 - After seeding, the worker should run each named query once to warm it up. The first run of a query took about 110 ms in the spike, and later runs about 25 ms.
 
+### 5.8 Raising a change request from the twin (demo only)
+
+The scope tool's code is frozen, but its workflow isn't. After freeze, a planner looking at a job in the twin can click "raise change request". The twin calls IMPACT Web's own `POST /api/v1/change-requests`, the endpoint the planner's form in IMPACT Web uses, so no IMPACT Web code changes for the twin.
+
+1. The call carries the signed-in user's token, not the service account's. IMPACT Web checks that user's membership and role in the exercise exactly as it would for its own form. The twin can't do anything the user couldn't.
+2. IMPACT Web stores the request as pending, stamped against the request's current version, with `raised_by` set to the user and `raised_via = twin`. The audit trail reads "raised from the twin by J. Planner".
+3. The reason field is prefilled with the twin's evidence and the matched tag, for example "add nozzle N3 on C-201; the column is already open for tray work, so entry, scaffold and isolation ENV-200-06 are shared". The planner can edit it before sending. The tag stays in the twin; IMPACT Web's equipment field is still free text.
+4. The DRB approves or rejects it in IMPACT Web. The next sync picks up the decision, and an approved request counts toward growth like any other.
+5. Each exercise has a `twin_write_through` switch, on by default in demo mode and set by the facilitator in planning mode. When it's off, IMPACT Web refuses the call with a 403, and the twin only flags the issue and shows the prefilled text for the planner to enter in IMPACT Web.
+6. The twin can't approve, edit or withdraw a request, change the freeze or touch the frozen copy. Every such call from the twin gets a 403.
+
+The Quint spec checks this as the `WorkflowOnly` and `ReadOnlyMode` rules ([verification.md](verification.md)). Where real write-back stops is still an open question from the workshop, which leaned towards starting conservative. This section is for the demo and doesn't change the proposal.
+
 ## 6. AI matcher
 
 - **Model.** Perplexity Decider v1.3 through OpenRouter's Decisions API (`POST /api/alpha/decisions`), set by `DECIDER_MODEL`. Decider is a decision model. It returns a probability for each option in a list instead of writing text ([Perplexity Decisions docs](https://docs.perplexity.ai/docs/decisions/decisions)). The weights are on Hugging Face under Apache 2.0, so a client could host it. The phase 0 spike measured about 0.3 seconds median per call ([spike](spikes/decider-matcher.md)).
@@ -194,7 +207,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 - Work request list with filters, and a detail and edit form. The equipment field is free text.
 - Review screens for fit to frame, challenge and DRB decisions.
 - Freeze action for the TA manager role, and the change request process after freeze.
-- A banner showing that the twin reads this system and never writes to it.
+- A banner showing that the twin reads this system and can only raise change requests through it, with the exercise's write-through switch shown as on or off.
 
 ### 7.2 Twin UI
 
@@ -218,7 +231,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 See [verification.md](verification.md) for the full plan: schemas, SHACL engineering rules, property tests and a Quint model of the workflow. The tests below sit alongside it.
 
 - **Backend.** Pytest for both services, with a Neo4j test container or local instance for the twin.
-- **Contract tests.** Twin to IMPACT Web, including a test that the twin's service account gets a 403 on any write.
+- **Contract tests.** Twin to IMPACT Web: the twin's service account gets a 403 on any write; a change request raised from the twin is stored as pending, marked `raised_via = twin` with the user as `raised_by`, and stamped against the current version; a user without the planner role gets a 403; the call gets a 403 before freeze and when the exercise's switch is off; and no other write endpoint accepts a call from the twin.
 - **Scenario tests.** The seeded Unit 200 data produces the expected match rate before and after review, the expected clusters, and the expected scope growth after the simulation runs.
 - **Front end.** Playwright end-to-end tests that follow the demo script.
 - **CI.** GitHub Actions on each push.
@@ -231,11 +244,11 @@ Each phase ends with a check-in before the next starts. Within each phase, the c
 |---|---|---|
 | 0. Spikes | Build and render one DEXPI sheet with pyDEXPI (done, see [spike](spikes/dexpi-sheet.md)). Seed Relate WASM from a Cypher script and run a traversal in a browser page (done, see [spike](spikes/relate-wasm.md)). Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker (done, see [spike](spikes/template-no-docker.md)). Run SHACL through n10s on a small graph (done, see [spike](spikes/shacl-n10s.md)). Model-check a first Quint spec of freeze and sync (done, see [spike](spikes/quint-worklist.md)). Optional: prove one cost rule in Bend 2 (done, see [spike](spikes/bend-cost.md)) | Each spike works or has a named fallback |
 | 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec, with schema and SHACL checks on every write | All engineering rules pass, the counts match the spec, and Hamid signs off the scenario |
-| 2. IMPACT Web | Service and UI, including review and freeze | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
+| 2. IMPACT Web | Service and UI, including review and freeze, plus the `raised_via` field and the per-exercise `twin_write_through` switch on change requests | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
 | 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |
-| 4. Sync and matching | Read-only sync, matching pipeline, AI matcher, review queue, match rate, mapping trace | Match rate before and after review matches the spec. Every request has a complete trace. The Quint workflow spec passes. Its sync and matching traces replay cleanly against the APIs. Baseline and change traces replay in phase 6. Planning-mode parts are checked as a model only until phase 8 |
+| 4. Sync and matching | Sync, matching pipeline, AI matcher, review queue, match rate, mapping trace | Match rate before and after review matches the spec. Every request has a complete trace. The Quint workflow spec passes. Its sync and matching traces replay cleanly against the APIs. Baseline and change traces replay in phase 6. Planning-mode parts are checked as a model only until phase 8 |
 | 5. Twin UI | Plot plan, P&ID viewer, graph panel, clusters, cut line | The demo script runs to the end of the cut-line step |
-| 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel | Scope growth after freeze matches the spec. The Quint baseline and change traces replay cleanly |
+| 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel, "raise change request" from the twin (section 5.8) | Scope growth after freeze matches the spec. A change request raised from the twin is approved in IMPACT Web and shows up as growth after the next sync. The write-through contract tests pass. The Quint baseline and change traces replay cleanly |
 | 7. Hardening | Compose, CI, Playwright, demo script, README | A fresh clone runs the demo with one command |
 | 8. Planning mode | Exercises, roles per exercise, exercise clock, facilitator console, injects, reset, debrief ([interactive-planning.md](interactive-planning.md)) | All checks in section 5 of that document pass, the Quint planning traces replay cleanly, and the demo-mode suite still passes |
 

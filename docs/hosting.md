@@ -71,6 +71,7 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 
 - The twin's scheduled sync and its membership lookups don't come from a person. They use a machine token for the twin's IMPACT Web service account, sent in `Authorization` to the Compose service `impactweb:8000` over the bridge network.
 - That account has a read-only role. It can read the change feed, frozen copies, memberships and the CMMS equipment master and functional locations (the matcher's tag list), and nothing else.
+- A change request raised from the twin doesn't use that account. The twin forwards the signed-in user's IMPACT Web token, so IMPACT Web applies that user's own role ([design section 5.8](design.md)).
 - The twin container holds no Postgres credentials, and Postgres accepts connections only from the IMPACT Web container's database user.
 
 ## 4. Secrets
