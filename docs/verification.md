@@ -66,6 +66,8 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 - **Growth adds up.** Scope growth always equals the sum of approved change deltas. Pending and rejected changes add nothing.
 - **Gate.** The twin can't mark the baseline ready for use if the match rate on frozen items is below the gate. The freeze itself doesn't depend on the gate.
 
+The [phase 0 spike](spikes/quint-worklist.md) wrote the first version of this spec. Apalache found no broken rule in any trace up to 10 steps, TLC walked every state of a smaller instance, and both caught all nine seeded bugs. One seeded bug first slipped through because its rule read the same setting the bug changed, so rules now state what's allowed in their own words.
+
 From phase 4 the spec also covers exercises, the clock, roles, concurrent editors and the change process from [interactive-planning.md](interactive-planning.md).
 
 The same spec also produces example traces, such as "add after freeze, sync, review". A small test harness replays them against the real FastAPI services, which ties the spec to the code rather than letting it drift into a separate document. Sync and matching traces are replayed from phase 4, baseline and change traces from phase 6, and planning-mode traces in phase 8, each once the APIs they need exist.
