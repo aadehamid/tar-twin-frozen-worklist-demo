@@ -8,7 +8,7 @@ A working demo of the 3.1 Frozen Work List MVP from the turnaround (TAR) digital
 
 The 3.1 MVP ships five things in release one. The demo walks through each of them on one screen flow:
 
-1. **Tag registry and match rate.** Scope items in IMPACT Web name their equipment in free text, because a code freeze stops IMPACT Web from adding a tag lookup. The twin resolves each item to an equipment tag and reports the match rate per site. Weak matches go to a review queue.
+1. **Tag registry and match rate.** Scope items in IMPACT Web name their equipment in free text, because a code freeze stops IMPACT Web from adding a tag lookup. The twin resolves each item to an equipment tag and reports the match rate per site. Weak matches go to a review queue. A mapping trace shows every step from the IMPACT Web entry to the equipment in the twin.
 2. **IMPACT Web read.** The twin reads each work request's description, driver, RIPT score and estimate. It never writes back.
 3. **Scope on the plant.** Jobs appear on a 2D plot plan. Jobs that share scaffold, isolation or access are grouped, and each group is costed once.
 4. **Cut line by location.** A budget target splits scope above and below the line, shown on the plant, ready for the DRB review.
@@ -46,7 +46,8 @@ apps/
   twin/               Digital twin: backend (FastAPI, Neo4j) and frontend (React, Relate WASM)
 jobs/                 Ingest and sync jobs: DEXPI to Neo4j, IMPACT Web to twin, browser graph export
 data/scenario/        Synthetic Unit 200: DEXPI sheets, plot plan layout, equipment master, work list
-docs/                 Design, scenario spec and decision records
+specs/                Quint workflow spec and SHACL shapes
+docs/                 Design, scenario spec, verification plan and decision records
 compose.yml           Postgres, Neo4j, both services
 ```
 
@@ -54,6 +55,7 @@ compose.yml           Postgres, Neo4j, both services
 
 - [docs/design.md](docs/design.md) covers the architecture, components, graph model, data flows, AI matching, the Relate browser graph, extension to 4.1 and 4.2, testing and build phases.
 - [docs/scenario-spec.md](docs/scenario-spec.md) covers Unit 200, the turnaround event, the candidate work list, the problems planted in the data and the demo walkthrough.
+- [docs/verification.md](docs/verification.md) covers how everything is checked as it is written: schemas, SHACL engineering rules in Neo4j, property tests, and a Quint (TLA) model of the sync, review and freeze workflow.
 - [docs/decisions.md](docs/decisions.md) records the technology choices and the reasons for them.
 
 ## Ground rules

@@ -55,3 +55,9 @@ Short records of the choices behind the design. Each one says what we chose, why
 
 - **Decision.** The twin never writes to IMPACT Web. Its service account has a read-only role, and a contract test checks that writes are refused.
 - **Why.** This follows the write-back position from the workshop for release one. Changes are made in the system of record and flow to the twin.
+
+## D10. Layered verification, with Quint for the workflow
+
+- **Decision.** Check data with Pydantic and SHACL (through n10s), calculations with Hypothesis property tests, and the sync, review and freeze workflow with a Quint spec checked by Apalache or TLC. Bend 2 is an optional spike for proving the cost rules.
+- **Why.** Each tool fits one kind of mistake. SHACL catches bad plant and scope data, property tests catch bad maths, and model checking catches workflow states nobody thought to test. Quint reads more like code than TLA+ and still compiles to TLA+. Bend 2 is promising but young, and it can't run inside the Python services yet.
+- **Revisit if.** Bend 2 gains a Python target and a stable checker, or the client wants TLA+ itself, which Quint can produce.
