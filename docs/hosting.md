@@ -42,7 +42,7 @@ Rules that keep it inside 4 GB:
 
 - Front ends are built in GitHub Actions, not on the VM. Vite builds use more memory than the running system.
 - Images are built in CI, pushed to GitHub's container registry, and pulled on the VM. exe.dev can pull private ghcr.io images through its registry integration, using a classic GitHub token scoped to reading packages ([exe.dev docs](https://exe.dev/docs/all.md)).
-- No local model. Inkling 2 Mini needs about 20 GB, so on this VM the AI matcher uses OpenRouter or runs rules-only. In planning mode, participant text is matched rules-only by default. The facilitator can turn on OpenRouter for an exercise.
+- No local model. Decider v1.3 is a 27B model, far too big for this VM, so the AI matcher uses OpenRouter or runs rules-only. In planning mode, participant text is matched rules-only by default. The facilitator can turn on OpenRouter for an exercise.
 - Other VMs on the account share the same 4 GB, so they stay stopped during exercises.
 
 If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `billing capacity --cpu=4`, at $35 a month, prorated and immediate ([exe.dev Personal plan](https://exe.dev/docs/billing/personal)).

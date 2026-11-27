@@ -23,8 +23,9 @@ So the showcase makes three claims, and the demo has to back each one with numbe
 | Alias rules | Code | Lookup in a versioned alias table. Each row has a rule ID that shows in the trace | Yes, under the acceptance rule below, and only above the auto-accept score |
 | Fuzzy | Code | rapidfuzz against tag descriptions in the request's area. Produces the candidate list | No, however high the score |
 | Topology facts | Code | A fixed Cypher query pulls each candidate's DEXPI neighbours, flow position and envelope. Every fact gets an ID and names the tag it belongs to | No |
-| Disambiguate | AI | Reads the request text, the candidates and their facts. Returns one candidate or none, a reason and the fact IDs it relied on | No, however confident |
+| Disambiguate | AI | Reads the request text, the candidates and their facts. Returns one candidate or none with a probability for each, and the fact that best identifies the equipment | No, however confident |
 | Check the AI | Code | See below | No, it can only reject |
+| Explain | AI | Inkling 2 Mini writes one sentence on why the checked pick fits, from that tag's facts only. Code drops it if it names another tag | No, display only |
 | Decide | Planner | Accept, reject or pick another tag in the review queue | Yes |
 
 Two separate rules decide what happens to a tag.
@@ -82,7 +83,7 @@ A Matching lab screen in the twin, with two views.
 1. The raw IMPACT Web text.
 2. Code: normalized text, the regex and alias rules that ran (with rule IDs), any findings, fuzzy candidates with scores.
 3. Code: the topology facts for each candidate, with their IDs.
-4. AI: the pick, the reason, and the fact IDs it cited, each one linked to the fact.
+4. AI: Decider's pick, a probability bar for each candidate, and the evidence fact, linked to its place in the topology panel. Below it, Inkling's one-line reason once it arrives, labelled as written by AI.
 5. Code: the checks on the AI answer, each pass or fail.
 6. The planner's decision.
 
@@ -115,15 +116,24 @@ These checks come before the code, as [CONTRIBUTING.md](../CONTRIBUTING.md) requ
 
 | Fixture | Expected outcome |
 |---|---|
-| "None" with a valid schema | Abstained, no proposal, no fact check |
-| Pick outside the candidates | Rejected, "no proposal" |
-| Cited fact ID not in the input | Rejected |
-| Cited facts all belong to other tags | Rejected |
-| Broken JSON | Rejected |
+| "None" in a well-formed response | Abstained, no proposal, no fact check |
+| Choice outside the options sent | Rejected, "no proposal" |
+| Evidence ID not among the facts sent | Rejected |
+| Evidence fact belongs to another tag | Rejected |
+| Missing answer, or probabilities that don't sum to 1 | Rejected |
 | Pick fails the compatibility check | Rejected |
 | Wrong candidate with a genuine fact about it | Passes the checks, lands in review as a proposal, and the answer key scores it wrong |
 | Instruction row where the AI picks E-201C | Same as above, and the instruction flag shows on the review item |
 | Valid correct pick | Lands in review as a proposal, never auto-accepted |
+
+**Checks on the reason writer.** Recorded Inkling responses, each with a defined outcome:
+
+| Fixture | Expected outcome |
+|---|---|
+| Reason that mentions only the picked tag | Shown on the review item, labelled as written by AI |
+| Reason that names another tag, such as "E-201C" on an E-201B pick | Dropped. The item shows probabilities and evidence only |
+| Broken JSON, timeout or no `REASON_MODEL` | No reason. The item is already in the queue with the same outcome |
+| Any reason at all | The outcome, band and evidence are byte-for-byte the same as without it |
 
 Each fixture runs through the whole path: parser, aliases, fuzzy, facts, the recorded AI answer, the checker and the review queue write. That way a test fails if any earlier step lets the item through.
 
@@ -132,7 +142,7 @@ Each fixture runs through the whole path: parser, aliases, fuzzy, facts, the rec
 - CI uses recorded model responses, so the build doesn't depend on a live model.
 - A separate evaluation script runs the live model over the answer key and writes a report per difficulty class: correct, wrong, abstained, rejected by the checker, and candidate recall. Abstaining on a row whose true answer is "none" counts as correct.
 - Reported, not gated: how often the AI is right on the sibling and process-context classes, how often it abstains on the general rows, and what it did on the instruction rows. Hamid sets the demo threshold after seeing the first run.
-- The same evaluation runs for any `LLM_MODEL`, so swapping models on OpenRouter comes with a before-and-after report.
+- The same evaluation runs for any `DECIDER_MODEL`, so swapping decision models on OpenRouter comes with a before-and-after report.
 
 **Planning mode.** Text typed by participants during an exercise goes through code only by default, as [interactive-planning.md](interactive-planning.md) says. The comparison runs on the seeded list, not on participant text.
 

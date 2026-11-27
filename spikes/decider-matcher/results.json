@@ -1,0 +1,330 @@
+{
+ "model": "perplexity/pplx-decider-v1.3:free",
+ "D1": {
+  "status": "PASS",
+  "expect_prefix": "perplexity/pplx-decider-v1.3",
+  "served": [
+   "perplexity/pplx-decider-v1.3-20261112"
+  ],
+  "latest_alias_serves": "perplexity/pplx-decider-v1.2-20261016"
+ },
+ "D2": {
+  "status": "PASS"
+ },
+ "D3": {
+  "status": "RECORD",
+  "rows": [
+   {
+    "case": "C1",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C1",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C1",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C2",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "usable": true
+   },
+   {
+    "case": "C2",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "usable": true
+   },
+   {
+    "case": "C2",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "usable": true
+   },
+   {
+    "case": "C3",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "usable": true
+   },
+   {
+    "case": "C3",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "usable": true
+   },
+   {
+    "case": "C3",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "usable": true
+   },
+   {
+    "case": "C4",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C4",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C4",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C5",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C5",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C5",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "proposal",
+     "kind": "passed",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "usable": true
+   },
+   {
+    "case": "C6",
+    "run": 0,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "usable": true
+   },
+   {
+    "case": "C6",
+    "run": 1,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "usable": true
+   },
+   {
+    "case": "C6",
+    "run": 2,
+    "status": 200,
+    "verdict": {
+     "outcome": "abstained",
+     "kind": "none",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "usable": true
+   }
+  ]
+ },
+ "D4": {
+  "status": "PASS",
+  "correct_of_3": {
+   "C1": 3,
+   "C2": 3,
+   "C3": 3,
+   "C4": 3,
+   "C5": 3,
+   "C6": 3
+  }
+ },
+ "D5": {
+  "status": "PASS",
+  "verdict_signatures": {
+   "C1": [
+    "proposal:E-201B"
+   ],
+   "C2": [
+    "proposal:E-201C"
+   ],
+   "C3": [
+    "abstained:none"
+   ],
+   "C4": [
+    "proposal:E-201A"
+   ],
+   "C5": [
+    "proposal:PSV-2105"
+   ],
+   "C6": [
+    "abstained:none"
+   ]
+  },
+  "top_p_spread": {
+   "C1": 0.0,
+   "C2": 0.0,
+   "C3": 0.0,
+   "C4": 0.0,
+   "C5": 0.0,
+   "C6": 0.0
+  }
+ },
+ "D7": {
+  "status": "RECORD",
+  "latency_median_s": 0.312,
+  "latency_max_s": 0.462,
+  "cost_usd_total": 0.0,
+  "calls_without_cost": 0
+ },
+ "D10": {
+  "status": "RECORD",
+  "calls_retried_after_429": 0
+ }
+}

@@ -99,7 +99,7 @@ Scope and decisions:
 
 - `(:ScopeItem {exercise_id, request_id, version, title, driver, ript, hours, cost, status})`, mirrored from IMPACT Web on each sync. Every scope and decision node carries `exercise_id`. The plant graph from DEXPI is shared by all exercises, read-only, and keyed on DEXPI ID
 - `(:ScopeItem)-[:RESOLVES_TO {confidence, method, status, reviewed_by}]->(:Equipment)` where method is exact, rule, fuzzy or ai, and status is proposed, accepted or rejected
-- `(:MatchProposal {model, prompt_version, reason, evidence})` for AI proposals, linked to the scope item and the candidate tags
+- `(:MatchProposal {model, question_version, probabilities, confidence, evidence})` for AI proposals, linked to the scope item and the candidate tags
 - `(:Cluster {id, type, shared_hours, shared_cost})` where type is scaffold, isolation or access, with `INCLUDES` to scope items
 - `(:Baseline {event, freeze_id, list_version, frozen_at, ready_for_use})` built from IMPACT Web's frozen copy, with `INCLUDES` to the frozen item versions
 - `(:ChangeEvent {change_request_id, type, mandatory, at, hours_delta, reason, source_group})` for approved changes only, unique on change request ID, linked to the scope item and the baseline
@@ -148,7 +148,7 @@ Every work request keeps a full record of how it got to its equipment, so anyone
 2. The normalized text, for example `200-E-201 B` to `E-201B`.
 3. Each method that ran (exact, rules, fuzzy, AI), what it found and its score.
 4. The candidate tags it considered, with class, area and DEXPI neighbours.
-5. For AI proposals, the model, prompt version, reason and the evidence it cited.
+5. For AI proposals, the model version, question version, the probability for each candidate and the evidence fact it picked.
 6. The reviewer's decision, who made it and when.
 7. The result: the equipment node in the twin, its P&ID sheet, its plot position and its isolation envelope.
 
@@ -176,10 +176,11 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 
 ## 6. AI matcher
 
-- **Model.** `thinkingmachines/inkling-2-mini` through OpenRouter by default. Inkling 2 Mini is an open-weight model released under Apache 2.0 on 20 November 2026, with 26.4B total and 3.4B active parameters. It runs in about 20 GB, so a local fallback through Ollama is practical. Any OpenRouter model can replace it through `LLM_MODEL`.
+- **Model.** Perplexity Decider v1.3 through OpenRouter's Decisions API (`POST /api/alpha/decisions`), set by `DECIDER_MODEL`. Decider is a decision model. It returns a probability for each option in a list instead of writing text ([Perplexity Decisions docs](https://docs.perplexity.ai/docs/decisions/decisions)). The weights are on Hugging Face under Apache 2.0, so a client could host it. The phase 0 spike measured about 0.3 seconds median per call ([spike](spikes/decider-matcher.md)).
 - **Input.** The work request text, the area if known, and up to 20 candidate tags from the fuzzy step, each with its class, description, area and DEXPI neighbours (for example "downstream of R-201, upstream of A-201").
-- **Output.** Structured JSON: chosen tag or none, confidence 0 to 1, a one-sentence reason, and the IDs of the facts it relied on. "None" with a valid schema is an abstention and creates no proposal. For a picked tag, code checks the schema, that the tag is a candidate, that every cited fact ID was in the input, that at least one cited fact belongs to the picked tag, and the compatibility rule. A pick that fails any check counts as "no proposal".
-- **Guardrails.** The model can only choose from the candidate list. It never creates tags. Every proposal goes to the review queue, however confident. Prompts are versioned, and each proposal records model, prompt version and latency.
+- **Output.** Two choice answers per request. `tag` is one of the candidates or none, with a probability for each and a confidence. `evidence` is the ID of the fact that best identifies the equipment. "None" is an abstention and creates no proposal. For a picked tag, code checks that the response is well formed (choices from the options sent, probabilities summing to 1), that the evidence fact belongs to the picked tag, and the compatibility rule. A pick that fails any check counts as "no proposal". Decider writes no reason, so the review queue shows the candidate probabilities and the text of the evidence fact.
+- **Reason writer.** After the checker passes a pick, Inkling 2 Mini (`REASON_MODEL`, OpenRouter chat completions with a JSON schema) writes one sentence explaining it from the picked tag's facts. It runs in the background, sees only the pick and its facts, and can't change the outcome. Code drops a reason that names any tag other than the pick. The queue labels it as an AI summary of the selected facts. Each reason is stored against the exact proposal ID and version it explains, so a late reason for a superseded proposal is discarded. With no reason, the queue still shows probabilities and evidence.
+- **Guardrails.** The model can only choose from the candidate list. It never creates tags. Every proposal goes to the review queue, however confident. Question wording is versioned, and each proposal records the model version served, question version and latency.
 - **Offline mode.** With no API key the matcher skips the AI step and more items go to review. The demo still runs.
 
 ## 7. Front ends
@@ -200,7 +201,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 - **P&ID viewer.** DEXPI sheets as SVG, with the selected job's equipment and envelope boundary valves highlighted.
 - **Graph panel.** Relate in the browser, Cytoscape.js drawing and the Cypher text.
 - **Mapping trace.** Pick any IMPACT Web request and see each step from raw text to equipment (section 5.4). The plot plan, P&ID and graph panel highlight the result together. A side-by-side mode shows the IMPACT Web record on the left and the twin equipment on the right.
-- **Match review.** The queue with method, confidence, AI reason and evidence, plus accept, reject and pick-another actions. Match rate by area and source group.
+- **Match review.** The queue with method, confidence, candidate probabilities, the evidence fact and the reason when Inkling has written one, plus accept, reject and pick-another actions. Match rate by area and source group.
 - **Matching lab.** Steps through one request showing what code did and what the AI did, in different colours, and compares code only, code then AI, and AI on everything against the answer key. See [matching-showcase.md](matching-showcase.md).
 - **Clusters and cut line.** Cluster list with shared hours and cost counted once, the budget slider and the above and below totals.
 - **Baseline and KPIs.** Scope growth after freeze in man-hours, tag match rate per site, and hours bundled or removed at the challenge. A value panel uses the brief's default assumptions, labeled unvalidated.
@@ -227,7 +228,7 @@ Each phase ends with a check-in before the next starts. Within each phase, the c
 
 | Phase | Work | Exit check |
 |---|---|---|
-| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI. Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Inkling 2 Mini on OpenRouter with a structured-output schema. Run the template without Docker. Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
+| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI. Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker. Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
 | 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec, with schema and SHACL checks on every write | All engineering rules pass, the counts match the spec, and Hamid signs off the scenario |
 | 2. IMPACT Web | Service and UI, including review and freeze | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
 | 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |

@@ -1,0 +1,256 @@
+{
+ "model": "thinkingmachines/inkling-2-mini",
+ "K2": {
+  "status": "PASS",
+  "http": [
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200,
+   200
+  ]
+ },
+ "K3": {
+  "status": "RECORD",
+  "verdicts": [
+   [
+    "C1",
+    0,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B"
+    }
+   ],
+   [
+    "C1",
+    1,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B"
+    }
+   ],
+   [
+    "C1",
+    2,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B"
+    }
+   ],
+   [
+    "C2",
+    0,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C"
+    }
+   ],
+   [
+    "C2",
+    1,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C"
+    }
+   ],
+   [
+    "C2",
+    2,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C"
+    }
+   ],
+   [
+    "C3",
+    0,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ],
+   [
+    "C3",
+    1,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ],
+   [
+    "C3",
+    2,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ],
+   [
+    "C4",
+    0,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A"
+    }
+   ],
+   [
+    "C4",
+    1,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A"
+    }
+   ],
+   [
+    "C4",
+    2,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A"
+    }
+   ],
+   [
+    "C5",
+    0,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105"
+    }
+   ],
+   [
+    "C5",
+    1,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105"
+    }
+   ],
+   [
+    "C5",
+    2,
+    {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105"
+    }
+   ],
+   [
+    "C6",
+    0,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ],
+   [
+    "C6",
+    1,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ],
+   [
+    "C6",
+    2,
+    {
+     "outcome": "abstained",
+     "reason": "valid none",
+     "tag": "none"
+    }
+   ]
+  ]
+ },
+ "K4": {
+  "status": "PASS",
+  "correct_of_3": {
+   "C1": 3,
+   "C2": 3,
+   "C3": 3,
+   "C4": 3,
+   "C5": 3,
+   "C6": 3
+  }
+ },
+ "K6": {
+  "status": "RECORD",
+  "latency_median_s": 2.94,
+  "latency_max_s": 10.43,
+  "tokens_in": [
+   373,
+   640,
+   373,
+   639,
+   639,
+   372,
+   275,
+   275,
+   508,
+   316,
+   556,
+   316,
+   197,
+   434,
+   401,
+   369,
+   369,
+   369
+  ],
+  "tokens_out": [
+   550,
+   563,
+   487,
+   409,
+   408,
+   588,
+   1224,
+   1473,
+   1576,
+   657,
+   540,
+   433,
+   596,
+   819,
+   679,
+   488,
+   494,
+   531
+  ],
+  "cost_usd_total": 0.004196,
+  "providers": [
+   "Darkbloom",
+   "DeepInfra",
+   "Io Net",
+   "PrimeIntellect"
+  ]
+ }
+}
