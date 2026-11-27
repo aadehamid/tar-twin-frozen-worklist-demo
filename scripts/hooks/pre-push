@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+REPO_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+CHECK_SCRIPT="${TAR_TWIN_CHECK_SCRIPT:-$REPO_ROOT/scripts/check.sh}"
+
+saw_line=0
+has_non_delete=0
+
+while read -r _local_ref local_oid _remote_ref _remote_oid; do
+  [ -n "${local_oid:-}" ] || continue
+  saw_line=1
+  if ! [[ "$local_oid" =~ ^0+$ ]]; then
+    has_non_delete=1
+  fi
+done
+
+if [ "$saw_line" -eq 1 ] && [ "$has_non_delete" -eq 0 ]; then
+  exit 0
+fi
+
+exec "$CHECK_SCRIPT"
