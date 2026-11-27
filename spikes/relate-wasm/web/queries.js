@@ -30,6 +30,17 @@ RETURN DISTINCT x.tag AS tag`,
   },
 };
 
+// The only scripts the worker may seed from, relative to the worker. Phase 1 replaces these with
+// the twin's own export endpoint. The page passes a name, never a URL.
+export const SEED_SOURCES = { plant: "../plant.cypher", padded: "../padded.cypher" };
+
+export function seedUrl(name, base) {
+  if (!Object.hasOwn(SEED_SOURCES, name)) {
+    throw new Error(`unknown seed source: ${String(name).slice(0, 40)}`);
+  }
+  return new URL(SEED_SOURCES[name], base).href;
+}
+
 // Run a script in the store. Returns the error of each failing statement, so [] means all ran.
 export function seed(db, script) {
   const out = db.executeScript(script, null);

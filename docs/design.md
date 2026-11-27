@@ -172,7 +172,7 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 - `GET /api/v1/graph/export.cypher?event_id=…` on the twin returns a Cypher script for the plant graph and the event's scope.
 - The twin UI loads Relate WASM in a module worker, creates an in-memory store and runs the script.
 - The graph panel then runs Cypher locally. Example: click `WR-200-0147` and the page runs a fixed query that returns the work request, its resolved equipment, the connected piping and block valves, the isolation envelope and the other scope items inside it. The panel shows the query text next to the drawing.
-- Relate's read-only mode starts empty and refuses every write, so the browser copy can't be seeded and then switched to read-only. Instead the store stays private to the worker, and the worker runs only the panel's named queries with string parameters, refusing any other Cypher text. Neo4j stays the master, and nothing the browser does reaches it ([spike](spikes/relate-wasm.md)).
+- Relate's read-only mode starts empty and refuses every write, so the browser copy can't be seeded and then switched to read-only. Instead the store stays private to the worker. The worker seeds once, from the twin's own export endpoint, and after that runs only the panel's named queries with string parameters, refusing any other Cypher text. Neo4j stays the master. The worker has no connection to it ([spike](spikes/relate-wasm.md)).
 - After seeding, the worker should run each named query once to warm it up. The first run of a query took about 110 ms in the spike, and later runs about 25 ms.
 
 ## 6. AI matcher

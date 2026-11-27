@@ -41,9 +41,9 @@ function fill(dl, pairs) {
 
 async function run() {
   const params = new URLSearchParams(location.search);
-  const script = params.get("script") || "plant.cypher";
+  const source = params.get("source") || "plant";
   const runs = Math.max(1, Math.min(100, Number(params.get("runs") || 1)));
-  const seeded = await ask({ type: "seed", url: new URL(`../${script}`, location.href).href });
+  const seeded = await ask({ type: "seed", source });
   if (seeded.errors.length) throw new Error(`seeding failed: ${seeded.errors[0]}`);
   const texts = await ask({ type: "texts" });
   $("q-chain").textContent = texts.chain.join("\n\n");

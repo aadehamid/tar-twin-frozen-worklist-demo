@@ -63,7 +63,7 @@ test("W7 page seeds in a worker and shows the chain and walk", async () => {
 });
 
 test("W8 padded graph in the browser", async () => {
-  const { page, problems, result } = await openPage("?script=padded.cypher&runs=20");
+  const { page, problems, result } = await openPage("?source=padded&runs=20");
   assert.equal(result.ok, true, result.error);
   assert.equal(result.nodes, KEY.padded_nodes);
   assert.deepEqual(result.chain, KEY["chain_WR-200-0147"]);
@@ -82,6 +82,10 @@ test("W8 padded graph in the browser", async () => {
 test("W9 the worker refuses query text it doesn't know", async () => {
   const { page, result } = await openPage();
   assert.equal(result.ok, true);
+  const elsewhere = await openPage("?source=https://evil.example/x.cypher");
+  assert.equal(elsewhere.result.ok, false);
+  assert.match(elsewhere.result.error, /unknown seed source/);
+  await elsewhere.page.close();
   const refused = await page.evaluate(() =>
     window.__ask({ type: "query", name: "MATCH (n) DETACH DELETE n", params: {} })
       .then(() => "ran", (e) => e.message));
@@ -90,10 +94,13 @@ test("W9 the worker refuses query text it doesn't know", async () => {
     window.__ask({ type: "query", name: "chain", params: { request_id: "WR-200-0147", x: "1" } })
       .then(() => "ran", (e) => e.message));
   assert.match(extra, /takes request_id/);
+  const reseed = await page.evaluate(() =>
+    window.__ask({ type: "seed", source: "padded" }).then(() => "ran", (e) => e.message));
+  assert.match(reseed, /already seeded/);
   const still = await page.evaluate(() =>
     window.__ask({ type: "query", name: "chain", params: { request_id: "WR-200-0147" } }));
   assert.equal(still.rows[0].length, 1, "store unchanged after refusals");
-  out.W9_browser = { refused, extra };
+  out.W9_browser = { refused, extra, reseed };
   writeFileSync(join(root, "browser-results.json"), JSON.stringify(out, null, 2) + "\n");
   await page.close();
 });

@@ -49,11 +49,11 @@ The answer key is `spikes/relate-wasm/expected.json`, written by hand from secti
 | W2 | Deterministic, loadable script | Two exports give byte-identical scripts. Every statement is under 4,194,304 bytes, and the script has no `BEGIN` or `COMMIT` |
 | W3 | The script matches the sheet | The exported rows, counted in Python, give the node counts by label and relationship counts by type in the answer key. `CONNECTED_TO` reduced to tagged items, walking through tees, nozzles and equipment sides, gives the DEXPI sheet spike's 21 flow edges |
 | W4 | Seeding in Node | The same WebAssembly build, run in Node, executes the script with no error in any statement. Counting in Cypher gives the W3 numbers |
-| W5 | Envelope walk | The live walk from E-201B returns exactly the expected boundary valves and contained equipment. They also match the stored ENV-200-02. Negative control: in a copy of the script with HV-2001's role changed to `control`, the walk no longer returns HV-2001 |
+| W5 | Envelope walk | The live walk from E-201B returns exactly the expected boundary valves and contained equipment. They also match the stored ENV-200-02. Negative control: in a copy of the script with HV-2001's role changed to `control`, the walk no longer returns HV-2001. Stop rules: with the sentinels in `sentinels.json` added, both the Python and the Cypher walk still give the expected answer. A mutant of each walk that ignores block valves reaches the sentinel beyond HV-2003, and one that ignores off-page connectors reaches the sentinel beyond a test-only connector off FV-2011 |
 | W6 | Panel chain | The chain query for WR-200-0147 returns exactly the expected request, equipment, nozzles, envelope, boundary valves and other requests. WR-200-0188 isn't among them |
 | W7 | In the browser | Headless Chromium loads a static page over HTTP. A module worker fetches the WebAssembly file and the script, seeds, and runs both queries for WR-200-0147. The results equal W5 and W6 exactly. The page shows the query text and the tags, and logs no console errors |
 | W8 | Speed at about 5,000 nodes | With the padded script in the browser, seeding takes at most 3 seconds and the median of 20 chain-plus-walk runs is at most 50 ms. RECORD the node count, script size, seed time, and median and worst query times, in the browser and in Node. The padded results for WR-200-0147 equal the unpadded ones |
-| W9 | Read-only | `new RelateDb(true)` refuses a write and holds no nodes, which is why seeding can't use it. The worker answers only the named queries it knows, and refuses any other query text |
+| W9 | Read-only | `new RelateDb(true)` refuses a write and holds no nodes, which is why seeding can't use it. The worker answers only the named queries it knows, and refuses any other query text. It seeds once, from a named source on its own list, and refuses a URL or a second seed |
 
 ## 5. Results
 
@@ -65,21 +65,27 @@ Run with `PYTHON=/tmp/dexvenv/bin/python node spikes/relate-wasm/run_spike.mjs` 
 | W2 | Pass. Two exports are byte-identical, at both sizes. The largest statement is well under the limit, since the whole padded script is about 1 MB |
 | W3 | Pass. 48 nodes and 72 relationships, matching the answer key by label and type. `CONNECTED_TO` reduced to tagged items gives exactly the DEXPI sheet spike's 21 flow edges |
 | W4 | Pass. Every statement ran without error in Node, and Cypher counts match W3 |
-| W5 | Pass. The live walk from E-201B reaches HV-2001, HV-2002, HV-2003 and HV-2015 and passes all six pieces of equipment. That's the same as the stored ENV-200-02. With HV-2001 changed to a control valve, the walk goes on to OPC-21 and HV-2001 drops out of the boundary |
+| W5 | Pass. The live walk from E-201B reaches HV-2001, HV-2002, HV-2003 and HV-2015 and passes all six pieces of equipment. That's the same as the stored ENV-200-02. With HV-2001 changed to a control valve, the walk goes on to OPC-21 and HV-2001 drops out of the boundary. All four stop-rule mutants reach their sentinels, two in Python and two in Cypher. The first review caught that without sentinels the stop rules went untested. On this sheet nothing sits past a boundary valve, and every off-page connector is already behind one |
 | W6 | Pass. The chain for WR-200-0147 gives E-201B, nozzles N1 to N4, ENV-200-02, the four block valves, and WR-200-0152, WR-200-0160 and WR-200-0171. WR-200-0188 isn't there |
 | W7 | Pass. Headless Chromium seeded the 48-node graph in a module worker in about 130 ms and showed the same results as W5 and W6, with the query text. No console errors and no failed requests |
 | W8 | Pass. See the table below |
-| W9 | Pass. `new RelateDb(true)` refuses `CREATE` with `WriteOnReadOnlyAccessDatabase` and holds no nodes. The worker refuses `MATCH (n) DETACH DELETE n` as an unknown query, refuses an extra parameter, and still answers the chain afterwards |
+| W9 | Pass. `new RelateDb(true)` refuses `CREATE` with `WriteOnReadOnlyAccessDatabase` and holds no nodes. The worker refuses `MATCH (n) DETACH DELETE n` as an unknown query, refuses an extra parameter, and still answers the chain afterwards. A page asked to seed from another site fails with `unknown seed source`, and a second seed request fails with `already seeded` |
 
 Speed at 5,040 nodes, padded script 1,038,837 bytes, 20 runs of chain plus walk:
 
 | | Seed | Median query | Worst query |
 |---|---|---|---|
-| Headless Chromium | 1,420 ms | 26 ms | 67 ms |
-| Node 20 | 1,407 ms | 32 ms | 35 ms |
+| Headless Chromium | 1,365 ms | 26 ms | 49 ms |
+| Node 20 | 1,374 ms | 31 ms | 34 ms |
 | Limit | 3,000 ms | 50 ms | none |
 
-The engine itself took about 60 ms to initialise in the browser, and fetching the script about 10 ms. The worst browser time is the first run. The first query after seeding costs about 110 ms, even on the small graph, and later runs settle around 25 ms. So the worker should warm each named query once after seeding, before the audience clicks. Times come from one run on the sandbox and will move a little between runs. Three earlier runs gave browser seed times from 1.36 to 1.61 seconds and medians from 24 to 26 ms.
+The engine itself took about 60 ms to initialise in the browser, and fetching the script about 10 ms. The worst browser time is the first run. The first query after seeding costs about 110 ms, even on the small graph, and later runs settle around 25 ms. So the worker should warm each named query once after seeding, before the audience clicks. Times come from one run on the sandbox and will move a little between runs. Six earlier runs gave browser seed times from 1.36 to 1.61 seconds, medians from 24 to 26 ms, and worst times from 49 to 69 ms.
+
+### Limits of this result
+
+- The padded copies aren't connected to each other or to the real sheet. Both queries start from one tag, so they only ever touch one 48-node component. The 5,040-node figure tests seeding cost and index lookups at that size, not a walk across a large connected envelope. The real HP loop envelope has 38 boundary valves over several sheets, and phase 1 has to measure the walk on that.
+- The page runs the queries on load, not on a click. The click handler in the real panel calls the same worker messages.
+- Seeding trusts the script it's given. The worker only takes scripts from its own list, but it runs whatever Cypher is in them. In phase 1 the source is the twin's own export endpoint on the same origin. The worker has no connection to Neo4j, so nothing in the browser can change the master graph.
 
 ## 6. What changes in the design
 

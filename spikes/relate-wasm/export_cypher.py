@@ -83,39 +83,48 @@ def _sheet_graph(model):
     return nodes, rels
 
 
-def envelope(nodes, rels):
-    """Equipment inside the envelope and the block valves bounding it. Walk the piping
-    undirected from each equipment item, through equipment, stopping at block valves and
-    off-page connectors. Raises if the sheet holds more than one envelope."""
+def is_stop(node):
+    """Walks end at block valves and off-page connectors. Control valves and equipment are
+    walked through."""
+    return node["label"] == "OffPageConnector" or (
+        node["label"] == "Valve" and node["props"]["role"] == "block")
+
+
+def walk(nodes, rels, start, stop=is_stop):
+    """From node key `start`, walk CONNECTED_TO and HAS_NOZZLE undirected, not passing any
+    node where `stop` is true. Returns (equipment keys passed, block valve keys reached)."""
     by_key = {n["key"]: n for n in nodes}
     adj = defaultdict(set)
     for r in rels:
         if r["type"] in ("CONNECTED_TO", "HAS_NOZZLE"):
             adj[r["from"]].add(r["to"])
             adj[r["to"]].add(r["from"])
+    seen, stack = {start}, [start]
+    while stack:
+        k = stack.pop()
+        for j in adj[k]:
+            if j in seen:
+                continue
+            seen.add(j)
+            if not stop(by_key[j]):
+                stack.append(j)
 
-    def stop(k):
+    def block(k):
         n = by_key[k]
-        return n["label"] == "OffPageConnector" or (
-            n["label"] == "Valve" and n["props"]["role"] == "block")
+        return n["label"] == "Valve" and n["props"]["role"] == "block"
 
+    return ({k for k in seen if by_key[k]["label"] == "Equipment"},
+            {k for k in seen if block(k)})
+
+
+def envelope(nodes, rels):
+    """Equipment inside the envelope and the block valves bounding it. Raises if the sheet
+    holds more than one envelope."""
     found = []
-    for start in sorted(k for k, n in by_key.items() if n["label"] == "Equipment"):
+    for start in sorted(n["key"] for n in nodes if n["label"] == "Equipment"):
         if any(start in eq for eq, _ in found):
             continue
-        seen, stack, bound = {start}, [start], set()
-        while stack:
-            k = stack.pop()
-            for j in adj[k]:
-                if j in seen:
-                    continue
-                seen.add(j)
-                if stop(j):
-                    if by_key[j]["label"] == "Valve":
-                        bound.add(j)
-                else:
-                    stack.append(j)
-        found.append(({k for k in seen if by_key[k]["label"] == "Equipment"}, bound))
+        found.append(walk(nodes, rels, start))
     if len(found) != 1:
         raise ValueError(f"expected one envelope on {SHEET}, found {len(found)}")
     return found[0]

@@ -115,3 +115,50 @@ def test_w3_flow_edges_match_the_sheet():
             else:
                 stack.extend(succ[j])
     assert edges == SHEET.FLOW_EDGES
+
+
+# Sentinels. On the real sheet nothing sits past the boundary, and every off-page connector is
+# already behind a block valve, so a walk that ignored either stop rule would still pass. So:
+# a block valve and an equipment item just beyond HV-2003, and a new off-page connector hung off
+# control valve FV-2011 (inside the envelope) with a block valve and equipment item beyond it.
+# Each mutant drops one stop rule and must reach its own sentinels. The same fixture is used for
+# the Cypher walk in test_relate.mjs.
+FIXTURE = json.loads((HERE / "sentinels.json").read_text())
+
+
+def _with_sentinels():
+    g = export_cypher.plant_graph()
+    nodes, rels = list(g["nodes"]), list(g["rels"])
+    key_of = {_tag_of(n): n["key"] for n in nodes if _tag_of(n)}
+    for n in FIXTURE["nodes"]:
+        nodes.append({"key": n["key"], "label": n["label"], "props": n["props"]})
+        key_of[n["key"]] = n["key"]
+    for a, b in FIXTURE["pipes"]:
+        rels.append({"type": "CONNECTED_TO", "from": key_of[a], "to": key_of[b]})
+    return nodes, rels, key_of
+
+
+def _walk_tags(stop):
+    nodes, rels, key_of = _with_sentinels()
+    by_key = {n["key"]: n for n in nodes}
+    eq, bv = export_cypher.walk(nodes, rels, key_of["E-201B"], stop=stop)
+    return (sorted(by_key[k]["props"]["tag"] for k in eq),
+            sorted(by_key[k]["props"]["tag"] for k in bv))
+
+
+def test_w5_python_walk_stops_before_sentinels():
+    eq, bv = _walk_tags(export_cypher.is_stop)
+    assert eq == KEY["walk_from_E-201B"]["equipment"]
+    assert bv == KEY["walk_from_E-201B"]["boundary"]
+
+
+def test_w5_python_walk_mutant_ignoring_block_valves():
+    eq, bv = _walk_tags(lambda n: n["label"] == "OffPageConnector")
+    assert "SENT-BV-1" in bv and "SENT-EQ-1" in eq
+    assert "SENT-BV-2" not in bv
+
+
+def test_w5_python_walk_mutant_ignoring_connectors():
+    eq, bv = _walk_tags(lambda n: n["label"] == "Valve" and n["props"]["role"] == "block")
+    assert "SENT-BV-2" in bv and "SENT-EQ-2" in eq
+    assert "SENT-BV-1" not in bv

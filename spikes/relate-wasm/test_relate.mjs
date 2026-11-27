@@ -4,7 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync, statSync } from "node:fs";
 import { initSync, RelateDb } from "@relate/relate-wasm";
-import { QUERIES, runNamed, seed, chainResult, walkResult } from "./web/queries.js";
+import { QUERIES, SEED_SOURCES, seedUrl, runNamed, seed, chainResult, walkResult } from "./web/queries.js";
 
 const here = new URL(".", import.meta.url);
 const KEY = JSON.parse(readFileSync(new URL("expected.json", here)));
@@ -74,6 +74,52 @@ test("W5 negative control: HV-2001 as a control valve", () => {
   assert.deepEqual(walk.boundary, KEY["walk_from_E-201B_with_HV-2001_as_control"].boundary);
 });
 
+// Sentinel fixture shared with test_export.py. See the comment there.
+const FIXTURE = JSON.parse(readFileSync(new URL("sentinels.json", here)));
+
+function withSentinels() {
+  const db = seeded();
+  for (const n of FIXTURE.nodes) {
+    rows(db, `CREATE (n:${n.label}) SET n = $p`, { p: { ...n.props, key: n.key } });
+  }
+  for (const [a, b] of FIXTURE.pipes) {
+    const r = rows(db, `MATCH (a) WHERE a.tag = $a OR a.number = $a OR a.key = $a
+      MATCH (b) WHERE b.tag = $b OR b.number = $b OR b.key = $b
+      CREATE (a)-[:CONNECTED_TO]->(b) RETURN count(*) AS c`, { a, b });
+    assert.equal(r[0].c, 1, `fixture pipe ${a} -> ${b}`);
+  }
+  return db;
+}
+
+function walkWith(db, statements) {
+  return walkResult(statements.map((q) => rows(db, q, { tag: "E-201B" })));
+}
+
+function mutate(statements, from, to) {
+  const out = statements.map((q) => q.replace(from, to));
+  out.forEach((q, i) => assert.notEqual(q, statements[i], `mutant must change statement ${i}`));
+  return out;
+}
+
+test("W5 Cypher walk stops before the sentinels", () => {
+  const db = withSentinels();
+  assert.deepEqual(walkResult(runNamed(db, "walk", { tag: "E-201B" })), KEY["walk_from_E-201B"]);
+});
+
+test("W5 Cypher mutant ignoring block valves reaches SENT-BV-1", () => {
+  const db = withSentinels();
+  const w = walkWith(db, mutate(QUERIES.walk.statements, " AND NOT (n:Valve AND n.role = 'block')", ""));
+  assert.ok(w.boundary.includes("SENT-BV-1") && w.equipment.includes("SENT-EQ-1"), JSON.stringify(w));
+  assert.ok(!w.boundary.includes("SENT-BV-2"));
+});
+
+test("W5 Cypher mutant ignoring off-page connectors reaches SENT-BV-2", () => {
+  const db = withSentinels();
+  const w = walkWith(db, mutate(QUERIES.walk.statements, "NOT n:OffPageConnector AND ", ""));
+  assert.ok(w.boundary.includes("SENT-BV-2") && w.equipment.includes("SENT-EQ-2"), JSON.stringify(w));
+  assert.ok(!w.boundary.includes("SENT-BV-1"));
+});
+
 test("W6 panel chain for WR-200-0147", () => {
   const db = seeded();
   const chain = chainResult(runNamed(db, "chain", { request_id: "WR-200-0147" }));
@@ -111,4 +157,10 @@ test("W9 read-only store and named queries only", () => {
   const db = seeded();
   assert.throws(() => runNamed(db, "MATCH (n) DETACH DELETE n", {}), /unknown query/);
   assert.deepEqual(Object.keys(QUERIES).sort(), ["chain", "walk"]);
+  assert.deepEqual(Object.keys(SEED_SOURCES).sort(), ["padded", "plant"]);
+  const base = "https://twin.example/app/web/worker.js";
+  assert.equal(seedUrl("plant", base), "https://twin.example/app/plant.cypher");
+  for (const bad of ["https://evil.example/x.cypher", "../plant.cypher", "toString", "__proto__"]) {
+    assert.throws(() => seedUrl(bad, base), /unknown seed source/, bad);
+  }
 });
