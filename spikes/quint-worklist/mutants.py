@@ -3,7 +3,7 @@ must make the model checker find a counterexample to the rule it names. A rule n
 break would be a rule the checks never exercise."""
 
 MUTANTS = [
-    {"id": "Q-M1", "rule": "ReadOnly",
+    {"id": "Q-M1", "rule": "WorkflowOnly",
      "what": "a twin review step changes the IMPACT Web request it matched",
      "old": "    iw_unchanged, // review_accept only reads IMPACT Web\n",
      "new": "    all { iw_hours' = iw_hours.set(i, iw_hours.get(i) + 1), iw_version' = iw_version,\n"
@@ -60,6 +60,30 @@ MUTANTS = [
      "what": "an edit keeps the DRB decision, so freeze copies a version the DRB never saw",
      "old": "    iw_drb' = iw_drb.set(i, false),\n",
      "new": "    iw_drb' = iw_drb,\n"},
+    {"id": "Q-M13", "rule": "WorkflowOnly",
+     "what": "the twin's raise approves its own change request",
+     "old": "target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),",
+     "new": "target: iw_hours.get(i) + d, delta: d, status: \"approved\", via: \"twin\" }),"},
+    {"id": "Q-M14", "rule": "ReadOnlyMode",
+     "what": "the twin raises a change request with write-through switched off",
+     "old": "    tw_write_mode,\n",
+     "new": ""},
+    {"id": "Q-M15", "rule": "WorkflowOnly",
+     "what": "the twin's raise applies its delta to the request's live hours straight away",
+     "old": "    iw_hours' = iw_hours, iw_version' = iw_version, // the raise commits nothing to the request itself\n",
+     "new": "    iw_hours' = iw_hours.set(i, iw_hours.get(i) + d), iw_version' = iw_version,\n"},
+    {"id": "Q-M16", "rule": "WorkflowOnly",
+     "what": "the twin raises a change request before freeze",
+     "old": "    iw_frozen, iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0, // the same guards as iw_raise\n",
+     "new": "    iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0,\n"},
+    {"id": "Q-M17", "rule": "WorkflowOnly",
+     "what": "the twin stamps a stale base version (0), not the request's current version",
+     "old": "    iw_changes' = iw_changes.set(c, { item: i, base: iw_version.get(i),\n                                      target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),",
+     "new": "    iw_changes' = iw_changes.set(c, { item: i, base: 0,\n                                      target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),"},
+    {"id": "Q-M18", "rule": "WorkflowOnly",
+     "what": "the twin's raise skips the check that the target hours aren't negative",
+     "old": "    iw_frozen, iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0, // the same guards as iw_raise\n",
+     "new": "    iw_frozen, iw_changes.get(c).status == \"none\",\n"},
 ]
 
 

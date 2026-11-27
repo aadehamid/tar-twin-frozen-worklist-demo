@@ -4,7 +4,7 @@ Version 0.3, for review. Revised after two cross-model reviews on PR #1.
 
 The system runs in two modes on the same code:
 
-- **Demo mode.** The 10-minute scripted walkthrough in the scenario spec. Seeded data, the same result every time.
+- **Demo mode.** The 11-minute scripted walkthrough in the scenario spec. Seeded data, the same result every time.
 - **Planning mode.** A team rehearses getting Unit 200 ready for a turnaround. People log in with their own roles, raise and challenge synthetic work requests in IMPACT Web, watch the twin respond, and take the list through DRB and freeze. A facilitator runs the clock and drops in events.
 
 Planning mode is a rehearsal and training tool on a synthetic unit. It is not a planning system for a real turnaround.
@@ -137,7 +137,7 @@ Every fit-to-frame, challenge and DRB decision records the request version it wa
 
 ## 4. Rules that still hold
 
-- **The twin never writes to IMPACT Web, in either mode.** Scope decisions are made in IMPACT Web. Tag match review is a twin decision about equipment identity, and it stays in the twin.
+- **The twin writes to IMPACT Web only through IMPACT Web's workflow, in either mode.** After freeze, a planner can raise a change request from the twin, as themselves, and the DRB decides it in IMPACT Web ([design section 5.8](design.md), demo only). The facilitator can turn the exercise's write-through switch off from the console, and then the twin is read only and shows the prefilled text for the planner to enter in IMPACT Web. Every other scope decision is made in IMPACT Web. Tag match review is a twin decision about equipment identity, and it stays in the twin.
 - **Cut-line options are twin-local.** A saved option is a `CutLineRun` against a named scope version: a budget, the ranking rule and the above and below sets. It doesn't change any request. It isn't the set-level what-if (31-f3), which changes estimates and stays out of release one.
 - **Checks on both sides.** IMPACT Web checks its own fields when they're saved (required fields, craft hours add up, valid driver and source group). It can't check work type against equipment class, because its equipment field is free text. The twin does that after sync. The compatibility check runs before any match is accepted, including exact matches. An incompatible item, like a bundle pull on a pump, gets a `Finding` node with the reason and sits in the review queue. No `RESOLVES_TO` link is accepted for it.
 - **Every item ends in one of four match outcomes:** matched, unresolved, unit general, or incompatible.
@@ -164,7 +164,7 @@ Following [CONTRIBUTING.md](../CONTRIBUTING.md), these checks are written before
 | Fixtures load exactly | Tests that seeded, partial and blank fixtures give the expected counts in both stores |
 | Injects are authorized, phase-limited, logged and applied once | Tests per library inject and for a custom inject, a retry test, and a refusal outside its phases |
 | Reset restores one exercise only | Snapshot comparison of both stores after reset, with a second exercise and demo mode running. A sync or edit started before the reset is refused. The archived log stays readable |
-| Cut-line options never touch IMPACT Web | Save, reopen and version tests. A contract test that IMPACT Web state is unchanged after any twin action |
+| Cut-line options never touch IMPACT Web | Save, reopen and version tests. A contract test that IMPACT Web state is unchanged after saving, reopening or comparing a cut-line option. The one twin action that does write, raising a change request, has its own contract tests in design.md section 9 |
 | Debrief numbers are right | A hand-calculated fixture with known match rates (including an n/a step), clusters, DRB cuts, growth and timeline order with actors. A Hypothesis property that debrief totals equal sums over the event history |
 | Twin views keep up | Playwright test: a late change approved in IMPACT Web appears on the plot plan, clusters, cut line and KPIs after sync, with the pending state shown until then |
 | Match outcomes are right | Tests for each outcome: an exact tag on an incompatible work type becomes a finding, not a match. Unresolved and unit-general items stay visible. The twin readiness flag follows the gate |

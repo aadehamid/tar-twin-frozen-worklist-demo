@@ -1,5 +1,7 @@
 // Freeze, sync, change and review workflow of the frozen work list demo.
-// IMPACT Web is the system of record. The twin reads it through syncs and never writes to it.
+// IMPACT Web is the system of record. The twin reads it through syncs. With write-through on, the
+// twin can also raise a change request after freeze through IMPACT Web's own raise step, and
+// nothing else. Write-through is a demo choice; decision D9 has the reasons.
 // Rules checked are in docs/verification.md section 4. Run with spikes/quint-worklist/run_spike.py.
 module worklist {
   // Small bounds keep the state space finite for TLC and quick for Apalache.
@@ -13,7 +15,7 @@ module worklist {
   pure val METHODS = Set("exact", "rule_high", "rule_low", "ai")
   pure val SYSTEM_METHODS = Set("exact", "rule_high")
 
-  type Change = { item: int, base: int, target: int, delta: int, status: str }
+  type Change = { item: int, base: int, target: int, delta: int, status: str, via: str }
   type Match = { state: str, method: str, by: str }
   type Sync = { id: int, lo: int, hi: int, frozen: bool, copy: int -> int }
   type Fin = { on: bool, lo: int, hi: int }
@@ -43,6 +45,7 @@ module worklist {
   var tw_syncs: int                   // syncs started so far
   var tw_match: int -> Match
   var tw_ready: bool
+  var tw_write_mode: bool            // write-through switch, picked at the start and fixed
 
   // Ghost state, only for stating the step rules
   var g_actor: str
@@ -69,6 +72,7 @@ module worklist {
   val approved = CHANGES.filter(c => iw_changes.get(c).status == "approved")
 
   action ghost(actor: str, fin: Fin): bool = all {
+    tw_write_mode' = tw_write_mode,     // every step calls ghost, so the switch never changes
     g_actor' = actor,
     g_fin' = fin,
     g_prev_cursor' = tw_cursor,
@@ -88,37 +92,41 @@ module worklist {
     tw_syncs' = tw_syncs, tw_match' = tw_match, tw_ready' = tw_ready,
   }
 
-  action init = all {
-    iw_hours' = ITEMS.mapBy(i => 0),
-    iw_version' = ITEMS.mapBy(i => 0),
-    iw_drb' = ITEMS.mapBy(i => false),
-    iw_drb_ver' = ITEMS.mapBy(i => -1),
-    iw_frozen' = false,
-    iw_copy' = ITEMS.mapBy(i => 0),
-    iw_changes' = CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none" }),
-    iw_pos' = CHANGES.mapBy(c => 0),
-    iw_len' = 0,
-    tw_baseline' = ITEMS.mapBy(i => 0),
-    tw_has_baseline' = false,
-    tw_cursor' = 0,
-    tw_events' = CHANGES.mapBy(c => 0),
-    tw_growth' = 0,
-    tw_inflight' = Set(),
-    tw_syncs' = 0,
-    tw_match' = ITEMS.mapBy(i => { state: "none", method: "", by: "" }),
-    tw_ready' = false,
-    g_actor' = "init",
-    g_prev_iw' = { hours: ITEMS.mapBy(i => 0), version: ITEMS.mapBy(i => 0),
-                   drb: ITEMS.mapBy(i => false), drb_ver: ITEMS.mapBy(i => -1), frozen: false,
-                   copy: ITEMS.mapBy(i => 0),
-                   changes: CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none" }),
-                   pos: CHANGES.mapBy(c => 0), len: 0 },
-    g_prev_baseline' = ITEMS.mapBy(i => 0),
-    g_prev_has_baseline' = false,
-    g_freeze_hours' = ITEMS.mapBy(i => 0),
-    g_freeze_ok' = ITEMS.mapBy(i => false),
-    g_prev_cursor' = 0,
-    g_fin' = NO_FIN,
+  action init = {
+    nondet w = Set(true, false).oneOf()
+    all {
+      tw_write_mode' = w,
+      iw_hours' = ITEMS.mapBy(i => 0),
+      iw_version' = ITEMS.mapBy(i => 0),
+      iw_drb' = ITEMS.mapBy(i => false),
+      iw_drb_ver' = ITEMS.mapBy(i => -1),
+      iw_frozen' = false,
+      iw_copy' = ITEMS.mapBy(i => 0),
+      iw_changes' = CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none", via: "" }),
+      iw_pos' = CHANGES.mapBy(c => 0),
+      iw_len' = 0,
+      tw_baseline' = ITEMS.mapBy(i => 0),
+      tw_has_baseline' = false,
+      tw_cursor' = 0,
+      tw_events' = CHANGES.mapBy(c => 0),
+      tw_growth' = 0,
+      tw_inflight' = Set(),
+      tw_syncs' = 0,
+      tw_match' = ITEMS.mapBy(i => { state: "none", method: "", by: "" }),
+      tw_ready' = false,
+      g_actor' = "init",
+      g_prev_iw' = { hours: ITEMS.mapBy(i => 0), version: ITEMS.mapBy(i => 0),
+                     drb: ITEMS.mapBy(i => false), drb_ver: ITEMS.mapBy(i => -1), frozen: false,
+                     copy: ITEMS.mapBy(i => 0),
+                     changes: CHANGES.mapBy(c => { item: 1, base: 0, target: 0, delta: 0, status: "none", via: "" }),
+                     pos: CHANGES.mapBy(c => 0), len: 0 },
+      g_prev_baseline' = ITEMS.mapBy(i => 0),
+      g_prev_has_baseline' = false,
+      g_freeze_hours' = ITEMS.mapBy(i => 0),
+      g_freeze_ok' = ITEMS.mapBy(i => false),
+      g_prev_cursor' = 0,
+      g_fin' = NO_FIN,
+    }
   }
 
   // IMPACT Web steps
@@ -159,7 +167,7 @@ module worklist {
   action iw_raise(c: int, i: int, d: int): bool = all {
     iw_frozen, iw_changes.get(c).status == "none", iw_hours.get(i) + d >= 0,
     iw_changes' = iw_changes.set(c, { item: i, base: iw_version.get(i),
-                                      target: iw_hours.get(i) + d, delta: d, status: "pending" }),
+                                      target: iw_hours.get(i) + d, delta: d, status: "pending", via: "iw" }),
     iw_hours' = iw_hours, iw_version' = iw_version, iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver,
     iw_frozen' = iw_frozen, iw_copy' = iw_copy, iw_pos' = iw_pos, iw_len' = iw_len,
     tw_unchanged, ghost("iw", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
@@ -260,6 +268,20 @@ module worklist {
     iw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
   }
 
+  // With write-through on, a planner raises a change request from the twin. The twin calls
+  // IMPACT Web's raise step for the signed-in user, so the request is stamped against the current
+  // version and waits for the DRB like any other. The twin can't approve it.
+  action tw_raise(c: int, i: int, d: int): bool = all {
+    tw_write_mode,
+    iw_frozen, iw_changes.get(c).status == "none", iw_hours.get(i) + d >= 0, // the same guards as iw_raise
+    iw_changes' = iw_changes.set(c, { item: i, base: iw_version.get(i),
+                                      target: iw_hours.get(i) + d, delta: d, status: "pending", via: "twin" }),
+    iw_hours' = iw_hours, iw_version' = iw_version, // the raise commits nothing to the request itself
+    iw_drb' = iw_drb, iw_drb_ver' = iw_drb_ver, iw_frozen' = iw_frozen, iw_copy' = iw_copy,
+    iw_pos' = iw_pos, iw_len' = iw_len,
+    tw_unchanged, ghost("twin", NO_FIN), g_freeze_hours' = g_freeze_hours, g_freeze_ok' = g_freeze_ok,
+  }
+
   action tw_mark_ready = all {
     tw_has_baseline, not(tw_ready), gateOk,
     tw_ready' = true,
@@ -296,12 +318,37 @@ module worklist {
     nondet i = ITEMS.oneOf()
     tw_review_reject(i),
     tw_mark_ready,
+    nondet c = CHANGES.oneOf()
+    nondet i = ITEMS.oneOf()
+    nondet d = DELTAS.oneOf()
+    tw_raise(c, i, d),
   }
 
   // Rules from verification.md section 4
 
-  // Read only. No twin step changes IMPACT Web state.
-  val ReadOnly = g_actor == "twin" implies iw_state == g_prev_iw
+  // Workflow only. A twin step leaves IMPACT Web as it was, or, with write-through on and the
+  // list frozen, raises exactly one change request from the twin, pending, against the request's
+  // current version and hours, and changes nothing else. So the twin never approves, never edits a
+  // request, never touches the freeze, the frozen copy or the feed. The conditions are written out
+  // here and not taken from tw_raise, so a bug in the raise step can't change the rule as well.
+  val WorkflowOnly = g_actor == "twin" implies (iw_state == g_prev_iw or and {
+    tw_write_mode, iw_frozen,
+    iw_hours == g_prev_iw.hours, iw_version == g_prev_iw.version, iw_drb == g_prev_iw.drb,
+    iw_drb_ver == g_prev_iw.drb_ver, iw_frozen == g_prev_iw.frozen, iw_copy == g_prev_iw.copy,
+    iw_pos == g_prev_iw.pos, iw_len == g_prev_iw.len,
+    CHANGES.exists(c => and {
+      g_prev_iw.changes.get(c).status == "none",
+      iw_changes.get(c).status == "pending",
+      iw_changes.get(c).via == "twin",
+      iw_changes.get(c).base == iw_version.get(iw_changes.get(c).item),
+      iw_changes.get(c).target == iw_hours.get(iw_changes.get(c).item) + iw_changes.get(c).delta,
+      iw_changes.get(c).target >= 0,     // IMPACT Web's own raise refuses a negative target
+      CHANGES.forall(e => e != c implies iw_changes.get(e) == g_prev_iw.changes.get(e)),
+    }),
+  })
+
+  // Read-only mode. With write-through off, no change request comes from the twin.
+  val ReadOnlyMode = not(tw_write_mode) implies CHANGES.forall(c => iw_changes.get(c).via != "twin")
 
   // Baseline fixed. Once the twin has a baseline, no step changes it.
   val BaselineFixed = g_prev_has_baseline implies (tw_has_baseline and tw_baseline == g_prev_baseline)
@@ -352,7 +399,7 @@ module worklist {
   // Gate. The baseline is marked ready only when the match rate on frozen items passes.
   val Gate = tw_ready implies gateOk
 
-  val AllRules = ReadOnly and BaselineFixed and FreezeExact and NothingMissed and HumansDecide
+  val AllRules = WorkflowOnly and ReadOnlyMode and BaselineFixed and FreezeExact and NothingMissed and HumansDecide
     and GrowthAddsUp and Gate
 
   // Witnesses. Each must be reachable, or the rules above could hold only because the steps
@@ -376,4 +423,9 @@ module worklist {
     and tw_match.get(i).method == "ai" and tw_match.get(i).by == "reviewer")
   val ObsReady = tw_ready
   val ObsFrozenNotReadyWithGrowth = iw_frozen and not(tw_ready) and tw_growth != 0
+  // The closed loop: a change request raised from the twin, approved by the DRB, synced as an event.
+  val ObsTwinRaisedSynced = CHANGES.exists(c => iw_changes.get(c).via == "twin"
+    and iw_changes.get(c).status == "approved" and tw_events.get(c) == 1)
+  // Read-only mode still works: growth after freeze, all of it raised in IMPACT Web.
+  val ObsReadOnlyGrowth = not(tw_write_mode) and iw_frozen and tw_growth != 0
 }

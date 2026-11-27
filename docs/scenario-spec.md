@@ -151,6 +151,7 @@ These are the problems the workshop described. The demo has to find each one.
 | Wrong-unit or retired tags | 4 items | Caught by the match step and sent to review |
 | Over budget at DRB | About 27% over target | Cut line by location shows what falls below the line |
 | Changes after freeze | 18 adds and 6 deletes approved, plus 5 rejected | Scope growth climbs on the KPI panel, each change with a reason and source group |
+| Adding a nozzle to a column that's already open | 1 item | The workshop's example. C-201 is already opened for tray work. After freeze, operations want a new nozzle N3 on it. The twin shows the work shares C-201's entry, scaffold and isolation (ENV-200-06), so only the nozzle's own hours are new, and the planner raises the change request from the twin (walkthrough step 7). It is the 19th approved add, raised live, so it isn't part of the late-scope simulation |
 
 Target scope growth after freeze: about 4,000 man-hours from approved changes net of deletes, which is about 3% to 4% of the frozen baseline.
 
@@ -168,14 +169,15 @@ The panel uses the focus-area brief's defaults for 3.1 and labels them as unvali
 
 The demo also shows the counts the data produces (hours bundled, items removed, growth after freeze), so the audience can see what the twin measured separately from what the brief assumes.
 
-## 7. Demo walkthrough (about 10 minutes)
+## 7. Demo walkthrough (about 11 minutes)
 
 The order follows the 3.1 slide in the MVP proposal.
 
-1. **IMPACT Web (1 min).** Open TAR-200-2028. Show 200 candidate requests, the free-text equipment field and the banner saying the twin reads this system and never writes to it.
+1. **IMPACT Web (1 min).** Open TAR-200-2028. Show 200 candidate requests, the free-text equipment field and the banner saying the twin reads this system and can only raise change requests through it.
 2. **Match rate (2 min).** In the twin, run sync. Match rate shows 73% from code acceptance alone. Open the trace of a clean tag to show code accepted it on its own. Run the AI matcher. In the review queue, open the pending AI proposal that cites DEXPI neighbours to pick E-201B over E-201A, and accept it. Open the trace of the `E-301B` request to show the wrong-unit `Finding`, then accept or correct its Unit 200 proposal in the queue. Open the mapping trace for one messy entry, "feed eff exchanger middle shell", and show each step from the raw IMPACT Web text to E-201B in the twin. In the Matching lab, show the three-mode comparison by difficulty class, and quote the numbers from the run rather than the ones we expect. Match rate after review passes the gate.
 3. **Scope on the plant (2 min).** The plot plan fills with job markers. Click a job on E-201B. The graph panel runs Cypher in the browser and draws the chain: work request, E-201B, nozzles and piping, block valves, ENV-200-02, and every other job inside it. The P&ID viewer highlights the same envelope on sheet 200-PID-002.
 4. **Shared-cost clusters (1.5 min).** Show the isolation, scaffold and access clusters. Hours and cost are counted once per cluster, and the total drops against the summed estimate. Show the 9 duplicate pairs found at the challenge.
 5. **Cut line (1.5 min).** Set the DRB budget target. The plant colours above and below the line by location. Move one item across the line and watch the cluster saving change, because pulling one job out of a shared setup doesn't save the shared cost.
 6. **Freeze and growth (1.5 min).** Freeze in IMPACT Web. The twin takes a baseline. Run the late-scope simulation. Adds and deletes arrive by sync, each logged with hours and reason. Scope growth in man-hours climbs on the KPI panel.
-7. **Value and what's next (0.5 min).** Show the value panel with its unvalidated label. Point to the reserved slots for work packages (4.1) and activities and logistics (4.2).
+7. **Raise it from the twin (1 min).** In the twin, open C-201, which is already open for tray work, and take the late ask to add nozzle N3. The twin shows it shares the column's entry, scaffold and ENV-200-06, so only the nozzle's own hours are new. Click "raise change request". The reason comes prefilled with the twin's evidence and the tag, as text only; the tag link itself stays in the twin. Switch to IMPACT Web: the request is pending, raised by J. Planner, marked as raised from the twin. Approve it as the DRB. Sync, and growth goes up by its hours. This is the 19th approved add; the other 18 come from the scripted late-scope simulation in step 6. Say it plainly: it went through IMPACT Web's normal change request step, and in the story no IMPACT Web code changed. The twin can't approve or touch the frozen copy, and it can't do anything the planner couldn't. Turn the exercise's write-through switch off and show the same click now giving text to retype in IMPACT Web, which is the conservative option the workshop leaned towards.
+8. **Value and what's next (0.5 min).** Show the value panel with its unvalidated label. Point to the reserved slots for work packages (4.1) and activities and logistics (4.2).

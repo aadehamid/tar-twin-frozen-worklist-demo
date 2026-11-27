@@ -71,11 +71,12 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 
 - The twin's scheduled sync and its membership lookups don't come from a person. They use a machine token for the twin's IMPACT Web service account, sent in `Authorization` to the Compose service `impactweb:8000` over the bridge network.
 - That account has a read-only role. It can read the change feed, frozen copies, memberships and the CMMS equipment master and functional locations (the matcher's tag list), and nothing else.
+- A change request raised from the twin uses a second token for the same account, `TWIN_RAISE_TOKEN`, which IMPACT Web accepts only on `POST /api/v1/twin/change-requests`. The twin names the signed-in user from its own edge-verified session, and IMPACT Web checks that user's membership and role, the freeze and the exercise's write-through switch before storing anything ([design section 5.8](design.md)). The token lives with the other secrets in section 4.
 - The twin container holds no Postgres credentials, and Postgres accepts connections only from the IMPACT Web container's database user.
 
 ## 4. Secrets
 
-- The OpenRouter key and database passwords live in `/opt/tar-twin/.env` on the VM, owned by root with mode 600. They are never committed.
+- The OpenRouter key, the twin's two IMPACT Web tokens (the read-only sync token and `TWIN_RAISE_TOKEN`) and the database passwords live in `/opt/tar-twin/.env` on the VM, owned by root with mode 600. They are never committed.
 - Each participant's exe.dev email is stored only in `exercise_membership`.
 
 ## 5. Deploying and backups
