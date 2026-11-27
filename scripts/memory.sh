@@ -25,17 +25,10 @@ set -euo pipefail
 here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cypher_dir="$here/memory"
 tmp=""
-init_lock=""
 build_dir=""
-cleanup() {
-  [ -z "$tmp" ] || rm -f "$tmp"
-  [ -z "$build_dir" ] || rm -rf "$build_dir"
-  [ -z "$init_lock" ] || rm -rf "$init_lock"
-}
-trap cleanup EXIT
-# Bash skips an EXIT trap when a signal ends it, so clean up on signals too.
-trap 'cleanup; trap - EXIT; exit 130' INT
-trap 'cleanup; trap - EXIT; exit 143' TERM HUP
+# Bash runs this EXIT trap on a normal exit and when SIGINT or SIGTERM ends
+# the script. Only SIGKILL skips it; create_store sweeps what that leaves.
+trap '[ -z "$tmp" ] || rm -f "$tmp"; [ -z "$build_dir" ] || rm -rf "$build_dir"' EXIT
 
 store() {
   if [ -n "${PROJECT_MEMORY_DB:-}" ]; then
@@ -125,48 +118,37 @@ read_query() {
 
 # The schema is idempotent, so every write runs it first. Its notes are noise
 # on success, so show them only when it fails.
-# Two agents creating the store at once leave Relate a broken store. The first
-# writer builds it beside the final path and renames it into place, under a
-# mkdir lock, so other writers only ever open a finished store.
+# Two relate processes creating one store at once leave it broken. So each
+# first writer builds a private store and renames it into place. A rename onto
+# a folder that already holds a store fails atomically, and the loser drops
+# its copy and uses the winner's. No lock is held, so none can go stale.
 create_store() {
-  local db="$1" lock="$1.init-lock" attempt=0 owner
-  mkdir -p "$(dirname "$db")"
-  if [ ! -w "$(dirname "$db")" ]; then
-    echo "memory: cannot create the store; $(dirname "$db") is not writable" >&2
+  local db="$1" parent base
+  parent="$(dirname "$db")"
+  base="$(basename "$db")"
+  mkdir -p "$parent"
+  if [ ! -w "$parent" ]; then
+    echo "memory: cannot create the store; $parent is not writable" >&2
     return 1
   fi
-  until mkdir "$lock" 2>/dev/null; do
-    # The holder may have finished between our mkdir and now.
-    [ -d "$db" ] && [ ! -d "$lock" ] && return 0
-    # A lock left by a process on this machine that no longer runs is stale.
-    owner="$(cat "$lock/owner" 2>/dev/null || true)"
-    # SIGKILL skips every trap, so this is how such a lock is recovered.
-    if [ "${owner% *}" = "$(hostname)" ] && ! kill -0 "${owner##* }" 2>/dev/null; then
-      rm -rf "$lock" "$db.init.${owner##* }"
-      continue
-    fi
-    attempt=$((attempt + 1))
-    if [ "$attempt" -ge 100 ]; then
-      echo "memory: another agent has been creating the store for 20 seconds; if none is, remove $lock" >&2
-      return 1
-    fi
-    sleep 0.2
-  done
-  # Only the process that made the lock may remove it, so set this after mkdir.
-  init_lock="$lock"
-  printf '%s %s\n' "$(hostname)" "$$" > "$lock/owner"
-  if [ ! -d "$db" ]; then
-    build_dir="$db.init.$$"
-    rm -rf "$build_dir"
-    if ! relate query --database "$build_dir" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
-      echo "memory: could not create the store at $db" >&2
-      return 1
-    fi
-    mv "$build_dir" "$db"
-    build_dir=""
+  # Builds left by a SIGKILL are never used; remove ones older than an hour.
+  find "$parent" -maxdepth 1 -name "$base.init.*" -mmin +60 -exec rm -rf {} + 2>/dev/null || true
+  build_dir="$db.init.$$.$RANDOM"
+  if ! relate query --database "$build_dir" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
+    echo "memory: could not create the store at $db" >&2
+    return 1
   fi
-  rm -rf "$init_lock"
-  init_lock=""
+  python3 -c 'import os, sys
+try:
+    os.rename(sys.argv[1], sys.argv[2])
+except OSError:
+    pass' "$build_dir" "$db"
+  rm -rf "$build_dir"
+  build_dir=""
+  if [ ! -d "$db" ]; then
+    echo "memory: could not create the store at $db" >&2
+    return 1
+  fi
 }
 
 init() {
@@ -189,9 +171,16 @@ from datetime import datetime, timedelta
 if sys.version_info < (3, 11):
     sys.exit("memory: needs python3 3.11 or later; this one is " + sys.version.split()[0])
 path = sys.argv[1]
+def reject_constant(c):
+    raise ValueError(f"{c} is not valid JSON")
+def finite_float(text):
+    value = float(text)
+    if value in (float("inf"), float("-inf")):
+        raise ValueError(f"{text} is too large for a JSON number")
+    return value
 try:
     with open(path, encoding="utf-8") as fh:
-        m = json.load(fh, parse_constant=lambda c: (_ for _ in ()).throw(ValueError(f"{c} is not valid JSON")))
+        m = json.load(fh, parse_constant=reject_constant, parse_float=finite_float)
 except (OSError, ValueError) as exc:
     sys.exit(f"memory: {path} is not readable JSON: {exc}")
 KINDS = {"decision", "preference", "correction", "finding", "handoff", "tool_call"}
