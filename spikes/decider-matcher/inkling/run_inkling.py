@@ -1,3 +1,4 @@
+# Record of the Inkling 2 Mini run (dropped in D16). Kept so the comparison can be rerun.
 """Live run of the six cases against OpenRouter. Run inside `pplx credentials run`.
 Writes recorded.json (raw responses) and results.json (K2, K3, K4, K6)."""
 import json
@@ -8,8 +9,9 @@ import time
 
 import httpx
 
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from cases import CASES, facts_for
-from checker import check
+from checker_inkling import check
 
 MODEL = os.environ.get("LLM_MODEL", "thinkingmachines/inkling-2-mini")
 URL = "https://openrouter.ai/api/v1/chat/completions"

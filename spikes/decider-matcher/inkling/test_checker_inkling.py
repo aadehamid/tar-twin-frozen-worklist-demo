@@ -2,7 +2,7 @@
 import json
 
 from cases import CASES
-from checker import check
+from checker_inkling import check
 
 C1 = CASES[0]
 

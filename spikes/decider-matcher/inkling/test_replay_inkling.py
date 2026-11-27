@@ -5,7 +5,7 @@ import os
 import pytest
 
 from cases import CASES
-from checker import check
+from checker_inkling import check
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 BY_ID = {c["id"]: c for c in CASES}
