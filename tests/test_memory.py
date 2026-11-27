@@ -12,6 +12,7 @@ skips where it is not installed.
 import json
 import os
 import shutil
+import signal
 import subprocess
 import tempfile
 import time
@@ -156,12 +157,13 @@ class WithoutRelate(Base):
         self.assertEqual([f for f in os.listdir(self.tmp.name) if f.startswith("project-memory.")], [])
 
     def test_non_json_constants_are_rejected_before_any_write(self):
-        for constant in ("NaN", "Infinity", "-Infinity"):
+        for constant in ("NaN", "Infinity", "-Infinity", "1e309", "-1e309", '"\\ud800"'):
             with self.subTest(constant):
                 body = json.dumps(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "A fact.")]))
                 p = self.run_memory("remember", "-", stdin=body[:-1] + ', "confidence": ' + constant + "}")
                 self.assertNotEqual(p.returncode, 0)
-                self.assertIn("not valid JSON", p.stderr)
+                self.assertIn("is not readable JSON", p.stderr)
+                self.assertNotIn("Traceback", p.stderr)
                 self.assertFalse(os.path.exists(self.db))
 
 
@@ -285,44 +287,71 @@ class WithRelate(Base):
                                         fingerprint="x"))
         self.assertIn("by zero", p.stdout + p.stderr)
 
-    def test_stale_init_lock_from_a_dead_process_is_cleared(self):
-        lock = self.db + ".init-lock"
-        os.makedirs(lock)
-        dead = subprocess.Popen(["true"])
-        dead.wait()
-        with open(os.path.join(lock, "owner"), "w") as fh:
-            fh.write(f"{os.uname().nodename} {dead.pid}\n")
-        start = time.monotonic()
-        p = self.run_memory("init")
-        self.assertEqual(p.returncode, 0, p.stderr)
-        self.assertLess(time.monotonic() - start, 10)
-        self.assertFalse(os.path.exists(lock))
-
-    def test_creator_killed_mid_build_is_recovered(self):
-        # SIGTERM runs the cleanup trap; SIGKILL runs nothing, so the next
-        # writer must clear the dead creator's lock and half-built store.
+    def test_creator_killed_mid_build_leaves_nothing_in_the_way(self):
+        # A slow relate keeps the first writer inside its build long enough to kill it.
         slow = os.path.join(self.tmp.name, "bin")
         os.makedirs(slow)
         real = shutil.which("relate")
         with open(os.path.join(slow, "relate"), "w") as fh:
-            fh.write(f"#!/bin/bash\nsleep 3\nexec {real} \"$@\"\n")
+            # Build first, then linger, so the kill lands while the build folder exists.
+            fh.write(f"#!/bin/bash\n{real} \"$@\"\nstatus=$?\nsleep 3\nexit $status\n")
         os.chmod(os.path.join(slow, "relate"), 0o755)
         env = dict(self.env, PATH=slow + os.pathsep + self.env["PATH"])
-        for stop in ("terminate", "kill"):
-            with self.subTest(stop):
+        builds = lambda: [f for f in os.listdir(self.tmp.name) if f.startswith("memory.init.")]
+        for sig in (signal.SIGTERM, signal.SIGKILL):
+            with self.subTest(sig.name):
                 shutil.rmtree(self.db, ignore_errors=True)
                 proc = subprocess.Popen(["bash", MEMORY, "init"], env=env, start_new_session=True,
                                         stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-                time.sleep(1)
-                self.assertTrue(os.path.isdir(self.db + ".init-lock"))
-                getattr(proc, stop)()
+                time.sleep(1.5)
+                self.assertEqual(len(builds()), 1, "the build folder should exist mid-build")
+                os.kill(proc.pid, sig)
                 proc.wait(timeout=30)
+                if self._group_alive(proc.pid):
+                    os.killpg(proc.pid, signal.SIGKILL)
+                if sig is signal.SIGTERM:
+                    self.assertEqual(builds(), [], "the EXIT trap removes the build on SIGTERM")
                 start = time.monotonic()
                 p = self.run_memory("init")
                 self.assertEqual(p.returncode, 0, p.stderr)
                 self.assertLess(time.monotonic() - start, 10)
-                self.assertFalse(os.path.exists(self.db + ".init-lock"))
-                self.assertEqual([f for f in os.listdir(self.tmp.name) if ".init." in f], [])
+                self.assert_check_passes()
+
+    @staticmethod
+    def _group_alive(pgid):
+        try:
+            os.killpg(pgid, 0)
+            return True
+        except ProcessLookupError:
+            return False
+
+    def make_build(self, path, hours_old):
+        os.makedirs(path)
+        when = time.time() - hours_old * 3600
+        os.utime(path, (when, when))
+        return path
+
+    def test_old_builds_are_swept_on_every_init_and_fresh_ones_kept(self):
+        self.assertEqual(self.run_memory("init").returncode, 0)
+        old = self.make_build(self.db + ".init.111.1", 2)
+        fresh = self.make_build(self.db + ".init.222.2", 0)
+        self.assertEqual(self.run_memory("init").returncode, 0)
+        self.assertFalse(os.path.exists(old))
+        self.assertTrue(os.path.exists(fresh))
+
+    def test_sweep_matches_the_store_name_literally_and_through_a_symlink(self):
+        real = os.path.join(self.tmp.name, "real")
+        os.makedirs(real)
+        link = os.path.join(self.tmp.name, "link")
+        os.symlink(real, link)
+        db = os.path.join(link, "mem[1]")
+        own = self.make_build(os.path.join(real, "mem[1].init.111.1"), 2)
+        other = self.make_build(os.path.join(real, "mem1.init.111.1"), 2)
+        p = self.run_memory("init", env=dict(self.env, PROJECT_MEMORY_DB=db))
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertFalse(os.path.exists(own))
+        self.assertTrue(os.path.exists(other))
+        self.assertTrue(os.path.isdir(real))
 
     def test_waiters_never_fail_while_another_creates_the_store(self):
         for _ in range(5):
@@ -342,7 +371,6 @@ class WithRelate(Base):
                 self.assertEqual(p.returncode, 0, p.stderr)
                 self.assertLess(time.monotonic() - start, 10)
                 self.assertTrue(os.path.isdir(db.rstrip("/")))
-                self.assertFalse(os.path.exists(db.rstrip("/") + ".init-lock"))
 
     def test_episode_without_a_fingerprint_is_not_reused(self):
         self.assertEqual(self.run_memory("init").returncode, 0)
