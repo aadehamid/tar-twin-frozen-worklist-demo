@@ -26,7 +26,16 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cypher_dir="$here/memory"
 tmp=""
 init_lock=""
-trap '[ -z "$tmp" ] || rm -f "$tmp"; [ -z "$init_lock" ] || rm -rf "$init_lock"' EXIT
+build_dir=""
+cleanup() {
+  [ -z "$tmp" ] || rm -f "$tmp"
+  [ -z "$build_dir" ] || rm -rf "$build_dir"
+  [ -z "$init_lock" ] || rm -rf "$init_lock"
+}
+trap cleanup EXIT
+# Bash skips an EXIT trap when a signal ends it, so clean up on signals too.
+trap 'cleanup; trap - EXIT; exit 130' INT
+trap 'cleanup; trap - EXIT; exit 143' TERM HUP
 
 store() {
   if [ -n "${PROJECT_MEMORY_DB:-}" ]; then
@@ -120,12 +129,21 @@ read_query() {
 # writer builds it beside the final path and renames it into place, under a
 # mkdir lock, so other writers only ever open a finished store.
 create_store() {
-  local db="$1" lock="$1.init-lock" build attempt=0
+  local db="$1" lock="$1.init-lock" attempt=0 owner
   mkdir -p "$(dirname "$db")"
+  if [ ! -w "$(dirname "$db")" ]; then
+    echo "memory: cannot create the store; $(dirname "$db") is not writable" >&2
+    return 1
+  fi
   until mkdir "$lock" 2>/dev/null; do
-    if [ ! -d "$lock" ]; then
-      echo "memory: cannot create $lock; check that its folder is writable" >&2
-      return 1
+    # The holder may have finished between our mkdir and now.
+    [ -d "$db" ] && [ ! -d "$lock" ] && return 0
+    # A lock left by a process on this machine that no longer runs is stale.
+    owner="$(cat "$lock/owner" 2>/dev/null || true)"
+    # SIGKILL skips every trap, so this is how such a lock is recovered.
+    if [ "${owner% *}" = "$(hostname)" ] && ! kill -0 "${owner##* }" 2>/dev/null; then
+      rm -rf "$lock" "$db.init.${owner##* }"
+      continue
     fi
     attempt=$((attempt + 1))
     if [ "$attempt" -ge 100 ]; then
@@ -136,16 +154,16 @@ create_store() {
   done
   # Only the process that made the lock may remove it, so set this after mkdir.
   init_lock="$lock"
+  printf '%s %s\n' "$(hostname)" "$$" > "$lock/owner"
   if [ ! -d "$db" ]; then
-    build="$db.init.$$"
-    rm -rf "$build"
-    if ! relate query --database "$build" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
-      rm -rf "$build" "$init_lock"
-      init_lock=""
+    build_dir="$db.init.$$"
+    rm -rf "$build_dir"
+    if ! relate query --database "$build_dir" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
       echo "memory: could not create the store at $db" >&2
       return 1
     fi
-    mv "$build" "$db"
+    mv "$build_dir" "$db"
+    build_dir=""
   fi
   rm -rf "$init_lock"
   init_lock=""
@@ -173,7 +191,7 @@ if sys.version_info < (3, 11):
 path = sys.argv[1]
 try:
     with open(path, encoding="utf-8") as fh:
-        m = json.load(fh)
+        m = json.load(fh, parse_constant=lambda c: (_ for _ in ()).throw(ValueError(f"{c} is not valid JSON")))
 except (OSError, ValueError) as exc:
     sys.exit(f"memory: {path} is not readable JSON: {exc}")
 KINDS = {"decision", "preference", "correction", "finding", "handoff", "tool_call"}
@@ -253,7 +271,7 @@ m.pop("fingerprint", None)
 canonical = json.dumps(m, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
 m["fingerprint"] = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
 with open(path, "w", encoding="utf-8") as fh:
-    json.dump(m, fh)
+    json.dump(m, fh, allow_nan=False)
 PY
 }
 

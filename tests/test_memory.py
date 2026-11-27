@@ -155,6 +155,15 @@ class WithoutRelate(Base):
                 self.assertFalse(os.path.exists(self.db))
         self.assertEqual([f for f in os.listdir(self.tmp.name) if f.startswith("project-memory.")], [])
 
+    def test_non_json_constants_are_rejected_before_any_write(self):
+        for constant in ("NaN", "Infinity", "-Infinity"):
+            with self.subTest(constant):
+                body = json.dumps(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "A fact.")]))
+                p = self.run_memory("remember", "-", stdin=body[:-1] + ', "confidence": ' + constant + "}")
+                self.assertNotEqual(p.returncode, 0)
+                self.assertIn("not valid JSON", p.stderr)
+                self.assertFalse(os.path.exists(self.db))
+
 
 @unittest.skipUnless(shutil.which("relate"), "relate is not installed")
 class WithRelate(Base):
@@ -275,6 +284,55 @@ class WithRelate(Base):
         p = self.run_cypher_script(dict(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "Raced.")]),
                                         fingerprint="x"))
         self.assertIn("by zero", p.stdout + p.stderr)
+
+    def test_stale_init_lock_from_a_dead_process_is_cleared(self):
+        lock = self.db + ".init-lock"
+        os.makedirs(lock)
+        dead = subprocess.Popen(["true"])
+        dead.wait()
+        with open(os.path.join(lock, "owner"), "w") as fh:
+            fh.write(f"{os.uname().nodename} {dead.pid}\n")
+        start = time.monotonic()
+        p = self.run_memory("init")
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertLess(time.monotonic() - start, 10)
+        self.assertFalse(os.path.exists(lock))
+
+    def test_creator_killed_mid_build_is_recovered(self):
+        # SIGTERM runs the cleanup trap; SIGKILL runs nothing, so the next
+        # writer must clear the dead creator's lock and half-built store.
+        slow = os.path.join(self.tmp.name, "bin")
+        os.makedirs(slow)
+        real = shutil.which("relate")
+        with open(os.path.join(slow, "relate"), "w") as fh:
+            fh.write(f"#!/bin/bash\nsleep 3\nexec {real} \"$@\"\n")
+        os.chmod(os.path.join(slow, "relate"), 0o755)
+        env = dict(self.env, PATH=slow + os.pathsep + self.env["PATH"])
+        for stop in ("terminate", "kill"):
+            with self.subTest(stop):
+                shutil.rmtree(self.db, ignore_errors=True)
+                proc = subprocess.Popen(["bash", MEMORY, "init"], env=env, start_new_session=True,
+                                        stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                time.sleep(1)
+                self.assertTrue(os.path.isdir(self.db + ".init-lock"))
+                getattr(proc, stop)()
+                proc.wait(timeout=30)
+                start = time.monotonic()
+                p = self.run_memory("init")
+                self.assertEqual(p.returncode, 0, p.stderr)
+                self.assertLess(time.monotonic() - start, 10)
+                self.assertFalse(os.path.exists(self.db + ".init-lock"))
+                self.assertEqual([f for f in os.listdir(self.tmp.name) if ".init." in f], [])
+
+    def test_waiters_never_fail_while_another_creates_the_store(self):
+        for _ in range(5):
+            shutil.rmtree(self.db, ignore_errors=True)
+            procs = [subprocess.Popen(["bash", MEMORY, "init"], env=self.env, stdout=subprocess.DEVNULL,
+                                      stderr=subprocess.PIPE, text=True) for _ in range(6)]
+            for proc in procs:
+                _, err = proc.communicate(timeout=60)
+                self.assertEqual(proc.returncode, 0, err)
+        self.assert_check_passes()
 
     def test_trailing_slash_and_missing_parent_are_handled(self):
         for db in (self.db + "/", os.path.join(self.tmp.name, "new", "dir", "memory")):
