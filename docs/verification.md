@@ -60,11 +60,13 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 
 - **Read only.** No step lets the twin change IMPACT Web state.
 - **Baseline fixed.** After freeze, the baseline never changes.
-- **Nothing missed.** Every approved change after freeze shows up as exactly one change event, once the next sync runs, however syncs overlap or repeat.
-- **Freeze is exact.** The twin baseline always equals IMPACT Web's frozen copy, whichever order a freeze and an edit arrive in.
+- **Nothing missed.** Every approved change after freeze shows up as exactly one change event once a sync that starts after the approval finishes, however syncs overlap or repeat. A sync that finishes applies the whole window it read. The model doesn't claim that a sync will ever run.
+- **Freeze is exact.** Freeze copies exactly the requests whose current version the DRB accepted, at their hours at that moment, and the twin baseline always equals that copy, whichever order a freeze and an edit arrive in.
 - **Humans decide.** No AI proposal becomes accepted without a reviewer step. System acceptance is limited to exact and high-scoring rule matches, and the trace records it.
-- **Growth adds up.** Scope growth always equals the sum of approved change deltas. Pending and rejected changes add nothing.
+- **Growth adds up.** In IMPACT Web, live hours equal frozen hours plus every approved change delta. In the twin, scope growth equals the sum of the deltas of the change events it has applied. The two agree once a sync catches up. Pending and rejected changes add nothing.
 - **Gate.** The twin can't mark the baseline ready for use if the match rate on frozen items is below the gate. The freeze itself doesn't depend on the gate.
+
+The [phase 0 spike](spikes/quint-worklist.md) wrote the first version of this spec. Apalache found no broken rule in any trace up to 10 steps, TLC walked every state of a smaller instance, and both caught all twelve seeded bugs. One seeded bug first slipped through because its rule read the same setting the bug changed, so rules now state what's allowed in their own words. Review by a second model then found that Nothing missed and Freeze is exact were too weak to catch a sync that drops its window or a freeze that copies unaccepted requests. Both rules were tightened, with three more seeded bugs to prove it.
 
 From phase 4 the spec also covers exercises, the clock, roles, concurrent editors and the change process from [interactive-planning.md](interactive-planning.md).
 
