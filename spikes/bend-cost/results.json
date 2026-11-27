@@ -1,0 +1,318 @@
+{
+  "checks": {
+    "B1": {
+      "pass": true,
+      "bend": "2.0.40",
+      "sha256_ok": true,
+      "telemetry_off": true
+    },
+    "B2": {
+      "pass": true,
+      "no_unsafe_or_todo": true,
+      "laws_alone": "fail",
+      "proofs": "check",
+      "seconds": 0.2
+    },
+    "B3": {
+      "pass": true,
+      "ran": true,
+      "lean": "Lean (version 4.34.0, x86_64-unknown-linux-gnu, commit 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b, Release)",
+      "seconds": 53.6,
+      "kernel_rejects_tampered_cluster": true
+    },
+    "B4": {
+      "pass": true,
+      "cases": 5000,
+      "seed": 20261127,
+      "mismatches": 0,
+      "laws_false_on_cases": [],
+      "empty": 1220,
+      "first_mismatch": null
+    },
+    "B5": {
+      "pass": true,
+      "mutants": {
+        "B-M1": {
+          "what": "every item in the cluster pays the setup, as if done alone",
+          "verdict": "fail",
+          "failed_at": [
+            "Laws.shared_once"
+          ],
+          "laws_false_on_cases": [
+            "saving",
+            "shared_once"
+          ]
+        },
+        "B-M2": {
+          "what": "the shared setup is left out of the cluster",
+          "verdict": "fail",
+          "failed_at": [
+            "Laws.shared_once"
+          ],
+          "laws_false_on_cases": [
+            "saving",
+            "shared_once"
+          ]
+        },
+        "B-M3": {
+          "what": "the shared setup is counted twice",
+          "verdict": "fail",
+          "failed_at": [
+            "Laws.shared_once"
+          ],
+          "laws_false_on_cases": [
+            "never_more",
+            "saving",
+            "shared_once"
+          ]
+        },
+        "B-M4": {
+          "what": "the first item's own cost is dropped",
+          "verdict": "fail",
+          "failed_at": [
+            "Laws.shared_once"
+          ],
+          "laws_false_on_cases": [
+            "saving",
+            "shared_once"
+          ]
+        }
+      },
+      "proof_defs": [
+        "Laws.never_more",
+        "Laws.saving",
+        "Laws.shared_once",
+        "sa_split"
+      ]
+    }
+  },
+  "runs": [
+    {
+      "label": "laws open",
+      "args": [
+        "LAWS.bend"
+      ],
+      "exit": 1,
+      "seconds": 0.2,
+      "verdict": "fail",
+      "locations": [],
+      "tail": [
+        "SOME PROOFS FAIL",
+        "Error: 3 TODOs found.",
+        "The code is incomplete, and not a valid proof yet."
+      ]
+    },
+    {
+      "label": "proofs",
+      "args": [
+        "PROOF.bend"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "check",
+      "locations": [],
+      "tail": [
+        "ALL PROOFS CHECK",
+        "Use --verdict for mathematical validity."
+      ]
+    },
+    {
+      "label": "verdict",
+      "args": [
+        "PROOF.bend",
+        "--verdict"
+      ],
+      "exit": 0,
+      "seconds": 53.6,
+      "verdict": "check",
+      "locations": [],
+      "tail": [
+        "ALL PROOFS CHECK"
+      ]
+    },
+    {
+      "label": "translate",
+      "args": [
+        "PROOF.bend",
+        "-o",
+        "PROOF.bendtt"
+      ],
+      "exit": 0,
+      "seconds": 0.3,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    },
+    {
+      "label": "kernel on tampered translation",
+      "exit": 1,
+      "tail": [
+        "SOME PROOFS FAIL",
+        "In LAWS_3a_shared__once:",
+        "expected: ((cost_3a_cluster +x0) (.Con, (x1, (x2, ()))))",
+        "observed: ((Nat.add (cost_3a_own (.Con, (x1, (x2, ()))))) x0)"
+      ]
+    },
+    {
+      "label": "compile js",
+      "args": [
+        "cost.bend",
+        "-o",
+        "cost.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    },
+    {
+      "label": "B-M1",
+      "args": [
+        "PROOF.bend"
+      ],
+      "exit": 1,
+      "seconds": 0.2,
+      "verdict": "fail",
+      "locations": [
+        "Laws.shared_once"
+      ],
+      "tail": [
+        "- h : Nat",
+        "- t : List<&2, Nat>",
+        "Location: Laws.shared_once",
+        "26 | def Laws.shared_once(s, h, t):",
+        "27>|   {==}",
+        "   |   ^^^^",
+        "28 | ",
+        "Note: the left side of the equality is the expected, the right side is the observed."
+      ]
+    },
+    {
+      "label": "compile js",
+      "args": [
+        "cost.bend",
+        "-o",
+        "cost.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    },
+    {
+      "label": "B-M2",
+      "args": [
+        "PROOF.bend"
+      ],
+      "exit": 1,
+      "seconds": 0.2,
+      "verdict": "fail",
+      "locations": [
+        "Laws.shared_once"
+      ],
+      "tail": [
+        "- h : Nat",
+        "- t : List<&2, Nat>",
+        "Location: Laws.shared_once",
+        "26 | def Laws.shared_once(s, h, t):",
+        "27>|   {==}",
+        "   |   ^^^^",
+        "28 | ",
+        "Note: the left side of the equality is the expected, the right side is the observed."
+      ]
+    },
+    {
+      "label": "compile js",
+      "args": [
+        "cost.bend",
+        "-o",
+        "cost.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    },
+    {
+      "label": "B-M3",
+      "args": [
+        "PROOF.bend"
+      ],
+      "exit": 1,
+      "seconds": 0.2,
+      "verdict": "fail",
+      "locations": [
+        "Laws.shared_once"
+      ],
+      "tail": [
+        "- h : Nat",
+        "- t : List<&2, Nat>",
+        "Location: Laws.shared_once",
+        "26 | def Laws.shared_once(s, h, t):",
+        "27>|   {==}",
+        "   |   ^^^^",
+        "28 | ",
+        "Note: the left side of the equality is the expected, the right side is the observed."
+      ]
+    },
+    {
+      "label": "compile js",
+      "args": [
+        "cost.bend",
+        "-o",
+        "cost.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    },
+    {
+      "label": "B-M4",
+      "args": [
+        "PROOF.bend"
+      ],
+      "exit": 1,
+      "seconds": 0.2,
+      "verdict": "fail",
+      "locations": [
+        "Laws.shared_once"
+      ],
+      "tail": [
+        "- h : Nat",
+        "- t : List<&2, Nat>",
+        "Location: Laws.shared_once",
+        "26 | def Laws.shared_once(s, h, t):",
+        "27>|   {==}",
+        "   |   ^^^^",
+        "28 | ",
+        "Note: the left side of the equality is the expected, the right side is the observed."
+      ]
+    },
+    {
+      "label": "compile js",
+      "args": [
+        "cost.bend",
+        "-o",
+        "cost.mjs"
+      ],
+      "exit": 0,
+      "seconds": 0.2,
+      "verdict": "error",
+      "locations": [],
+      "tail": []
+    }
+  ],
+  "inputs": {
+    "bend": "2.0.40",
+    "os": "Linux-6.1.155-x86_64-with-glibc2.43",
+    "python": "3.14.8",
+    "node": "v20.20.2",
+    "lean": "Lean (version 4.34.0, x86_64-unknown-linux-gnu, commit 293d5d0c0c3f3dded4688b3ccd6a33939ac5102b, Release)"
+  },
+  "total_seconds": 57.7
+}

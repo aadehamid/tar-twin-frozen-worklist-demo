@@ -63,7 +63,7 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 - **Nothing missed.** Every approved change after freeze shows up as exactly one change event once a sync that starts after the approval finishes, however syncs overlap or repeat. A sync that finishes applies the whole window it read. The model doesn't claim that a sync will ever run.
 - **Freeze is exact.** Freeze copies exactly the requests whose current version the DRB accepted, at their hours at that moment, and the twin baseline always equals that copy, whichever order a freeze and an edit arrive in.
 - **Humans decide.** No AI proposal becomes accepted without a reviewer step. System acceptance is limited to exact and high-scoring rule matches, and the trace records it.
-- **Growth adds up.** In IMPACT Web, live hours equal frozen hours plus every approved change delta. In the twin, scope growth equals the sum of the deltas of the change events it has applied. The two agree once a sync catches up. Pending and rejected changes add nothing.
+- **Growth adds up.** In IMPACT Web, a request's live hours equal its live hours at the moment of freeze plus every approved change delta. That holds for requests left out of the frozen copy too. In the twin, scope growth equals the sum of the deltas of the change events it has applied. The two agree once a sync catches up. Pending and rejected changes add nothing.
 - **Gate.** The twin can't mark the baseline ready for use if the match rate on frozen items is below the gate. The freeze itself doesn't depend on the gate.
 
 The [phase 0 spike](spikes/quint-worklist.md) wrote the first version of this spec. Apalache found no broken rule in any trace up to 10 steps, TLC walked every state of a smaller instance, and both caught all twelve seeded bugs. One seeded bug first slipped through because its rule read the same setting the bug changed, so rules now state what's allowed in their own words. Review by a second model then found that Nothing missed and Freeze is exact were too weak to catch a sync that drops its window or a freeze that copies unaccepted requests. Both rules were tightened, with three more seeded bugs to prove it.
@@ -75,6 +75,8 @@ The same spec also produces example traces, such as "add after freeze, sync, rev
 ## Where Bend fits
 
 Bend 2 is now a language with dependent types, where you write rules in a laws file and the compiler demands a proof that the code keeps them ([Bend on GitHub](https://github.com/bendlang/bend)). That fits the idea of proving the cost rules. The project's README also says it is young, mostly AI-written and not fully audited, and Python is only a planned target. So it stays out of the main build path. One optional spike: write the cluster-cost and cut-line rules as Bend laws and prove them, then check that the Python results match the Bend version on the same inputs. If it works cleanly it makes a good slide for an architect audience. If not, the Hypothesis properties already cover the same rules.
+
+The [phase 0 spike](spikes/bend-cost.md) proved the cluster rule for a single shared setup: never more than standalone, setup counted once, and the saving equal to the setup times the extra items. The Lean kernel accepted the proof and rejected a tampered one, Bend's JavaScript matched Python on 5,000 cases, and all four seeded bugs failed at a proof. "Never more" alone missed three of the four bugs, so the Hypothesis property for clusters checks both halves.
 
 ## What formal methods don't cover
 
