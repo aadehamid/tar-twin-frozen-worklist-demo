@@ -1,0 +1,30 @@
+{
+  "sheet": "200-PID-002",
+  "X1": {
+    "pydexpi": "2.1.0",
+    "license": "GNU Affero General Public License v3",
+    "python": "3.14.8"
+  },
+  "X4": {
+    "validator_issues": 0
+  },
+  "X9": {
+    "svg": "200-PID-002.svg",
+    "svg_bytes": 37090,
+    "png": "200-PID-002.png",
+    "png_bytes": 69137
+  },
+  "X10": {
+    "nodes": 24,
+    "relationships": 28
+  },
+  "X11": {
+    "build_ms": 39.5,
+    "write_xml_ms": 38.6,
+    "reload_ms": 96.8,
+    "validate_ms": 13.0,
+    "render_svg_ms": 9.2,
+    "render_png_ms": 95.1
+  },
+  "xml_bytes": 430497
+}

@@ -72,6 +72,13 @@ def test_x2_deterministic_build(tmp_path):
 
 
 # X3
+def test_x2_committed_xml_is_current(written):
+    # run_spike.py writes the XML into the repo. It must be what the builder makes today.
+    committed = HERE / f"{X.SHEET}.xml"
+    assert committed.exists(), "run python run_spike.py"
+    assert committed.read_bytes() == written.read_bytes()
+
+
 def test_x3_schema_valid(written):
     schema = _schema()
     ok = schema.validate(etree.parse(str(written)))
@@ -203,6 +210,21 @@ def test_x8_fact_holds(fid, reloaded):
         assert _check_claim(claim, edges, conns), (fid, claim, cases.FACTS[fid][1])
 
 
+TAG_IN_TEXT = re.compile(r"\b[A-Z]{1,4}-\d{3,4}[A-Z]?\b")
+
+
+def _tags_in(text):
+    return set(TAG_IN_TEXT.findall(text))
+
+
+@pytest.mark.parametrize("fid", sorted(X.FACT_CLAIMS))
+def test_x8_claims_match_fact_text(fid):
+    # The claims are written by hand, so tie them to the words: the other tags a fact names
+    # must be exactly the other tags its claims check. Otherwise the text could drift.
+    own, fact_text = cases.FACTS[fid]
+    assert _tags_in(fact_text) - {own} == _tags_in(repr(X.FACT_CLAIMS[fid])) - {own}, fact_text
+
+
 def test_x8_claim_checker_catches_a_wrong_fact(reloaded):
     edges = G.flow_edges(reloaded)
     conns = G.connectors(reloaded)
@@ -266,6 +288,107 @@ def test_x9_pipe_lines_join_their_ends(reloaded):
         pts = polyline_of(line)
         for (x0, y0), (x1, y1) in zip(pts, pts[1:]):
             assert snap_axis(x1 - x0, y1 - y0) is not None, (pipe.id, "diagonal leg")
+
+
+# Text is checked with estimated boxes: about 0.55 em per character wide and 1 em tall. That is
+# rough, so the margins are generous, but it catches labels that run off the sheet, under the
+# title block or into each other.
+CHAR_W, PAD = 0.55, 1.0
+
+
+def _texts(model):
+    out = []
+
+    def walk(group, in_title):
+        in_title = in_title or getattr(group, "id", "") == "TitleBlock"
+        for e in getattr(group, "elements", None) or []:
+            if type(e).__name__ == "Text":
+                out.append((e, in_title))
+        for g in getattr(group, "groups", None) or []:
+            walk(g, in_title)
+
+    for g in model.diagram.groups:
+        walk(g, False)
+    return out
+
+
+def _text_box(t):
+    w, h = CHAR_W * t.size * len(t.text), t.size
+    align = t.alignment.name
+    x = t.position.x - (0 if align.startswith("LEFT") else w if align.startswith("RIGHT") else w / 2)
+    y = t.position.y - h / 2
+    return (x - PAD, y - PAD, x + w + PAD, y + h + PAD)
+
+
+def _overlap(a, b):
+    return min(a[2], b[2]) > max(a[0], b[0]) and min(a[3], b[3]) > max(a[1], b[1])
+
+
+def _title_rect(model):
+    tb = next(g for g in model.diagram.groups if g.id == "TitleBlock")
+    pts = [p for e in tb.elements if type(e).__name__ == "PolyLine" for p in e.points]
+    return (min(p.x for p in pts), min(p.y for p in pts), max(p.x for p in pts),
+            max(p.y for p in pts))
+
+
+def test_x9_text_inside_border_and_clear_of_title_block(reloaded):
+    border = next(g for g in reloaded.diagram.groups if type(g).__name__ == "Border")
+    pts = [p for e in border.elements for p in e.points]
+    inner = (min(p.x for p in pts), min(p.y for p in pts), max(p.x for p in pts),
+             max(p.y for p in pts))
+    title = _title_rect(reloaded)
+    for t, in_title in _texts(reloaded):
+        b = _text_box(t)
+        assert inner[0] <= b[0] and b[2] <= inner[2] and inner[1] <= b[1] and b[3] <= inner[3], t.text
+        if not in_title:
+            assert not _overlap(b, title), t.text
+
+
+def test_x9_text_does_not_overlap_text(reloaded):
+    boxes = [(t.text, _text_box(t)) for t, _ in _texts(reloaded)]
+    for (a, ba), (b, bb) in combinations(boxes, 2):
+        assert not _overlap(ba, bb), (a, b)
+
+
+def test_x9_symbols_clear_of_title_block(reloaded):
+    title = _title_rect(reloaded)
+    for obj in _tagged_objects(reloaded):
+        e = symbol_extent(get_representation_group_of_object(reloaded, obj))
+        assert not _overlap((e.min_x, e.min_y, e.max_x, e.max_y), title), G.tag_of(obj)
+
+
+def test_x9_equipment_text_clear_of_other_symbols(reloaded):
+    # A label may sit inside its own symbol (a tag inside a vessel) but not on another one.
+    extents = {}
+    for obj in _tagged_objects(reloaded):
+        e = symbol_extent(get_representation_group_of_object(reloaded, obj))
+        extents[G.tag_of(obj)] = (e.min_x, e.min_y, e.max_x, e.max_y)
+    for t, in_title in _texts(reloaded):
+        if in_title:
+            continue
+        owner = next((tag for tag in extents if t.id.startswith(tag.replace("-", "_") + "_")), None)
+        for tag, box in extents.items():
+            if tag != owner:
+                assert not _overlap(_text_box(t), box), (t.text, tag)
+
+
+def test_x9_reactor_text_clear_of_beds(reloaded):
+    # Text inside a reactor must not sit on a catalyst bed outline. Beds are the dashed
+    # rectangles in the reactor symbols.
+    for tag in ("R-201", "R-202"):
+        kind = build_sheet.EQUIPMENT[tag][0]
+        cx, cy = build_sheet.EQUIPMENT[tag][1]
+        shape, _ = build_sheet.SYMBOLS[kind]
+        beds = []
+        for prim in shape.primitives:
+            if type(prim).__name__ == "PolyLine" and prim.stroke.dashStyle.name != "SOLID":
+                xs = [p.x + cx for p in prim.points]
+                ys = [p.y + cy for p in prim.points]
+                beds.append((min(xs), min(ys), max(xs), max(ys)))
+        for t, _ in _texts(reloaded):
+            if t.id.startswith(tag.replace("-", "_") + "_"):
+                for bed in beds:
+                    assert not _overlap(_text_box(t), bed), (t.text, tag)
 
 
 # X10

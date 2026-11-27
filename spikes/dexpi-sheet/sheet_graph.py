@@ -9,6 +9,16 @@ from pydexpi.toolkits.model_toolkit import get_all_instances_in_model
 EQUIPMENT_CLASSES = {"TubularHeatExchanger", "Furnace", "PressureVessel"}
 VALVE_CLASSES = {"GateValve", "GlobeValve"}
 CONNECTOR_CLASSES = {"FlowInPipeOffPageConnector", "FlowOutPipeOffPageConnector"}
+NOZZLE_CLASSES = {"Nozzle", "ProcessNozzle"}
+
+
+def text_of(mls):
+    """Plain text of a DEXPI MultiLanguageString, or of a plain string."""
+    if mls is None:
+        return ""
+    if isinstance(mls, str):
+        return mls
+    return " ".join(s.value for s in mls.singleLanguageStrings)
 
 
 def tag_of(obj):
@@ -91,7 +101,7 @@ def structural_problems(model):
             used[id(node)] += 1
     for obj in objects(model):
         name = type(obj).__name__
-        if name in VALVE_CLASSES or name in CONNECTOR_CLASSES or name == "Nozzle":
+        if name in VALVE_CLASSES or name in CONNECTOR_CLASSES or name in NOZZLE_CLASSES:
             for n in obj.nodes:
                 if used[id(n)] != 1:
                     problems.append(f"{obj.id} node {n.id} used {used[id(n)]} times")
@@ -193,6 +203,6 @@ def connectors(model):
             out[obj.pipeConnectorNumber] = (
                 type(obj).__name__,
                 getattr(ref, "referencedDrawingNumber", None),
-                obj.pipeConnectorDescription or "",
+                text_of(obj.pipeConnectorDescription),
             )
     return out

@@ -228,7 +228,7 @@ Each phase ends with a check-in before the next starts. Within each phase, the c
 
 | Phase | Work | Exit check |
 |---|---|---|
-| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI. Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker. Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
+| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI (done, see [spike](spikes/dexpi-sheet.md)). Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker. Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
 | 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec, with schema and SHACL checks on every write | All engineering rules pass, the counts match the spec, and Hamid signs off the scenario |
 | 2. IMPACT Web | Service and UI, including review and freeze | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
 | 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |
