@@ -45,10 +45,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753415-33W0hoyPqqxOhsGSfviR",
+   "id": "gen-dec-1795753636-Xxv1swTzVMndtrWvjA3E",
    "provider": "Perplexity"
   },
-  "latency_s": 0.514
+  "latency_s": 0.444,
+  "cost": 0
  },
  {
   "case": "C1",
@@ -96,10 +97,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753416-JPYmeqioXZS2dcjC5syU",
+   "id": "gen-dec-1795753637-JlML10Irv08f3TrWBn0W",
    "provider": "Perplexity"
   },
-  "latency_s": 0.286
+  "latency_s": 0.322,
+  "cost": 0
  },
  {
   "case": "C1",
@@ -147,10 +149,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753416-EuuG50lHZe0QU6KqlFzo",
+   "id": "gen-dec-1795753637-3moAGSEInSRVfZ42eaJb",
    "provider": "Perplexity"
   },
-  "latency_s": 0.372
+  "latency_s": 0.296,
+  "cost": 0
  },
  {
   "case": "C2",
@@ -198,10 +201,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753416-suPWljyNmJ9FZitCYzBh",
+   "id": "gen-dec-1795753637-wnQ1nUMMqkQOk2ktWLBU",
    "provider": "Perplexity"
   },
-  "latency_s": 0.32
+  "latency_s": 0.316,
+  "cost": 0
  },
  {
   "case": "C2",
@@ -249,10 +253,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753417-hTwRraD374sQHM8tcSFX",
+   "id": "gen-dec-1795753637-q1EYQDdtberF7fLRTU4A",
    "provider": "Perplexity"
   },
-  "latency_s": 0.32
+  "latency_s": 0.288,
+  "cost": 0
  },
  {
   "case": "C2",
@@ -300,10 +305,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753417-S5DJvzxXW2oYMSPzeRZD",
+   "id": "gen-dec-1795753638-43pMVOjRuNODzH3vUuG9",
    "provider": "Perplexity"
   },
-  "latency_s": 0.284
+  "latency_s": 0.332,
+  "cost": 0
  },
  {
   "case": "C3",
@@ -348,10 +354,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753417-7cKww0oROf0h2Qum6a0C",
+   "id": "gen-dec-1795753638-RPN0mwz7zhZMLhU0jNYL",
    "provider": "Perplexity"
   },
-  "latency_s": 0.275
+  "latency_s": 0.444,
+  "cost": 0
  },
  {
   "case": "C3",
@@ -396,10 +403,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753417-MAB4KuPMh0LHlLNM3Cq4",
+   "id": "gen-dec-1795753639-AVXqdk7tIyivAMzsSw6X",
    "provider": "Perplexity"
   },
-  "latency_s": 0.317
+  "latency_s": 0.296,
+  "cost": 0
  },
  {
   "case": "C3",
@@ -444,10 +452,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753418-mxhVPeNVMuJUHEDvRSW2",
+   "id": "gen-dec-1795753639-49paj1l6IiorWtEnUcb9",
    "provider": "Perplexity"
   },
-  "latency_s": 0.512
+  "latency_s": 0.318,
+  "cost": 0
  },
  {
   "case": "C4",
@@ -492,10 +501,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753418-k4QXcJ8WnhQBXaeyGs2L",
+   "id": "gen-dec-1795753639-Uxc6fEUfGHTLWyaXsx7c",
    "provider": "Perplexity"
   },
-  "latency_s": 0.38
+  "latency_s": 0.294,
+  "cost": 0
  },
  {
   "case": "C4",
@@ -540,10 +550,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753419-SC37E8Ixq4igXVJEHKd4",
+   "id": "gen-dec-1795753639-6Sow9M2mimFaHMpHfoHM",
    "provider": "Perplexity"
   },
-  "latency_s": 0.332
+  "latency_s": 0.288,
+  "cost": 0
  },
  {
   "case": "C4",
@@ -588,10 +599,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753419-wQRFitSTCPvCfpL02YVJ",
+   "id": "gen-dec-1795753640-g47NmRdswsYm0XeOblCM",
    "provider": "Perplexity"
   },
-  "latency_s": 0.336
+  "latency_s": 0.32,
+  "cost": 0
  },
  {
   "case": "C5",
@@ -632,10 +644,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753419-k9oAEcV8okxRxZU3QpDa",
+   "id": "gen-dec-1795753640-Vwkg53ZA0Pyger3793Rg",
    "provider": "Perplexity"
   },
-  "latency_s": 0.323
+  "latency_s": 0.312,
+  "cost": 0
  },
  {
   "case": "C5",
@@ -676,10 +689,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753420-U29deVFhYAnSJc3JWrvQ",
+   "id": "gen-dec-1795753640-oRq0hf5zv9rn1MzfOZou",
    "provider": "Perplexity"
   },
-  "latency_s": 0.34
+  "latency_s": 0.392,
+  "cost": 0
  },
  {
   "case": "C5",
@@ -720,10 +734,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753420-kp9CX3NGnP0lop8br33o",
+   "id": "gen-dec-1795753641-wSyCPnJgTRLHwlAYsmOY",
    "provider": "Perplexity"
   },
-  "latency_s": 0.36
+  "latency_s": 0.308,
+  "cost": 0
  },
  {
   "case": "C6",
@@ -771,10 +786,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753420-NooYKeO9DyAeiH9N7cp6",
+   "id": "gen-dec-1795753641-pGbnuqCEdQ0V7yrz1WSC",
    "provider": "Perplexity"
   },
-  "latency_s": 0.274
+  "latency_s": 0.308,
+  "cost": 0
  },
  {
   "case": "C6",
@@ -822,10 +838,11 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753421-wadwTyscL3ijEe10x53Q",
+   "id": "gen-dec-1795753641-IaZuH18Xvpr6PTA4noIB",
    "provider": "Perplexity"
   },
-  "latency_s": 0.31
+  "latency_s": 0.288,
+  "cost": 0
  },
  {
   "case": "C6",
@@ -873,9 +890,10 @@
      "upstream_inference_completions_cost": 0
     }
    },
-   "id": "gen-dec-1795753421-DthmeXYkxGh6UsUz9gHl",
+   "id": "gen-dec-1795753642-IqC8OOamyUD1V4vHTTbr",
    "provider": "Perplexity"
   },
-  "latency_s": 0.336
+  "latency_s": 0.232,
+  "cost": 0
  }
 ]

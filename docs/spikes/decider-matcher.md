@@ -38,10 +38,13 @@ Each case runs 3 times, 18 calls in total.
 
 The checker turns a Decider response into one of three outcomes, the same ones as in matching-showcase.md section 2. None of them is an automatic accept.
 
-1. Rejected if the response is malformed: no `tag` or `evidence` answer, a choice outside the options sent, probabilities that don't sum to 1 within 0.01, or a confidence outside 0 to 1.
-2. Abstained if `tag` is `none`. The evidence answer is ignored.
-3. Rejected if the evidence fact doesn't belong to the picked tag.
-4. Otherwise a proposal, banded `high` when confidence is at least 0.8 and `low` below that. The band is only a display aid in the queue. The threshold is provisional, and phase 4 sets it from the 200-request evaluation.
+1. Rejected if the `tag` answer is malformed: missing, a choice outside the options sent, a probability for each option that isn't a finite number from 0 to 1, probabilities that don't sum to 1 within 0.01, or a confidence that isn't a finite number from 0 to 1.
+2. Abstained if `tag` is `none`. The evidence answer isn't read at all, so a missing, malformed or other-tag evidence answer doesn't matter. This matches "no fact check" for abstentions in matching-showcase.md.
+3. Rejected if the `evidence` answer is malformed, by the same rules as rule 1.
+4. Rejected if the evidence fact doesn't belong to the picked tag.
+5. Otherwise a proposal, banded `high` when confidence is at least 0.8 and `low` below that. The band is only a display aid in the queue. The threshold is provisional, and phase 4 sets it from the 200-request evaluation.
+
+Each verdict carries a `kind` (`malformed`, `none`, `evidence_owner`, `passed`, or `http` for a failed call), and the gates read that field, never the reason text. The compatibility check (work type against equipment class) belongs to phase 4. In this spike the candidates are hand-picked, so it doesn't run.
 
 Decider computes confidence as \((p_{top} - 1/n) / (1 - 1/n)\) for \(n\) options, so it isn't the top probability ([Perplexity Decisions docs](https://docs.perplexity.ai/docs/decisions/decisions)).
 
@@ -49,15 +52,15 @@ Decider computes confidence as \((p_{top} - 1/n) / (1 - 1/n)\) for \(n\) options
 
 | ID | Check | Pass condition |
 |---|---|---|
-| D1 | Model is available | Every call returns HTTP 200, and the response's `model` field starts with `perplexity/pplx-decider-v1.3`. RECORD which version the `latest` alias serves on the day of the run |
-| D2 | Responses are well formed | All 18 responses pass rule 1 |
+| D1 | Model is available | Every call returns HTTP 200, and the response's `model` field starts with `DECIDER_EXPECT_PREFIX` (default `perplexity/pplx-decider-v1.3`). RECORD which version the `latest` alias serves on the day of the run |
+| D2 | Responses are well formed | All 18 calls return 200 and none gets kind `malformed` |
 | D3 | Checker verdicts on live answers | RECORD for each call the outcome, band, confidence, the probability for each option and the evidence fact |
-| D4 | Right answers | C1 and C2 right in at least 2 of 3 runs each, and C3 and C6 abstain in at least 2 of 3 runs each. C4 and C5 are reported |
-| D5 | Stable answers | The same `tag` choice in all 3 runs of every case. RECORD the largest spread in top probability across runs |
-| D6 | Checker unit tests, no network | Crafted responses give the outcomes in section 3: a choice outside the options, a missing answer, probabilities summing to 0.9 and a confidence of 1.2 are rejected. `none` abstains even with evidence from another tag. Evidence from another tag rejects a pick. A wrong candidate with its own fact as evidence passes as a proposal. A correct pick passes as `high` at 0.9 confidence and `low` at 0.5. No outcome is ever an accept |
+| D4 | Right answers | A run counts as right only if it's a proposal for the true tag, or an abstention when the true answer is none. A rejected pick of the true tag doesn't count. C1 and C2 right in at least 2 of 3 runs each, and C3 and C6 in at least 2 of 3. C4 and C5 are reported |
+| D5 | Stable answers | The same verdict (outcome and tag) in all 3 runs of every case, and every run well formed. RECORD the spread in top probability across runs |
+| D6 | Checker unit tests, no network | Crafted responses give the outcomes in section 3: a choice outside the options, a missing answer, probabilities summing to 0.9 and a confidence of 1.2 are rejected. `none` abstains even with evidence from another tag. Evidence from another tag rejects a pick. A wrong candidate with its own fact as evidence passes as a proposal. A correct pick passes as `high` at 0.9 confidence and `low` at 0.5. Non-object bodies, null answers, NaN, booleans and out-of-range values are rejected without raising. `none` abstains with missing or broken evidence. The gate summary fails, not crashes, on HTTP errors and rejections. No outcome is ever an accept |
 | D7 | Speed and cost | RECORD median and maximum latency and the cost per call from the usage data. The demo expects under 1 second per call |
-| D8 | Recorded answers replay | Raw responses go to `spikes/decider-matcher/recorded.json`. Replaying them through the checker without the network gives the same verdicts as the live run |
-| D9 | The key stays out | No OpenRouter key string appears in the recorded responses, the results or the run log |
+| D8 | Recorded answers replay | Raw responses go to `spikes/decider-matcher/recorded.json`. It must hold exactly the 18 case and run pairs, all HTTP 200, and replaying them through the checker without the network gives the same verdicts as the live run |
+| D9 | The key stays out | Manual check after the run: `rg "sk-or-v1-[A-Za-z0-9]"` finds nothing in the recorded responses, the results or the run log |
 | D10 | Free endpoint limits | RECORD any HTTP 429. The runner retries a 429 once after 5 seconds. If v1.3 stays rate limited, the fallback is `perplexity/pplx-decider-v1.2`, the paid endpoint, recorded as a separate run |
 
 ## 5. Inkling 2 Mini, the first run
@@ -91,14 +94,14 @@ pytest spikes/decider-matcher
 
 | ID | Result | Detail |
 |---|---|---|
-| D1 | PASS | All 18 calls returned 200 from `perplexity/pplx-decider-v1.3-20261112`. The `latest` alias served `perplexity/pplx-decider-v1.2-20261016` on the same day |
-| D2 | PASS | All 18 responses well formed |
+| D1 | PASS | All 18 calls returned 200 from `perplexity/pplx-decider-v1.3-20261112`. RECORD: the `latest` alias served `perplexity/pplx-decider-v1.2-20261016` on the same day |
+| D2 | PASS | All 18 calls returned 200 with no malformed verdicts |
 | D3 | RECORD | 12 proposals, all band `high`, and 6 abstentions. No rejections. Each proposal's evidence fact belonged to the picked tag |
 | D4 | PASS | Every case right in 3 of 3 runs, C4 and C5 included |
-| D5 | PASS | Same pick in every run. The top probability didn't move at all across runs |
-| D7 | RECORD | Median 0.33 s, worst 0.51 s. Cost $0, since the v1.3 endpoint is free |
-| D8 | PASS | Replaying `recorded.json` through the checker gives the live verdicts |
-| D9 | PASS | No key string in the recorded responses, results or log |
+| D5 | PASS | Same verdict in every run of every case. The top probability didn't move at all across runs |
+| D7 | RECORD | Median 0.31 s, worst 0.44 s. Cost $0, since the v1.3 endpoint is free |
+| D8 | PASS | All 18 pairs present, all 200, and the replay matches. `pytest spikes/decider-matcher` runs 35 tests, all passing |
+| D9 | PASS (manual) | The search found nothing |
 | D10 | RECORD | No 429s, so the fallback run wasn't needed |
 
 | Case | Pick | Confidence | Evidence fact |

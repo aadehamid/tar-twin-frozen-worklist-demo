@@ -1,5 +1,5 @@
 """Live run of the six cases against OpenRouter's Decisions API.
-Run inside `pplx credentials run`. Writes recorded.json and results.json (D1 to D5, D7, D10)."""
+Run inside `pplx credentials run`. Writes recorded.json and results.json."""
 import json
 import os
 import statistics
@@ -9,10 +9,12 @@ import time
 import httpx  # not urllib: urllib cannot tunnel through an https:// HTTPS_PROXY and hangs
 
 from cases import CASES
-from checker import check
 from decider import request
+from summary import summarize
 
 MODEL = os.environ.get("DECIDER_MODEL", "perplexity/pplx-decider-v1.3:free")
+# Prefix the served `model` field must start with. Set it when running the v1.2 fallback (D10).
+EXPECT = os.environ.get("DECIDER_EXPECT_PREFIX", "perplexity/pplx-decider-v1.3")
 URL = "https://openrouter.ai/api/alpha/decisions"
 RUNS = 3
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -21,66 +23,61 @@ CLIENT = httpx.Client(timeout=httpx.Timeout(30, connect=10))
 
 
 def post(body):
-    for attempt in range(2):
+    """Return (status, json_or_error_dict, seconds, retried_429)."""
+    retried = 0
+    while True:
         t0 = time.time()
         try:
             r = CLIENT.post(URL, json=body)
         except httpx.HTTPError as e:
-            return 0, {"error": type(e).__name__}, time.time() - t0, attempt
-        if r.status_code == 429 and attempt == 0:
+            return 0, {"error": type(e).__name__}, time.time() - t0, retried
+        if r.status_code == 429 and not retried:
+            retried = 1
             time.sleep(5)
             continue
-        data = r.json() if r.status_code == 200 else {"error": r.text[:300]}
-        return r.status_code, data, time.time() - t0, attempt
-    return r.status_code, {"error": "429 after retry"}, time.time() - t0, attempt
+        try:
+            data = r.json() if r.status_code == 200 else {"error": r.text[:300]}
+        except ValueError:
+            return r.status_code, {"error": "non-JSON body"}, time.time() - t0, retried
+        if not isinstance(data, dict):
+            data = {"error": "JSON body is not an object", "body": data}
+        return r.status_code, data, time.time() - t0, retried
 
 
 def alias_version():
-    case = CASES[0]
-    status, data, _, _ = post(request("~perplexity/pplx-decider-latest", case))
+    status, data, _, _ = post(request("~perplexity/pplx-decider-latest", CASES[0]))
     return data.get("model") if status == 200 else f"http {status}"
 
 
 recorded, rows = [], []
 for case in CASES:
     for run in range(RUNS):
-        status, data, secs, retries = post(request(MODEL, case))
-        verdict = check(data, case) if status == 200 else {"outcome": "rejected", "reason": f"http {status}"}
-        tag = (data.get("answers") or {}).get("tag", {}) if status == 200 else {}
-        rec = {"case": case["id"], "run": run, "status": status, "retried_429": retries,
-               "response": data, "latency_s": round(secs, 3)}
-        recorded.append(rec)
-        rows.append({"case": case["id"], "run": run, "status": status, "model": data.get("model"),
-                     "verdict": verdict, "probabilities": tag.get("probabilities"),
-                     "top_p": max((tag.get("probabilities") or {"": 0}).values()),
-                     "correct": verdict.get("tag") == case["answer"], "latency_s": round(secs, 3),
-                     "cost": (data.get("usage") or {}).get("cost"), "retried_429": retries})
-        print(case["id"], run, status, verdict, f"{secs:.2f}s", flush=True)
+        status, data, secs, retried = post(request(MODEL, case))
+        usage = data.get("usage") if isinstance(data.get("usage"), dict) else {}
+        recorded.append({"case": case["id"], "run": run, "status": status, "retried_429": retried,
+                         "response": data, "latency_s": round(secs, 3), "cost": usage.get("cost")})
+        rows.append((case, run, status, data))
+        print(case["id"], run, status, f"{secs:.2f}s", flush=True)
 
-d1 = all(r["status"] == 200 and str(r["model"]).startswith("perplexity/pplx-decider-v1.3") for r in rows)
-MALFORMED = ("missing ", "outside options", "do not match", "do not sum", "confidence outside")
-d2 = all(r["status"] == 200 and not any(m in r["verdict"]["reason"] for m in MALFORMED) for r in rows)
-per_case = {c["id"]: sum(r["correct"] for r in rows if r["case"] == c["id"]) for c in CASES}
-d4 = all(per_case[c] >= 2 for c in ("C1", "C2", "C3", "C6"))
-picks = {c["id"]: {r["verdict"].get("tag") for r in rows if r["case"] == c["id"]} for c in CASES}
-spread = {c["id"]: round(max(r["top_p"] for r in rows if r["case"] == c["id"]) -
-                         min(r["top_p"] for r in rows if r["case"] == c["id"]), 4) for c in CASES}
-d5 = all(len(p) == 1 for p in picks.values())
-lat = [r["latency_s"] for r in rows]
+s = summarize(rows, EXPECT)
+lat = [r["latency_s"] for r in recorded]
 results = {
     "model": MODEL,
-    "D1": {"status": "PASS" if d1 else "FAIL", "served": sorted({str(r["model"]) for r in rows}),
-           "latest_alias_serves": alias_version()},
-    "D2": {"status": "PASS" if d2 else "FAIL"},
-    "D3": {"status": "RECORD", "rows": [{k: r[k] for k in ("case", "run", "verdict", "probabilities")} for r in rows]},
-    "D4": {"status": "PASS" if d4 else "FAIL", "correct_of_3": per_case},
-    "D5": {"status": "PASS" if d5 else "FAIL", "picks": {k: sorted(map(str, v)) for k, v in picks.items()},
-           "top_p_spread": spread},
+    "D1": {"status": "PASS" if s["D1"] else "FAIL", "expect_prefix": EXPECT,
+           "served": sorted({str(r["model"]) for r in s["rows"]}), "latest_alias_serves": alias_version()},
+    "D2": {"status": "PASS" if s["D2"] else "FAIL"},
+    "D3": {"status": "RECORD", "rows": [{k: r[k] for k in ("case", "run", "status", "verdict", "usable")}
+                                       for r in s["rows"]]},
+    "D4": {"status": "PASS" if s["D4"] else "FAIL", "correct_of_3": s["correct_of_3"]},
+    "D5": {"status": "PASS" if s["D5"] else "FAIL", "verdict_signatures": s["verdict_signatures"],
+           "top_p_spread": s["top_p_spread"]},
     "D7": {"status": "RECORD", "latency_median_s": statistics.median(lat), "latency_max_s": max(lat),
-           "cost_usd_total": round(sum(r["cost"] or 0 for r in rows), 6)},
-    "D10": {"status": "RECORD", "calls_retried_after_429": sum(r["retried_429"] for r in rows)},
+           "cost_usd_total": round(sum(r["cost"] or 0 for r in recorded), 6)},
+    "D10": {"status": "RECORD", "calls_retried_after_429": sum(r["retried_429"] for r in recorded)},
 }
 json.dump(recorded, open(os.path.join(HERE, f"recorded{SUFFIX}.json"), "w"), indent=1)
 json.dump(results, open(os.path.join(HERE, f"results{SUFFIX}.json"), "w"), indent=1)
+for r in s["rows"]:
+    print(r["case"], r["run"], r["verdict"], flush=True)
 print(json.dumps({k: v["status"] for k, v in results.items() if k != "model"}))
-sys.exit(0 if d1 and d2 and d4 and d5 else 1)
+sys.exit(0 if all(s[k] for k in ("D1", "D2", "D4", "D5")) else 1)
