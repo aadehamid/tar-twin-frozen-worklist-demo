@@ -13,7 +13,7 @@ Short records of the choices behind the design. Each one says what we chose, why
 - **Decision.** Both services start from [fastapi/full-stack-fastapi-template](https://github.com/fastapi/full-stack-fastapi-template): FastAPI, SQLModel, PostgreSQL, React with TypeScript and Vite, Tailwind with shadcn/ui, JWT auth, Docker Compose, pytest and Playwright.
 - **Why.** It gives auth, a generated API client, tests and CI from day one, so the demo looks and behaves like real software.
 - **Revisit if.** The template's Postgres coupling gets in the way of the Neo4j-backed twin. The twin then keeps the template's auth and front end and drops SQLModel for its plant data.
-- **Status.** The template at `f8c6c14` builds and passes its own lint, backend tests and Playwright suite with no Docker, using local Postgres 18 and the Mailpit binary. One template bug has to be fixed when we fork it, see the [template spike](spikes/template-no-docker.md).
+- **Status.** The template at `f8c6c14` builds and passes its lint, migrations and backend tests with no Docker, using local Postgres 18 and the Mailpit binary. Its Playwright suite passed in six of eight runs. The two failures came from a race in the template's signup test helper, which we patch when we fork it. See the [template spike](spikes/template-no-docker.md).
 
 ## D3. Neo4j is the twin's master store
 

@@ -1,6 +1,9 @@
-"""Run the full-stack FastAPI template's CI steps with no Docker, and record checks T1 to T10.
+"""Run the full-stack FastAPI template's CI steps with no Docker, and record checks T1 to T11.
 
-    python3 run_spike.py [--keep] [--work DIR]
+    python3 run_spike.py [--keep] [--work DIR] [--repeats N]
+
+The run happens in a new folder. With --work it's a new child of DIR, otherwise a new folder
+under the system temp dir. Only that new folder is deleted at the end.
 
 Needs git, uv, curl, Postgres 18 binaries and network access. Writes results.json next to this
 file and exits non-zero if any check fails. See docs/spikes/template-no-docker.md.
@@ -41,6 +44,9 @@ SUPERUSER_PASSWORD = "changethis"
 results = {"template": {"repo": TEMPLATE, "commit": PIN}, "checks": {}, "steps": {}}
 procs = []
 REPEATS = 0
+# The reset spec's two tests that call signUpNewUser and then wait for the reset email.
+SIGNUP_TESTS = ("reset-password.spec.ts › User can reset password successfully using the link",
+                "reset-password.spec.ts › Weak new password validation")
 
 
 def log(msg):
@@ -137,8 +143,12 @@ def main():
     a = ap.parse_args()
     global REPEATS
     REPEATS = a.repeats
-    work = Path(a.work or tempfile.mkdtemp(prefix="tpl-spike-"))
-    work.mkdir(parents=True, exist_ok=True)
+    parent = None
+    if a.work:
+        parent = Path(a.work)
+        parent.mkdir(parents=True, exist_ok=True)
+    # A fresh folder the script owns, so cleanup can never remove anything it didn't create.
+    work = Path(tempfile.mkdtemp(prefix="tpl-spike-", dir=parent))
     LOGS = work / "logs"
     LOGS.mkdir(exist_ok=True)
     tools = work / "tools"
@@ -148,6 +158,9 @@ def main():
     t_all = time.monotonic()
     try:
         _run_all(work, tools, src)
+    except RuntimeError as e:  # a failed precondition, already recorded as a failed check
+        results["stopped"] = str(e)
+        log(f"stopped: {e}")
     finally:
         for p in reversed(procs):
             if p.poll() is None:
@@ -164,7 +177,7 @@ def main():
             shutil.rmtree(work, ignore_errors=True)
     failed = [k for k, v in results["checks"].items() if not v["pass"]]
     log(f"failed checks: {failed or 'none'}")
-    sys.exit(1 if failed else 0)
+    sys.exit(1 if failed or "stopped" in results else 0)
 
 
 def _serve_checks(base, ev):
@@ -192,10 +205,16 @@ def _run_all(work, tools, src):
     run("clone_checkout", ["git", "checkout", "-q", "FETCH_HEAD"], src)
     head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=src, capture_output=True,
                           text=True).stdout.strip()
+    if head != PIN:
+        check("T2", False, commit=head, reason="template checkout is not at the pinned commit")
+        raise RuntimeError("T2 failed, stopping before running any template code")
     rel = f"https://github.com/oven-sh/bun/releases/download/bun-v{BUN}"
     bun_zip = fetch(f"{rel}/bun-linux-x64.zip")
     bun_ok = hashlib.sha256(bun_zip).hexdigest() == published_sha(f"{rel}/SHASUMS256.txt",
                                                                  "bun-linux-x64.zip")
+    if not bun_ok:
+        check("T2", False, commit=head, bun_sha256_ok=False, reason="bun hash mismatch")
+        raise RuntimeError("T2 failed, stopping before unpacking bun")
     (tools / "bun.zip").write_bytes(bun_zip)
     with zipfile.ZipFile(tools / "bun.zip") as z:
         (tools / "bun").write_bytes(z.read("bun-linux-x64/bun"))
@@ -215,6 +234,10 @@ def _run_all(work, tools, src):
         mp_ok = mp_ok and mp_api == "agrees"
     except Exception as e:
         mp_api = f"unavailable ({type(e).__name__})"
+    if not mp_ok:
+        check("T2", False, commit=head, bun_sha256_ok=bun_ok, mailpit_sha256_ok=False,
+              mailpit_api_digest=mp_api, reason="Mailpit hash mismatch")
+        raise RuntimeError("T2 failed, stopping before unpacking Mailpit")
     (tools / "mailpit.tgz").write_bytes(mp_tgz)
     subprocess.run(["tar", "xzf", "mailpit.tgz", "mailpit"], cwd=tools, check=True)
 
@@ -266,6 +289,9 @@ def _run_all(work, tools, src):
 
     be = src / "backend"
     run("uv_sync", ["uv", "sync"], be, env=env)
+    _, py = run("python_version", ["uv", "run", "python", "--version"], be, env=env)
+    results["checks"]["T2"]["versions"]["python"] = next(
+        (ln for ln in py.splitlines() if ln.startswith("Python ")), py.strip())
 
     def psql(sql):
         p = subprocess.run([str(PG_BIN / "psql"), "-h", "localhost", "-p", str(PG_PORT), "-U",
@@ -354,10 +380,19 @@ def _run_all(work, tools, src):
         pw = checks.playwright_summary(out)
     except ValueError as e:
         pw = {"parse_error": str(e)}
-    reset = re.findall(r"^\s+\S+\s+\d+ \[chromium\] .*reset-password.*$", out, re.M)
-    check("T9", c == 0 and pw.get("failed") == 0 and pw.get("flaky") == 0
-          and pw.get("did_not_run") == 0 and pw.get("passed", 0) > 0 and len(reset) > 0,
-          exit=c, counts=pw, reset_password_tests=len(reset),
+    try:
+        total = checks.running_total(out)
+    except ValueError:
+        total = None
+    per_test = checks.test_results(out)
+    signup = {k: per_test.get(k) for k in SIGNUP_TESTS}
+    # Every test ran and passed first time, and both tests that read Mailpit after a signup
+    # are among them.
+    check("T9", c == 0 and total is not None and pw.get("passed") == total
+          and pw.get("failed") == 0 and pw.get("flaky") == 0 and pw.get("skipped") == 0
+          and pw.get("did_not_run") == 0
+          and all(v == {"passed": 1, "failed": 0, "skipped": 0} for v in signup.values()),
+          exit=c, total=total, counts=pw, signup_tests=signup,
           seconds=results["steps"]["playwright"]["seconds"])
 
     # T11. The signup race behind the flaky reset test. Run the reset spec many times without
@@ -371,7 +406,7 @@ def _run_all(work, tools, src):
                '    (r) => r.url().includes("/api/v1/users/signup") && r.request().method() === "POST",\n'
                '  )\n'
                '  await page.getByRole("button", { name: "Sign Up" }).click()\n'
-               '  await signedUp\n'
+               '  if (!(await signedUp).ok()) throw new Error("signup request failed")\n'
                '  await page.goto("/login")\n')
         if original.count(old) != 1:
             raise RuntimeError("signUpNewUser no longer has the expected click-then-goto lines")
@@ -381,13 +416,24 @@ def _run_all(work, tools, src):
             c, out = run(f"race_{label}", ["bunx", "playwright", "test", "tests/reset-password.spec.ts",
                                            f"--repeat-each={REPEATS}", "--retries=0",
                                            "--reporter=list"], fe, env=pw_env)
+            arm = {"exit": c}
             try:
-                race[label] = checks.playwright_summary(out)
+                arm["counts"] = checks.playwright_summary(out)
+                arm["total"] = checks.running_total(out)
             except ValueError as e:
-                race[label] = {"parse_error": str(e)}
+                arm["parse_error"] = str(e)
+            per_test = checks.test_results(out)
+            arm["signup_tests"] = {k: per_test.get(k) for k in SIGNUP_TESTS}
+            race[label] = arm
         helper.write_text(original)
         p = race["patched"]
-        check("T11", p.get("failed") == 0 and p.get("passed", 0) > 0, repeats=REPEATS, **race)
+        n = p.get("counts", {})
+        # The patched arm ran every repeat, with no skips, and each signup test passed every time.
+        check("T11", p["exit"] == 0 and p.get("total") is not None and n.get("passed") == p["total"]
+              and n.get("failed") == 0 and n.get("skipped") == 0 and n.get("did_not_run") == 0
+              and all(v == {"passed": REPEATS, "failed": 0, "skipped": 0}
+                      for v in p["signup_tests"].values()),
+              repeats=REPEATS, **race)
 
     # T10. Footprint, recorded only.
     pg_pid = int((work / "pgdata" / "postmaster.pid").read_text().split()[0])

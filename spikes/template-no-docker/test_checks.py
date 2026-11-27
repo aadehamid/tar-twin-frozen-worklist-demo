@@ -78,3 +78,40 @@ def test_no_docker_in_run_script():
     # T1 itself: the run script never calls docker.
     text = (Path(__file__).resolve().parent / "run_spike.py").read_text()
     assert checks.docker_commands(text) == []
+
+
+LIST_OUT = """Running 5 tests using 1 worker
+
+  ✓   1 [setup] › tests/auth.setup.ts:4:1 › authenticate (1.1s)
+  ✓   2 [chromium] › tests/reset-password.spec.ts:32:1 › User can reset password successfully using the link (3.0s)
+  ✘   3 [chromium] › tests/reset-password.spec.ts:83:1 › Weak new password validation (5.5s)
+  ✓   4 [chromium] › tests/reset-password.spec.ts:83:1 › Weak new password validation (repeat1) (2.0s)
+  -   5 [chromium] › tests/reset-password.spec.ts:10:1 › Password Recovery title is visible (0.1s)
+
+  1 failed
+  1 skipped
+  3 passed (12.0s)
+"""
+
+
+def test_running_total():
+    assert checks.running_total(LIST_OUT) == 5
+
+
+def test_running_total_singular_and_missing():
+    assert checks.running_total("Running 1 test using 1 worker\n") == 1
+    with pytest.raises(ValueError):
+        checks.running_total("Error: no tests found")
+
+
+def test_test_results_by_title():
+    r = checks.test_results(LIST_OUT)
+    assert r["reset-password.spec.ts › User can reset password successfully using the link"] == {"passed": 1, "failed": 0, "skipped": 0}
+    assert r["reset-password.spec.ts › Weak new password validation"] == {"passed": 1, "failed": 1, "skipped": 0}
+    assert r["reset-password.spec.ts › Password Recovery title is visible"] == {"passed": 0, "failed": 0, "skipped": 1}
+    assert r["auth.setup.ts › authenticate"]["passed"] == 1
+
+
+def test_test_results_ignores_footer_and_errors():
+    out = "  1) [chromium] › tests/a.spec.ts:1:1 › x ─────\n  1 failed\n"
+    assert checks.test_results(out) == {}

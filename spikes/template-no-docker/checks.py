@@ -48,3 +48,26 @@ def docker_commands(text):
                 or re.search(r"""["']docker(?:-compose)?\s+\w""", line)):
             hits.append(line.strip())
     return hits
+
+
+def running_total(out):
+    """N from Playwright's "Running N tests" header. Raises if there isn't one."""
+    m = re.search(r"^Running (\d+) tests? using", out, re.M)
+    if not m:
+        raise ValueError("no Running N tests line")
+    return int(m.group(1))
+
+
+_LIST_LINE = re.compile(
+    r"^\s+([✓✘-])\s+\d+ \[[^\]]+\] › (?:\S+/)?(\S+?):\d+:\d+ › (.+?)"
+    r"(?: \((?:retry #\d+|repeat\d+)\))? \([\d.]+m?s\)\s*$", re.M)
+
+
+def test_results(out):
+    """Per "file › title", how many attempts passed, failed or were skipped, from the list
+    reporter. Retries and repeats of one test add to the same title."""
+    res = {}
+    for mark, file, title in _LIST_LINE.findall(out):
+        r = res.setdefault(f"{file} › {title}", {"passed": 0, "failed": 0, "skipped": 0})
+        r[{"✓": "passed", "✘": "failed", "-": "skipped"}[mark]] += 1
+    return res
