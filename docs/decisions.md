@@ -78,3 +78,9 @@ Short records of the choices behind the design. Each one says what we chose, why
 - **Decision.** One exe.dev VM on Hamid's Personal plan (2 vCPU, 4 GB) runs the whole system with Docker Compose. Sign-in comes through exe.dev, and roles come from our own membership table.
 - **Why.** It gives private HTTPS, sign-in by email and persistent disks for $15 a month, with no server to run. The data is synthetic, so a host outside the client's network is fine.
 - **Revisit if.** The 15-user soak test goes over the memory budget (move to 4 vCPU and 8 GB), the team needs SSO or sharing controls (Work plan), or real client data comes in (a client-approved host).
+
+## D14. Trust identity from loopback only
+
+- **Decision.** The edge runs in host network mode, listens on 127.0.0.1 only, and passes the exe.dev identity headers only when the peer is 127.0.0.1. The apps listen on loopback ports outside the proxy's range.
+- **Why.** The phase 0 spike showed the exe.dev proxy connects over loopback and replaces client-sent `X-ExeDev-*` headers, and that containers can't reach the host's loopback ([spike results](spikes/exe-hosting.md)). A peer-address rule on loopback is simple to test.
+- **Revisit if.** exe.dev changes how the proxy connects, the site goes public, or anything other than our stack and exe.dev's agent runs on the host.

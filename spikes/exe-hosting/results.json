@@ -1,0 +1,183 @@
+{
+  "H1": {
+    "status": "PASS",
+    "detail": {
+      "out": "RUN_OK\n2.40.3+ds1-0ubuntu1~24.04.1",
+      "err": "mplete\nd5e71e642bf5: Download complete\n4f55086f7dd0: Pull complete\nDigest: sha256:1e4c05b897a751332ce85c7e9449da2d93514ea2dea6dbb0e2753c9e949b2bfa\nStatus: Downloaded newer image for hello-world:latest"
+    }
+  },
+  "H3": {
+    "status": "PASS",
+    "detail": {
+      "status": {
+        "8000": 401,
+        "8001": 401,
+        "8002": 401
+      },
+      "requests_reaching_server": 0
+    }
+  },
+  "H2": {
+    "status": "PASS",
+    "detail": {
+      "status": {
+        "8000": 200,
+        "8001": 200,
+        "8002": 200
+      }
+    }
+  },
+  "H4": {
+    "status": "PASS",
+    "detail": {
+      "emails": [
+        [
+          "aadehamid@gmail.com"
+        ],
+        [
+          "aadehamid@gmail.com"
+        ],
+        [
+          "aadehamid@gmail.com"
+        ]
+      ],
+      "userids": [
+        [
+          "usrMQJJXDOMN27JI"
+        ],
+        [
+          "usrMQJJXDOMN27JI"
+        ],
+        [
+          "usrMQJJXDOMN27JI"
+        ]
+      ],
+      "ctx": [
+        [
+          "{\"spike\":\"exe-hosting\"}"
+        ],
+        [
+          "{\"spike\":\"exe-hosting\"}"
+        ],
+        [
+          "{\"spike\":\"exe-hosting\"}"
+        ]
+      ]
+    }
+  },
+  "H6": {
+    "status": "PASS",
+    "detail": {
+      "token_headers_seen": [
+        [],
+        [],
+        []
+      ]
+    }
+  },
+  "H5": {
+    "status": "PASS",
+    "detail": {
+      "8000": {
+        "status": 200,
+        "email": [
+          "aadehamid@gmail.com"
+        ],
+        "userid": [
+          "usrMQJJXDOMN27JI"
+        ],
+        "ctx": [
+          "{\"spike\":\"exe-hosting\"}"
+        ],
+        "any_forged": false
+      },
+      "8001": {
+        "status": 200,
+        "email": [
+          "aadehamid@gmail.com"
+        ],
+        "userid": [
+          "usrMQJJXDOMN27JI"
+        ],
+        "ctx": [
+          "{\"spike\":\"exe-hosting\"}"
+        ],
+        "any_forged": false
+      },
+      "8002": {
+        "status": 200,
+        "email": [
+          "aadehamid@gmail.com"
+        ],
+        "userid": [
+          "usrMQJJXDOMN27JI"
+        ],
+        "ctx": [
+          "{\"spike\":\"exe-hosting\"}"
+        ],
+        "any_forged": false
+      }
+    }
+  },
+  "H7": {
+    "status": "RECORD",
+    "detail": {
+      "proxy_peers": [
+        "127.0.0.1"
+      ],
+      "x_forwarded_for": [
+        "23.22.183.111, 23.22.183.111"
+      ],
+      "container_peer": "172.17.0.2",
+      "vm_addresses": [
+        "lo 127.0.0.1/8",
+        "eth0 10.42.0.42/16",
+        "docker0 172.17.0.1/16"
+      ],
+      "overlap": false
+    }
+  },
+  "H11": {
+    "status": "PASS",
+    "detail": {
+      "proxy_status": 200,
+      "proxy_peer": "127.0.0.1",
+      "container_attempt": "000 rc=7"
+    }
+  },
+  "H12": {
+    "status": "RECORD",
+    "detail": {
+      "proxy_status": 200,
+      "proxy_peer_in_container": "172.17.0.1",
+      "container_to_container_peer": "172.17.0.3",
+      "echo_container_ip": "172.17.0.2",
+      "overlap": false,
+      "complete": true
+    }
+  },
+  "H8": {
+    "status": "PASS",
+    "detail": {
+      "neo4j_mib": 992.9,
+      "postgres_mib": 22.89,
+      "ready": true,
+      "free_before": "               total        used        free      shared  buff/cache   available\nMem:            3902         280        1429           0        2249        3621\nSwap:              0           0           0\n",
+      "free_after": "               total        used        free      shared  buff/cache   available\nMem:            3902        1288         322          14        2367        2613\nSwap:              0           0           0\n"
+    }
+  },
+  "H9": {
+    "status": "PASS",
+    "detail": {
+      "proxy_7474": 502,
+      "proxy_5432": 502,
+      "open_listeners": ""
+    }
+  },
+  "H10": {
+    "status": "PASS",
+    "detail": {
+      "leftover": ""
+    }
+  }
+}

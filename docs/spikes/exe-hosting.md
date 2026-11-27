@@ -1,6 +1,6 @@
 # Spike: exe.dev hosting checks
 
-Status: checks written before code. Results go in section 3 after the run.
+Status: run on 26 November 2026. All pass checks passed. Raw output is in `spikes/exe-hosting/results.json`.
 
 VM: `tar-frozen-work-list` on Hamid's exe.dev Personal plan. The sandbox reaches it with an SSH key scoped to this one VM (`ssh-key add --vm`), so the spike can't touch other VMs, sharing or billing.
 
@@ -12,7 +12,7 @@ A small echo server (`spikes/exe-hosting/echo.py`, standard library only) listen
 
 Authenticated requests use a VM token signed locally with the scoped key, namespace `v0@tar-frozen-work-list.exe.xyz`, with `exp` set one hour ahead, sent in `X-Exedev-Authorization`. The token payload carries a `ctx` field so we can see it arrive as `X-ExeDev-Token-Ctx`.
 
-`spikes/exe-hosting/run_checks.sh` runs every check and writes `spikes/exe-hosting/results.json`. Each check prints PASS, FAIL or RECORD (for observations with no pass bar).
+`spikes/exe-hosting/run_checks.py` runs every check and writes `spikes/exe-hosting/results.json`. Each check prints PASS, FAIL or RECORD (for observations with no pass bar).
 
 ## 2. Checks and pass conditions
 
@@ -27,13 +27,42 @@ Authenticated requests use a VM token signed locally with the scoped key, namesp
 | H7 | Source address of proxy traffic | RECORD the peer address over 5 requests per port and the `X-Forwarded-For` value. Then RECORD the peer address the server sees for a request from a Docker container on the default bridge. The result decides the edge trust rule (see section 4) |
 | H8 | Idle memory of Neo4j and Postgres | Start `neo4j:5-community` with heap 768 MB and page cache 384 MB, and `postgres:16` with `shared_buffers` 128 MB, both with no published ports. After 3 minutes idle, `docker stats` shows Neo4j at or below 1.5 GB and Postgres at or below 300 MB, the hosting.md budget. Also RECORD `free -m` before and after |
 | H9 | Database ports stay closed | With H8 running, an authenticated GET to the proxy on 7474 and 5432 doesn't reach Neo4j or Postgres, and `ss -tlnp` on the VM shows no listener on 0.0.0.0 for 7474, 7687 or 5432 |
+| H11 | Loopback-only listener | Added after H7 showed proxy traffic arrives from 127.0.0.1. A second echo server bound to 127.0.0.1:8003 returns 200 to an authenticated proxy request with peer 127.0.0.1, and a container on the default bridge can't connect to it at 172.17.0.1:8003 |
+| H12 | Peer seen behind a published port | RECORD the peer address an echo server inside a container sees when the proxy reaches it through `-p 127.0.0.1:8004:8004`, and when another container on the same bridge calls it directly. This tells us whether bridge mode can tell proxy traffic from container traffic |
 | H10 | Clean up | After the run, no spike containers, volumes or echo processes are left on the VM |
 
 Not covered here. A public site (`share set-public`) changes the threat, because anyone can send forged headers without a login. The scoped key can't change sharing, and the plan keeps the VM private until phase 8. Phase 8 repeats H5 against a public share before any wider access.
 
 ## 3. Results
 
-To be filled in from `results.json` after the run.
+| ID | Result | What we saw |
+|---|---|---|
+| H1 | PASS | `exedev` is in the docker group. Docker 29.1.3, Compose 2.40.3 |
+| H2 | PASS | 200 on 8000, 8001 and 8002 |
+| H3 | PASS | 401 on all three ports, and nothing reached the echo server |
+| H4 | PASS | One `X-ExeDev-Email` (aadehamid@gmail.com) and one `X-ExeDev-UserID` per request. The token's `ctx` arrived as `X-ExeDev-Token-Ctx` |
+| H5 | PASS | The forged email, user ID and ctx were replaced on all three ports. No header value contained `forged` |
+| H6 | PASS | No token header reached the server |
+| H7 | RECORD | Every proxy request came from 127.0.0.1. `X-Forwarded-For` held the sandbox's public address, listed twice. A container on the default bridge calling the host came from 172.17.0.2 |
+| H11 | PASS | A server bound to 127.0.0.1:8003 answered through the proxy with peer 127.0.0.1. A container calling 172.17.0.1:8003 got connection refused |
+| H12 | RECORD | Behind `-p 127.0.0.1:8004:8004`, the containerized server saw proxy traffic from the bridge gateway 172.17.0.1. A second container calling it directly came from its own address, 172.17.0.3 |
+| H8 | PASS | After 3 minutes idle: Neo4j 993 MiB, Postgres 23 MiB. VM memory used went from 280 MiB to 1,288 MiB with 2.6 GB still available |
+| H9 | PASS | The proxy returned 502 on 7474 and 5432, and nothing listened on 0.0.0.0 for 7474, 7687 or 5432 |
+| H10 | PASS | No spike containers, volumes, processes or files left. The pulled images stay as a cache |
+
+Two things the run turned up that the checks didn't ask about:
+
+- The VM's own disk is 25 GB with 17 GB free, not the 100 GB account allowance. hosting.md now says so.
+- The first runs failed on the harness, not on exe.dev. `pkill -f` matched the SSH shell that ran it, and a stray second copy of the runner removed the databases mid-measurement. Both are fixed in `run_checks.py`.
+
+## 4. What the results decide
+
+- H5 passed, so the proxy is a trustworthy source of identity for a private VM.
+- H7 and H11 show the proxy connects over loopback. The edge runs in host network mode and listens on 127.0.0.1 only. A container can't open a connection to the host's loopback, so the rule "pass identity only when the peer is 127.0.0.1" can't be met by container traffic. This replaces the bridge-address rule in hosting.md.
+- H12 shows bridge mode would also work, since proxy traffic arrives from the gateway and containers come from their own addresses. We don't use it, because any host process reaching the published port also shows up as the gateway, and the loopback rule is simpler to test.
+- H8 passed with room to spare. Neo4j sits under its 1.5 GB budget at idle, and Postgres is far below 300 MB. The budget in hosting.md stays, because load, n10s and SHACL will raise Neo4j's use. The phase 7 soak test is the real check.
+
+The decision before the run, kept for the record:
 
 ## 4. What the results decide
 

@@ -8,17 +8,17 @@ The data is synthetic, so a hosted service outside the client's network is fine.
 
 ## 1. What runs on the VM
 
-One VM, `tar-twin`, running Docker Compose. exe.dev VMs support `docker` and `docker-compose` directly ([exe.dev docs](https://exe.dev/docs/all.md)).
+One VM, `tar-frozen-work-list`, running Docker Compose. exe.dev VMs support `docker` and `docker-compose` directly ([exe.dev docs](https://exe.dev/docs/all.md)).
 
-| Container | Published on the host | Reachable by |
+| Container | Listens on the host | Reachable by |
 |---|---|---|
-| Edge (Caddy) | 8000, 8001, 8002 | People the VM is shared with, through the exe.dev proxy. 8000 is a landing page, 8001 forwards to IMPACT Web, 8002 to the twin |
-| IMPACT Web (API plus built UI) | nothing | The edge, and the twin over the Docker network |
-| Twin (API plus built UI) | nothing | The edge |
+| Edge (Caddy, host network mode) | 127.0.0.1:8000, 8001, 8002 | People the VM is shared with, through the exe.dev proxy. 8000 is a landing page, 8001 forwards to IMPACT Web, 8002 to the twin |
+| IMPACT Web (API plus built UI) | 127.0.0.1:18001 | The edge, and the twin over the Docker network |
+| Twin (API plus built UI) | 127.0.0.1:18002 | The edge |
 | PostgreSQL | nothing | IMPACT Web only |
 | Neo4j (Bolt and Browser) | nothing | The twin only |
 
-The exe.dev proxy serves `https://tar-twin.exe.xyz/` and forwards ports 3000 to 9999 ([exe.dev proxy](https://exe.dev/docs/proxy)). So the only host ports in use are the edge's three. Nothing else publishes a port, not even on loopback. Neo4j's 7474 and 7687 sit inside the forwarded range, which is why they stay inside Docker.
+The exe.dev proxy serves `https://tar-frozen-work-list.exe.xyz/` and forwards ports 3000 to 9999 ([exe.dev proxy](https://exe.dev/docs/proxy)). The phase 0 spike showed it connects over loopback, so a loopback-only listener in that range is still reachable through the proxy ([spike results](spikes/exe-hosting.md)). The edge runs in host network mode, so it reaches the apps through loopback ports outside the forwarded range, 18001 and 18002, which the proxy can't forward to. Nothing else listens in 3000 to 9999 apart from exe.dev's own agent, Shelley, on 127.0.0.1:9999. Neo4j's 7474 and 7687 sit inside the forwarded range, which is why they stay inside Docker.
 
 For owner access to the graph, Hamid uses `cypher-shell` through `ssh` and `docker compose exec`. For Neo4j Browser he opens an SSH tunnel from his machine straight to the Neo4j container's address on the Docker network, for both 7474 and 7687, so nothing is published on the VM.
 
@@ -45,14 +45,14 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 
 ## 3. Who can get in
 
-- The VM stays private. Hamid adds each participant with `share add tar-twin <email>`, which gives web access only, no shell ([exe.dev sharing](https://exe.dev/docs/sharing)).
+- The VM stays private. Hamid adds each participant with `share add tar-frozen-work-list <email>`, which gives web access only, no shell ([exe.dev sharing](https://exe.dev/docs/sharing)).
 - exe.dev adds `X-ExeDev-Email` and `X-ExeDev-UserID` headers to requests from signed-in users ([exe.dev docs](https://exe.dev/docs/all.md)). exe.dev's own deploy guides show the proxy replacing any such headers a client sends, and phase 0 confirms it on our VM.
 
 ### Trusting the identity headers
 
-- **Threat model.** The exe.dev proxy is the only path from outside to the edge's ports. Only Hamid has root on the VM, and only our containers run on it. Anyone with root could fake a header, so root is never shared.
-- **Only the edge can carry a user identity.** The edge is the only container with published ports. The apps publish nothing, so the only way to reach them is through the edge or from another container on the Docker network.
-- **The edge only passes identity from the exe.dev proxy.** The edge strips any incoming `X-Edge-Auth` header. It keeps `X-ExeDev-Email` and `X-ExeDev-UserID`, and adds its own `X-Edge-Auth` secret, only for requests from outside the Docker networks, which on this VM means the exe.dev proxy. A request to the edge from a container gets its identity headers stripped and no secret. Phase 0 records the source address the edge sees for proxy traffic. If it can't be told apart from container traffic, the edge runs in host network mode so it can.
+- **Threat model.** The exe.dev proxy is the only path from outside to the edge's ports. Only Hamid has root on the VM, and only our containers run on it. Anyone with root could fake a header, so root is never shared. Any process on the host can also connect from 127.0.0.1, so host processes count as trusted. The only ones are Docker, our stack and exe.dev's own agent, Shelley.
+- **Only the edge can carry a user identity.** The edge is the only service reachable from the proxy. It runs in host network mode and listens on 127.0.0.1:8000 to 8002 only. The apps publish nothing, so the only way to reach them is through the edge or from another container on the Docker network.
+- **The edge only passes identity from the exe.dev proxy.** The phase 0 spike showed the proxy connects to the VM over loopback, from 127.0.0.1, and replaces any client-sent `X-ExeDev-*` headers ([spike results](spikes/exe-hosting.md)). The edge strips any incoming `X-Edge-Auth` header. It keeps `X-ExeDev-Email` and `X-ExeDev-UserID`, and adds its own `X-Edge-Auth` secret, only when the peer is 127.0.0.1. Containers can't reach the host's loopback, so a request from a container never gets the secret.
 - **The apps check the secret's value.** They read `X-ExeDev-Email` only when `X-Edge-Auth` matches the expected secret, using a constant-time compare. A missing or wrong value means the request is anonymous. A request that doesn't come through the edge, for example the twin calling IMPACT Web, never has the secret and must use a machine token.
 - **Owner-only until verified.** Until the identity checks in section 6 pass on the VM, the VM is shared with Hamid only.
 
@@ -112,16 +112,16 @@ The data lives in two places, and both are backed up:
 
 | Acceptance criterion | Check |
 |---|---|
-| Only the edge publishes ports | Post-deploy checks of `docker compose config`, `docker ps` port mappings and `ss -tlnp`. Any listener in 3000 to 9999 other than 8000, 8001 and 8002 fails the deploy |
-| Neo4j and Postgres can't be reached through the proxy | Smoke test as a web-shared, low-privilege user: `:7474`, `:7687` and `:5432` through `tar-twin.exe.xyz` fail |
+| Only the edge is reachable through the proxy | Post-deploy checks of `docker compose config`, `docker ps` port mappings and `ss -tlnp`. Any listener in 3000 to 9999 other than the edge's 8000, 8001 and 8002 and Shelley's 9999 fails the deploy. Any listener on 0.0.0.0 or a non-loopback address fails it too, and 18001 and 18002 must be bound to 127.0.0.1 |
+| Neo4j and Postgres can't be reached through the proxy | Smoke test as a web-shared, low-privilege user: `:7474`, `:7687` and `:5432` through `tar-frozen-work-list.exe.xyz` fail |
 | Only shared users get in | Test with an unshared exe.dev account on `:8000`, `:8001` and `:8002`. Each gets the exe.dev login and no app content |
-| A forged identity header doesn't work | From outside: a client-sent `X-ExeDev-Email` or `X-Edge-Auth` on both app ports doesn't change who the app sees. From inside: a container calling an app directly with `X-ExeDev-Email` is anonymous, with no secret or a wrong one. A container calling the edge directly gets its identity headers stripped and no secret added |
+| A forged identity header doesn't work | From outside: a client-sent `X-ExeDev-Email` or `X-Edge-Auth` on both app ports doesn't change who the app sees. From inside: a container calling an app directly with `X-ExeDev-Email` is anonymous, with no secret or a wrong one. A container can't open a connection to the edge at all, because it listens on loopback only. A local request to 18001 or 18002 that skips the edge is anonymous, with no secret |
 | Users without a membership are refused | API test in `AUTH_MODE=exe` with a known email and no membership |
 | Machine sync works without a person and can't write | Test that the twin sync and a CMMS master read run on its token with no user session, that each allowed read endpoint answers, and that every IMPACT Web write endpoint and every other endpoint refuses that token |
 | The twin has no database access to IMPACT Web | Check that the twin container's environment holds no Postgres credentials, and that Postgres refuses a connection from the twin container |
 | Demo logins are off when hosted | Test that password login returns 404 in `AUTH_MODE=exe` |
 | The system fits in 4 GB | Soak test: 15 simulated users through a full exercise, including a cold start, the DEXPI load with SHACL checks, concurrent edits, matching, graph exports and a reset. Peak memory stays below 3.5 GB on the VM, `docker stats` peaks are logged per container, and there are no out-of-memory kills, container restarts or 5xx errors. Twin freshness stays inside the targets in [interactive-planning.md](interactive-planning.md) section 7 |
-| Disk stays in budget | Deploy check of the VM's actual filesystem free space with `df`, and of account usage against the 100 GB allowance, with image pruning |
+| Disk stays in budget | Deploy check of the VM's actual filesystem free space with `df` (the VM disk is 25 GB, 17 GB free after the phase 0 images), and of account usage against the 100 GB allowance, with image pruning |
 | Deploys can be reversed | Test deploying tag N, then N-1, then N again with data intact, using a release that adds a real column |
 | A breaking migration can be undone | Test restoring the pre-deploy dump after a breaking migration, then deploying forward again |
 | Backups restore the whole state | Monthly restore into a scratch stack from the off-VM copies: Postgres row counts match, and a sample of reviewed matches, findings and saved cut-line options come back exactly. After restore, the mirrored scope items, decisions and change events from before the cutoff are all in Neo4j and match Postgres, per exercise. A write made after the backup is absent after restore. A new write after restore is applied exactly once. A pair with mismatched cutoffs is refused |
