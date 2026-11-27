@@ -114,7 +114,7 @@ VALVES = {
 
 # number: (in or out, centre, arrow pointing, drawing, description)
 CONNECTORS = {
-    "OPC-21": ("in", (60, 500), "right", "200-PID-001", "COMBINED FEED FROM P-201A/B DISCHARGE"),
+    "OPC-21": ("in", (60, 500), "right", "200-PID-001", "FEED FROM P-201A/B DISCHARGE"),
     "OPC-22": ("in", (60, 580), "right", "200-PID-004", "RECYCLE GAS FROM K-201"),
     "OPC-23": ("in", (1150, 310), "left", "200-PID-004", "QUENCH GAS FROM K-201"),
     "OPC-24": ("out", (1150, 620), "right", "200-PID-003", "REACTOR EFFLUENT TO A-201"),

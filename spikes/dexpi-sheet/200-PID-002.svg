@@ -335,7 +335,7 @@
         <text x="60.0" y="500.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">OPC-21</text>
       </g>
       <g class="offpageconnectordescriptionlabel">
-        <text x="40.0" y="524.0" text-anchor="start" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">COMBINED FEED FROM P-201A/B DISCHARGE</text>
+        <text x="40.0" y="524.0" text-anchor="start" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">FEED FROM P-201A/B DISCHARGE</text>
       </g>
       <g class="label">
         <text x="40.0" y="514.0" text-anchor="start" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">200-PID-001</text>

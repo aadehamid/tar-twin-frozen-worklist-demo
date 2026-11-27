@@ -206,3 +206,61 @@ def connectors(model):
                 text_of(obj.pipeConnectorDescription),
             )
     return out
+
+
+def nozzle_edges(model):
+    """Like flow_edges, but equipment ends are single nozzles, named `TAG/N2`, so a check can
+    tell a reactor's main inlet from its quench nozzle."""
+    names = {}
+    for obj in objects(model):
+        if type(obj).__name__ in EQUIPMENT_CLASSES:
+            for nz in obj.nozzles:
+                names[id(nz)] = f"{obj.tagName}/{nz.subTagName}"
+        else:
+            tag = tag_of(obj)
+            if tag is not None:
+                names[id(obj)] = tag
+    succ = defaultdict(list)
+    for _seg, c in connections(model):
+        succ[id(c.sourceItem)].append(id(c.targetItem))
+    edges = set()
+    for k, name in names.items():
+        for hit in _contract(succ, names, k):
+            edges.add((name, hit))
+    return edges
+
+
+def _groups(group):
+    yield group
+    for g in getattr(group, "groups", None) or []:
+        yield from _groups(g)
+
+
+def nozzle_positions(model, tag):
+    """subTagName -> (x, y) of each nozzle's drawn node, read from the diagram."""
+    eq = next(o for o in objects(model) if tag_of(o) == tag)
+    by_node = {}
+    for top in model.diagram.groups:
+        for g in _groups(top):
+            for pos in getattr(g, "nodePositions", None) or []:
+                by_node[id(pos.node)] = (pos.position.x, pos.position.y)
+    return {nz.subTagName: by_node[id(nz.nodes[0])] for nz in eq.nozzles}
+
+
+def bed_boxes(model, tag):
+    """Catalyst bed outlines of a reactor, as (min_x, min_y, max_x, max_y) on the sheet. Read
+    from the drawing: the dashed polylines in the shape the reactor's symbol uses."""
+    eq = next(o for o in objects(model) if tag_of(o) == tag)
+    group = next(g for g in model.diagram.groups if getattr(g, "represents", None) is eq)
+    boxes = []
+    for g in _groups(group):
+        for el in getattr(g, "elements", None) or []:
+            if type(el).__name__ != "ShapeUsage":
+                continue
+            ox, oy = el.position.x, el.position.y
+            for prim in el.shape.primitives:
+                if type(prim).__name__ == "PolyLine" and prim.stroke.dashStyle.name != "SOLID":
+                    xs = [p.x + ox for p in prim.points]
+                    ys = [p.y + oy for p in prim.points]
+                    boxes.append((min(xs), min(ys), max(xs), max(ys)))
+    return boxes

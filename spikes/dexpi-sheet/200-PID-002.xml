@@ -69,7 +69,7 @@
                               <String>en</String>
                             </Data>
                             <Data property="Value">
-                              <String>COMBINED FEED FROM P-201A/B DISCHARGE</String>
+                              <String>FEED FROM P-201A/B DISCHARGE</String>
                             </Data>
                           </AggregatedDataValue>
                         </Data>
@@ -4169,7 +4169,7 @@
                       <Double>6.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>COMBINED FEED FROM P-201A/B DISCHARGE</String>
+                      <String>FEED FROM P-201A/B DISCHARGE</String>
                     </Data>
                   </Object>
                 </Components>

@@ -176,13 +176,36 @@ def _series_order(edges):
     return [G.strip_side(e) for e in order]
 
 
-def _check_claim(claim, edges, conns):
+def _place(model, tag, nozzle):
+    """above_beds, between_beds or below_beds, from the drawn nozzle and bed outlines (Y down)."""
+    _x, y = G.nozzle_positions(model, tag)[nozzle]
+    beds = sorted(G.bed_boxes(model, tag), key=lambda b: b[1])
+    if not beds:
+        return None
+    if y < beds[0][1]:
+        return "above_beds"
+    if y > beds[-1][3]:
+        return "below_beds"
+    if any(upper[3] < y < lower[1] for upper, lower in zip(beds, beds[1:])):
+        return "between_beds"
+    return "inside_a_bed"
+
+
+def _check_claim(claim, edges, conns, model=None):
     kind = claim[0]
     valves = set(X.VALVES)
     if kind == "series":
         _, tag, pos, of = claim
         order = _series_order(edges)
         return len(order) == of and order[pos - 1] == tag
+    if kind in ("nozzle_from", "nozzle_to"):
+        _, tag, nozzle, arg = claim
+        nz_edges = G.nozzle_edges(model)
+        walk = G.equipment_from if kind == "nozzle_from" else G.equipment_to
+        return walk(nz_edges, f"{tag}/{nozzle}", valves) == arg
+    if kind == "nozzle_place":
+        _, tag, nozzle, place = claim
+        return _place(model, tag, nozzle) == place
     _, tag, side, arg = claim
     end = X.at(tag, side)
     if kind == "from":
@@ -207,7 +230,7 @@ def test_x8_fact_holds(fid, reloaded):
     edges = G.flow_edges(reloaded)
     conns = G.connectors(reloaded)
     for claim in X.FACT_CLAIMS[fid]:
-        assert _check_claim(claim, edges, conns), (fid, claim, cases.FACTS[fid][1])
+        assert _check_claim(claim, edges, conns, reloaded), (fid, claim, cases.FACTS[fid][1])
 
 
 TAG_IN_TEXT = re.compile(r"\b[A-Z]{1,4}-\d{3,4}[A-Z]?\b")
@@ -223,6 +246,52 @@ def test_x8_claims_match_fact_text(fid):
     # must be exactly the other tags its claims check. Otherwise the text could drift.
     own, fact_text = cases.FACTS[fid]
     assert _tags_in(fact_text) - {own} == _tags_in(repr(X.FACT_CLAIMS[fid])) - {own}, fact_text
+
+
+@pytest.mark.parametrize("fid", sorted(X.FACT_CLAIMS))
+def test_x8_fact_text_is_pinned(fid):
+    assert cases.FACTS[fid][1] == X.FACT_TEXT[fid]
+
+
+def test_x8_pin_catches_a_same_tag_rewording():
+    # The reviewer's mutant: same tags, different ordinal. The tag check alone passes it.
+    reworded = X.FACT_TEXT["F-E201B-1"].replace("shell 2 of 3", "shell 1 of 3")
+    assert _tags_in(reworded) == _tags_in(X.FACT_TEXT["F-E201B-1"])
+    assert reworded != X.FACT_TEXT["F-E201B-1"]
+
+
+@pytest.mark.parametrize("tag", sorted(X.REACTOR_NOZZLES))
+def test_x8_reactor_nozzles_sit_where_expected(tag, reloaded):
+    for nozzle, place in X.REACTOR_NOZZLES[tag].items():
+        assert _place(reloaded, tag, nozzle) == place, (tag, nozzle)
+
+
+def _swap_pipe_targets(model, tag, a, b):
+    """Return a copy of the model with the pipes into nozzles `a` and `b` of `tag` swapped.
+    The drawing is left alone, so the nozzles keep their drawn places."""
+    m = copy.deepcopy(model)
+    eq = next(o for o in G.objects(m) if G.tag_of(o) == tag)
+    nz = {n.subTagName: n for n in eq.nozzles}
+    into = {}
+    for _seg, c in G.connections(m):
+        for key in (a, b):
+            if c.targetItem is nz[key]:
+                into[key] = c
+    pa, pb = into[a], into[b]
+    pa.targetItem, pb.targetItem = nz[b], nz[a]
+    pa.targetNode, pb.targetNode = nz[b].nodes[0], nz[a].nodes[0]
+    return m
+
+
+def test_x8_catches_swapped_reactor_feed_and_quench(reloaded):
+    # The reviewer's model mutant: feed into the quench nozzle and quench into the top. The
+    # validator and the vessel-level edges can't see it. The nozzle claims must.
+    m = _swap_pipe_targets(reloaded, "R-202", "N1", "N2")
+    assert G.structural_problems(m) == []
+    assert G.flow_edges(m) == G.flow_edges(reloaded)
+    edges, conns = G.flow_edges(m), G.connectors(m)
+    results = [_check_claim(c, edges, conns, m) for c in X.FACT_CLAIMS["F-R202-1"]]
+    assert not all(results)
 
 
 def test_x8_claim_checker_catches_a_wrong_fact(reloaded):
@@ -373,23 +442,15 @@ def test_x9_equipment_text_clear_of_other_symbols(reloaded):
 
 
 def test_x9_reactor_text_clear_of_beds(reloaded):
-    # Text inside a reactor must not sit on a catalyst bed outline. Beds are the dashed
-    # rectangles in the reactor symbols.
+    # Text inside a reactor must not sit on a catalyst bed outline. The beds are read from the
+    # reloaded drawing, not from the builder.
     for tag in ("R-201", "R-202"):
-        kind = build_sheet.EQUIPMENT[tag][0]
-        cx, cy = build_sheet.EQUIPMENT[tag][1]
-        shape, _ = build_sheet.SYMBOLS[kind]
-        beds = []
-        for prim in shape.primitives:
-            if type(prim).__name__ == "PolyLine" and prim.stroke.dashStyle.name != "SOLID":
-                xs = [p.x + cx for p in prim.points]
-                ys = [p.y + cy for p in prim.points]
-                beds.append((min(xs), min(ys), max(xs), max(ys)))
+        beds = G.bed_boxes(reloaded, tag)
+        assert beds, tag
         for t, _ in _texts(reloaded):
             if t.id.startswith(tag.replace("-", "_") + "_"):
                 for bed in beds:
                     assert not _overlap(_text_box(t), bed), (t.text, tag)
-
 
 # X10
 def test_x10_neo4j_records(reloaded):

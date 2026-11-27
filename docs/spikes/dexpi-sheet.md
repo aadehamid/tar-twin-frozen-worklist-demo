@@ -22,7 +22,7 @@ The symbols are our own, drawn from DEXPI primitives (polylines, polygons, ellip
 
 Flow follows the process summary in scenario-spec.md section 2.1. Feed and effluent run counter-current through the three feed/effluent shells.
 
-- Combined feed enters from 200-PID-001 (charge pump P-201A/B discharge) through block valve HV-2001. Recycle gas from 200-PID-004 joins it through HV-2003.
+- Liquid feed enters from 200-PID-001 (charge pump P-201A/B discharge) through block valve HV-2001. Recycle gas from 200-PID-004 joins it through HV-2003.
 - Feed side: E-201A, then E-201B, then E-201C, then a split into the two heater passes, each with a pass flow control valve (FV-2011, FV-2012), into charge heater H-201.
 - The two passes rejoin and go to guard reactor R-201, then main reactor R-202.
 - Quench gas from 200-PID-004 enters R-202 between the beds, through HV-2015 and FV-2015.
@@ -48,11 +48,11 @@ The expected inventory and flow edges are written by hand in `spikes/dexpi-sheet
 | X10 | Neo4j records | pyDEXPI's conceptual-level Neo4j export holds one node per tagged item with its tag. Every relationship's ends are nodes in the export. RECORD the node and relationship counts |
 | X11 | Speed | RECORD build, write, reload, validate and render times |
 
-X8 is there because the matcher spike wrote its neighbour facts by hand. If the plant graph and those facts disagree, the AI matcher would be shown facts the twin can't back up. Writing this check turned up one such disagreement before any code ran: fact F-R202-1 says R-202's inlet is from the charge heater, but the process summary puts guard reactor R-201 between them. This PR corrects the fact to say R-202's inlet is from R-201. X8 also checks that the tags each fact names in its text are the tags its hand-coded claims test, so the text can't drift away from the check.
+X8 is there because the matcher spike wrote its neighbour facts by hand. If the plant graph and those facts disagree, the AI matcher would be shown facts the twin can't back up. Writing this check turned up one such disagreement before any code ran: fact F-R202-1 says R-202's inlet is from the charge heater, but the process summary puts guard reactor R-201 between them. This PR corrects the fact to say R-202's inlet is from R-201. X8 pins the exact wording of each fact in `expected.py`, so any change to a fact, even one that keeps the same tags, fails until someone reviews its claims. It also checks that the tags a fact names are the tags its claims test. R-202 is checked nozzle by nozzle, not only as a vessel. The main inlet N1 comes from R-201, the quench nozzle N2 comes from OPC-23, and the drawing puts N2 between the two beds.
 
 ## 4. Results
 
-Run on 2026-11-26 with pyDEXPI 2.1.0 on Python 3.14. `pytest spikes/dexpi-sheet` runs 46 tests and all pass. `python spikes/dexpi-sheet/run_spike.py` writes the sheet as `200-PID-002.xml`, `200-PID-002.svg` and `200-PID-002.png`, and the recorded values to `results.json`.
+Run on 2026-11-26 with pyDEXPI 2.1.0 on Python 3.14. `pytest spikes/dexpi-sheet` runs 59 tests and all pass. `python spikes/dexpi-sheet/run_spike.py` writes the sheet as `200-PID-002.xml`, `200-PID-002.svg` and `200-PID-002.png`, and the recorded values to `results.json`.
 
 | ID | Result | Detail |
 |---|---|---|
@@ -63,10 +63,10 @@ Run on 2026-11-26 with pyDEXPI 2.1.0 on Python 3.14. `pytest spikes/dexpi-sheet`
 | X5 | PASS | Load and save again gives the same bytes |
 | X6 | PASS | 6 equipment items, 7 valves and 4 off-page connectors, each with the expected class and nothing extra. All IDs unique and schema-safe |
 | X7 | PASS | The segment walk and pyDEXPI's conceptual graph both give the 21 expected flow edges |
-| X8 | PASS | All 9 facts about tags on this sheet hold. The text check failed on the old F-R202-1 before the fix, as planned |
+| X8 | PASS | All 9 facts about tags on this sheet hold, and their wording matches the pinned copy. The text check failed on the old F-R202-1 before the fix, as planned. Review found that the first version passed two mutants: a same-tag rewording ("shell 1 of 3" for E-201B) and R-202's feed and quench pipes swapped between nozzles. The validator and the vessel-level edges can't see the swap. Both mutants are now tests that must fail |
 | X9 | PASS | SVG parses, every tag is labelled once, no symbols overlap and every pipe joins its ends with straight legs. The first render had the title block over HV-2002 and OPC-24, connector text off the sheet and reactor text over the beds. The text checks were added for those, failed, and pass after the layout fix |
 | X10 | RECORD | 24 nodes and 28 relationships at the conceptual level, every relationship end a node |
-| X11 | RECORD | Build 40 ms, write 39 ms, reload 97 ms, validate 13 ms, SVG 9 ms, PNG 95 ms. The XML is about 430 KB |
+| X11 | RECORD | Build 38 ms, write 39 ms, reload 73 ms, validate 13 ms, SVG 9 ms, PNG 108 ms. The XML is about 430 KB |
 
 Correcting F-R202-1 changed what the Decider matcher sees, so its live run was recorded again on the same day, at no cost. Every verdict is the same. C3 still abstains, at 0.881 confidence instead of 0.870. [decider-matcher.md](decider-matcher.md) has the new numbers.
 
@@ -76,4 +76,5 @@ What this shows and doesn't:
 - Layout is all ours. Every symbol position and pipe route in `build_sheet.py` is typed in by hand. Phase 1 needs four more sheets, so expect to spend real time there, or write a small router for the straight-line legs.
 - The symbols are simplified and the lines have no flow arrows. That's fine for a demo viewer, and a fair thing to improve once the viewer exists.
 - The text checks guess at text width from character counts, since the SVG doesn't carry font metrics. They catch the gross faults. Someone still has to look at the PNG.
+- Off-page connectors name the drawing they lead to but not the matching connector number on it. Phase 1 fills that in once all five sheets exist.
 - The AGPL-3.0 license still matters if the code ever leaves the team. Nothing in this spike changes that.

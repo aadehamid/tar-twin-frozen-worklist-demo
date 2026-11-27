@@ -67,7 +67,7 @@ def at(tag, side=None):
 
 # Directed flow edges between tagged items, through untagged piping and tees.
 FLOW_EDGES = {
-    # Combined feed in, and recycle gas joining it.
+    # Liquid feed in, and recycle gas joining it.
     ("OPC-21", "HV-2001"),
     ("OPC-22", "HV-2003"),
     ("HV-2001", at("E-201A", FEED_SIDE)),
@@ -105,6 +105,9 @@ FLOW_EDGES = {
 #   ("to", tag, side, {ends})                  the side's outlet goes to exactly these ends
 #   ("from_mentions", tag, side, words)        an upstream connector's description has the words
 #   ("to_mentions", tag, side, words)          a downstream connector's description has the words
+#   ("nozzle_from", tag, nozzle, {ends})       that nozzle's inlet comes from exactly these ends
+#   ("nozzle_to", tag, nozzle, {ends})         that nozzle's outlet goes to exactly these ends
+#   ("nozzle_place", tag, nozzle, place)       the drawn nozzle sits there against the beds
 FACT_CLAIMS = {
     "F-E201A-1": [("series", "E-201A", 1, 3)],
     "F-E201A-2": [("from_mentions", "E-201A", FEED_SIDE, "P-201A/B"),
@@ -116,6 +119,33 @@ FACT_CLAIMS = {
     "F-E201C-1": [("series", "E-201C", 3, 3)],
     "F-E201C-2": [("from", "E-201C", FEED_SIDE, {at("E-201B", FEED_SIDE)}),
                   ("to", "E-201C", FEED_SIDE, {at("H-201", PASS1), at("H-201", PASS2)})],
-    "F-E201C-3": [("from", "E-201C", EFFLUENT_SIDE, {at("R-202", "Vessel")})],
-    "F-R202-1": [("from", "R-202", "Vessel", {at("R-201", "Vessel"), "OPC-23"})],
+    "F-E201C-3": [("from", "E-201C", EFFLUENT_SIDE, {at("R-202", "Vessel")}),
+                  ("nozzle_to", "R-202", "N3", {"E-201C/N3"})],
+    "F-R202-1": [("from", "R-202", "Vessel", {at("R-201", "Vessel"), "OPC-23"}),
+                 ("nozzle_from", "R-202", "N1", {"R-201/N2"}),
+                 ("nozzle_from", "R-202", "N2", {"OPC-23"}),
+                 ("nozzle_place", "R-202", "N2", "between_beds")],
+}
+
+# The exact wording of each fact above. The claims test what the words say, so the words are
+# pinned: a change to a fact's text, even one that keeps the same tags (say "shell 1 of 3"
+# for "shell 2 of 3"), fails until the claims are reviewed and this copy is updated with them.
+FACT_TEXT = {
+    "F-E201A-1": "Feed/effluent exchanger shell 1 of 3 in series on the reactor feed train.",
+    "F-E201A-2": "Feed side inlet from charge pump P-201A/B discharge. Feed side outlet to E-201B.",
+    "F-E201A-3": "Effluent side outlet to air cooler A-201.",
+    "F-E201B-1": "Feed/effluent exchanger shell 2 of 3 in series on the reactor feed train.",
+    "F-E201B-2": "Feed side inlet from E-201A. Feed side outlet to E-201C.",
+    "F-E201C-1": "Feed/effluent exchanger shell 3 of 3 in series on the reactor feed train.",
+    "F-E201C-2": "Feed side inlet from E-201B. Feed side outlet to charge heater H-201 inlet.",
+    "F-E201C-3": "Effluent side inlet from reactor R-202 outlet.",
+    "F-R202-1": "Main hydrotreating reactor. Inlet from guard reactor R-201. "
+                "Quench gas between the beds.",
+}
+
+# Where each reactor nozzle sits against the catalyst beds in the drawing. N2 on R-202 is the
+# interbed quench nozzle.
+REACTOR_NOZZLES = {
+    "R-201": {"N1": "above_beds", "N2": "below_beds"},
+    "R-202": {"N1": "above_beds", "N2": "between_beds", "N3": "below_beds"},
 }
