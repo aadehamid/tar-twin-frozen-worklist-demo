@@ -92,8 +92,19 @@ The data lives in two places, and both are backed up:
 
 - **IMPACT Web (Postgres).** Nightly `pg_dump`.
 - **Twin-only state (Neo4j).** This is the data that exists only in the twin: reviewed matches, AI proposals, findings, saved cut-line options, baseline readiness flags and sync cursors. A nightly export from the twin API writes it to JSON. Everything else in the twin rebuilds from the DEXPI files and an IMPACT Web sync.
-- **Paired, at one watermark.** The nightly backup and the pre-deploy backup put the stack in maintenance mode for about a minute: IMPACT Web refuses writes and the twin pauses its sync. The backup then records the current change-feed sequence number, takes the `pg_dump`, and takes the twin-only export with its sync cursor at that same number. Both files carry the watermark, and a pair whose numbers don't match is rejected.
-- **Restore** puts back the Postgres dump, rebuilds the plant graph from DEXPI, imports the twin-only export, sets the sync cursor to the watermark, and only then starts the sync. The first sync applies nothing older than the watermark and picks up anything newer exactly once.
+- **Paired, at one watermark per exercise.** The nightly backup and the pre-deploy backup put the stack in maintenance mode for about a minute:
+  1. IMPACT Web refuses writes.
+  2. For each exercise, the backup records the latest change-feed sequence number as that exercise's cutoff.
+  3. The twin drains its sync until every exercise's cursor equals its cutoff.
+  4. The backup takes the `pg_dump`, then the twin-only export, which records each exercise's cursor.
+  5. Both files carry the per-exercise cutoffs. A pair whose cutoffs don't match is rejected.
+- **Restore:**
+  1. Put back the Postgres dump. The change feed is in it, so the whole scope history comes back.
+  2. Rebuild the plant graph from DEXPI.
+  3. Replay each exercise's feed from the start up to its cutoff, which rebuilds the mirrored scope, decisions, baselines and change events.
+  4. Import the twin-only export: reviewed matches, AI proposals, findings, saved cut-line options and readiness flags.
+  5. Check that each exercise's cursor equals its cutoff, then leave maintenance mode and resume the sync.
+- **The limit.** Writes made after the backup aren't in the dump. They're lost unless someone enters them again. That's acceptable for rehearsal data.
 - **Off the VM.** Copies on the same VM don't protect against losing the VM. `scripts/pull-backup.sh`, run from Hamid's machine, copies the latest dumps off the VM. exe.dev S3 backups need an S3 bucket and a Workload Identity Federation integration ([exe.dev docs](https://exe.dev/docs/all.md)), so they're an option for later.
 - **Before each team exercise,** Hamid stops the stack, copies the whole VM with exe.dev's `cp` ([exe.dev docs](https://exe.dev/docs/all.md)), starts the stack again, and checks that the copy boots.
 
@@ -113,7 +124,7 @@ The data lives in two places, and both are backed up:
 | Disk stays in budget | Deploy check of the VM's actual filesystem free space with `df`, and of account usage against the 100 GB allowance, with image pruning |
 | Deploys can be reversed | Test deploying tag N, then N-1, then N again with data intact, using a release that adds a real column |
 | A breaking migration can be undone | Test restoring the pre-deploy dump after a breaking migration, then deploying forward again |
-| Backups restore the whole state | Monthly restore into a scratch stack from the off-VM copies: Postgres row counts match, and a sample of reviewed matches, findings and saved cut-line options come back exactly. A test makes a change just before and just after the watermark, restores, and checks that the first sync applies only the later change, exactly once. A pair with mismatched watermarks is refused |
+| Backups restore the whole state | Monthly restore into a scratch stack from the off-VM copies: Postgres row counts match, and a sample of reviewed matches, findings and saved cut-line options come back exactly. After restore, the mirrored scope items, decisions and change events from before the cutoff are all in Neo4j and match Postgres, per exercise. A write made after the backup is absent after restore. A new write after restore is applied exactly once. A pair with mismatched cutoffs is refused |
 | A pre-exercise copy is usable | Boot the copied VM and run the smoke test on it |
 | Secrets stay off Git | CI secret scan, plus a check that `.env` is mode 600 on the VM |
 
