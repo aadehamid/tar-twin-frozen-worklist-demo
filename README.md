@@ -62,6 +62,7 @@ compose.yml           Postgres, Neo4j, both services
 - [docs/scenario-spec.md](docs/scenario-spec.md) covers Unit 200, the turnaround event, the candidate work list, the problems planted in the data and the demo walkthrough.
 - [docs/verification.md](docs/verification.md) covers how everything is checked as it is written: schemas, SHACL engineering rules in Neo4j, property tests, and a Quint (TLA) model of the sync, review and freeze workflow.
 - [docs/interactive-planning.md](docs/interactive-planning.md) covers planning mode: roles, the exercise clock, injects, the debrief, and the checks it must pass.
+- [docs/hosting.md](docs/hosting.md) covers the exe.dev VM for team exercises: what runs where, the 4 GB memory budget, sign-in, deploys, backups and the hosting checks.
 - [docs/decisions.md](docs/decisions.md) records the technology choices and the reasons for them.
 
 ## How we work
@@ -77,7 +78,7 @@ Two rules from [CONTRIBUTING.md](CONTRIBUTING.md) apply to every change. First, 
 
 ## Running it
 
-There's nothing to run yet. Once phase 0 lands, `docker compose up` will start Postgres, Neo4j and both services, and seed Unit 200. The README will then list the URLs and demo logins.
+There's nothing to run yet. Once phase 0 lands, `docker compose up` will start Postgres, Neo4j and both services, and seed Unit 200. The README will then list the URLs and demo logins. Team exercises will run on an exe.dev VM (see [docs/hosting.md](docs/hosting.md)).
 
 ## Configuration (planned)
 

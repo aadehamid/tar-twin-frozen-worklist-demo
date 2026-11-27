@@ -55,6 +55,7 @@ The twin can only reach IMPACT Web through its public API, the same way it would
 - Two front ends on two ports, for example `:8001` for IMPACT Web and `:8002` for the twin, so the audience sees two separate systems.
 - Neo4j Browser stays available on `:7474` for architects who want to query the twin directly.
 - Development without Docker is also supported: a local Postgres, a local Neo4j and `uv run` for each service.
+- Hosted team exercises run on one exe.dev VM. See [hosting.md](hosting.md).
 
 ## 4. Data model
 

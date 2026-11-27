@@ -72,3 +72,9 @@ Short records of the choices behind the design. Each one says what we chose, why
 - **Decision.** Demo mode and planning mode share the same services. Planning mode adds exercises, per-exercise roles, an exercise clock and a facilitator console.
 - **Why.** A team rehearsal uses the exact system the demo shows, so the demo shows the same system a team would use.
 - **Revisit if.** Planning-mode needs, such as many teams at once, start to slow the demo down.
+
+## D13. Host team exercises on one exe.dev VM
+
+- **Decision.** One exe.dev VM on Hamid's Personal plan (2 vCPU, 4 GB) runs the whole system with Docker Compose. Sign-in comes through exe.dev, and roles come from our own membership table.
+- **Why.** It gives private HTTPS, sign-in by email and persistent disks for $15 a month, with no server to run. The data is synthetic, so a host outside the client's network is fine.
+- **Revisit if.** The 15-user soak test goes over the memory budget (move to 4 vCPU and 8 GB), the team needs SSO or sharing controls (Work plan), or real client data comes in (a client-approved host).
