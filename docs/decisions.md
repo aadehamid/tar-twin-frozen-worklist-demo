@@ -22,10 +22,11 @@ Short records of the choices behind the design. Each one says what we chose, why
 
 ## D4. Relate in the browser for the graph panel
 
-- **Decision.** The twin UI loads a read-only copy of the graph into Relate, Neo4j's embedded Cypher engine, compiled to WebAssembly and running in a browser worker.
+- **Decision.** The twin UI loads a copy of the graph into Relate, Neo4j's embedded Cypher engine, compiled to WebAssembly and running in a browser worker.
 - **Why.** The audience sees real Cypher run against the real graph when they click a job, with no round trip. It shows the connection rather than a picture of it.
 - **Known limits.** In the browser, Relate can't open a saved database file or URL, and there are no multi-statement transactions, so we seed it from a Cypher script. Neo4j stays the master.
 - **Revisit if.** The phase 0 spike shows seeding or query speed is not good enough at about 5,000 nodes. The fallback is the same panel calling the twin API.
+- **Status.** The phase 0 spike passed on 2026-11-27 ([spike](spikes/relate-wasm.md)). At 5,040 nodes, headless Chromium seeded the store in about 1.4 seconds and ran the chain and the walk in a median of 26 ms, so the fallback isn't needed. Relate's read-only mode can't hold seeded data, so the worker answers only named queries instead.
 
 ## D5. DEXPI through pyDEXPI
 
