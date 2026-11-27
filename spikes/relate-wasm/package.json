@@ -1,0 +1,14 @@
+{
+  "name": "tar-twin-relate-wasm-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test test_relate.mjs"
+  },
+  "dependencies": {
+    "@relate/relate-wasm": "1.3.0"
+  },
+  "devDependencies": {
+    "playwright-core": "^1.65.1"
+  }
+}

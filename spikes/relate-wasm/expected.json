@@ -1,0 +1,51 @@
+{
+  "_note": "Answer key for the Relate WASM spike, written by hand from docs/spikes/relate-wasm.md section 2 and spikes/dexpi-sheet/expected.py. The exporter must not read this file.",
+  "relate_version": "1.3.0",
+  "nodes": {
+    "Equipment": 6,
+    "Nozzle": 21,
+    "Valve": 7,
+    "PipeTee": 3,
+    "OffPageConnector": 4,
+    "PidSheet": 1,
+    "IsolationEnvelope": 1,
+    "ScopeItem": 5
+  },
+  "relationships": {
+    "HAS_NOZZLE": 21,
+    "CONNECTED_TO": 24,
+    "ON_SHEET": 13,
+    "CONTAINS": 6,
+    "BOUNDED_BY": 4,
+    "RESOLVES_TO": 4
+  },
+  "valve_roles": {
+    "HV-2001": "block", "HV-2002": "block", "HV-2003": "block", "HV-2015": "block",
+    "FV-2011": "control", "FV-2012": "control", "FV-2015": "control"
+  },
+  "scope": {
+    "WR-200-0147": "E-201B",
+    "WR-200-0152": "R-202",
+    "WR-200-0160": "H-201",
+    "WR-200-0171": "E-201C",
+    "WR-200-0188": null
+  },
+  "walk_from_E-201B": {
+    "boundary": ["HV-2001", "HV-2002", "HV-2003", "HV-2015"],
+    "equipment": ["E-201A", "E-201B", "E-201C", "H-201", "R-201", "R-202"]
+  },
+  "walk_from_E-201B_with_HV-2001_as_control": {
+    "boundary": ["HV-2002", "HV-2003", "HV-2015"]
+  },
+  "chain_WR-200-0147": {
+    "request": "WR-200-0147",
+    "equipment": "E-201B",
+    "nozzles": ["N1", "N2", "N3", "N4"],
+    "envelope": "ENV-200-02",
+    "boundary": ["HV-2001", "HV-2002", "HV-2003", "HV-2015"],
+    "others": ["WR-200-0152", "WR-200-0160", "WR-200-0171"]
+  },
+  "pad_copies": 104,
+  "padded_nodes": 5040,
+  "speed_limits_ms": {"seed": 3000, "median_query": 50}
+}

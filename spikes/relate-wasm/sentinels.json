@@ -1,0 +1,17 @@
+{
+  "_note": "Test-only nodes for the W5 stop-rule mutants. Keys double as tags. Pipes are [from, to] by tag or key.",
+  "nodes": [
+    {"key": "SENT-BV-1", "label": "Valve", "props": {"tag": "SENT-BV-1", "role": "block"}},
+    {"key": "SENT-EQ-1", "label": "Equipment", "props": {"tag": "SENT-EQ-1"}},
+    {"key": "SENT-OPC", "label": "OffPageConnector", "props": {"number": "SENT-OPC"}},
+    {"key": "SENT-BV-2", "label": "Valve", "props": {"tag": "SENT-BV-2", "role": "block"}},
+    {"key": "SENT-EQ-2", "label": "Equipment", "props": {"tag": "SENT-EQ-2"}}
+  ],
+  "pipes": [
+    ["HV-2003", "SENT-BV-1"],
+    ["HV-2003", "SENT-EQ-1"],
+    ["FV-2011", "SENT-OPC"],
+    ["SENT-OPC", "SENT-BV-2"],
+    ["SENT-OPC", "SENT-EQ-2"]
+  ]
+}
