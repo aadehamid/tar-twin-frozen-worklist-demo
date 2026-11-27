@@ -49,12 +49,7 @@ def snapshot(repo: Path) -> TreeSnapshot:
     entries: dict[bytes, tuple[object, ...]] = {}
     for rel in unique_paths:
         full = os.path.join(repo_b, rel)
-        try:
-            st = os.lstat(full)
-        except FileNotFoundError:
-            entries[rel] = ("missing",)
-            continue
-
+        st = os.lstat(full)
         fmt = stat.S_IFMT(st.st_mode)
         mode = stat.S_IMODE(st.st_mode)
         if stat.S_ISLNK(st.st_mode):

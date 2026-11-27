@@ -176,6 +176,17 @@ class TestTreeGuard:
         finally:
             secret.chmod(stat.S_IRUSR | stat.S_IWUSR)
 
+    def test_missing_tracked_file_aborts_snapshot_while_staged_delete_succeeds(self, tmp_path: Path):
+        tg = _load_module("tree_guard")
+        repo = init_repo(tmp_path / "repo")
+        (repo / "docs" / "info.md").unlink()
+        with pytest.raises(FileNotFoundError):
+            tg.snapshot(repo)
+        run_git(repo, "rm", "docs/info.md")
+        before = tg.snapshot(repo)
+        after = tg.snapshot(repo)
+        assert tg.diff_snapshots(before, after) == []
+
 
 class TestCheckDocs:
     def test_clean_docs_pass(self, tmp_path: Path):
@@ -195,7 +206,7 @@ class TestCheckDocs:
         repo = init_repo(tmp_path / "repo")
         (repo / "docs" / "info.md").write_text(
             "Valid [readme](../README.md#section), [web](https://example.com), "
-            "`[inline](missing-inline.md)`.\n"
+            "`[inline](missing-inline.md)`, ``[double](missing-double.md)``.\n"
             "```md\n[fenced](missing-fenced.md)\n```\n"
             "Broken [missing](nope.md).\n",
             encoding="utf-8",
@@ -212,6 +223,35 @@ class TestCheckDocs:
         (repo / "README.md").write_text("Escape [out](../outside.md).\n", encoding="utf-8")
         errors = cd.check_repo_docs(repo)
         assert any("outside.md" in e or "outside repository" in e.lower() for e in errors)
+
+    def test_handles_balanced_parens_and_reference_links(self, tmp_path: Path):
+        cd = _load_module("check_docs")
+        repo = init_repo(tmp_path / "repo")
+        paren_dir = repo / "docs" / "v(1)"
+        paren_dir.mkdir(parents=True)
+        (paren_dir / "note(2).md").write_text("# Note\n", encoding="utf-8")
+        (repo / "README.md").write_text(
+            "Good [paren](docs/v(1)/note(2).md) and [ref][good] and [badref][bad].\n\n"
+            "[good]: docs/v(1)/note(2).md\n"
+            "[bad]: docs/v(1)/missing(3).md\n",
+            encoding="utf-8",
+        )
+        errors = cd.check_repo_docs(repo)
+        assert len(errors) == 1
+        assert "missing(3).md" in errors[0]
+
+    def test_scans_markdown_in_other_directories_and_excludes_vendor(self, tmp_path: Path):
+        cd = _load_module("check_docs")
+        repo = init_repo(tmp_path / "repo")
+        (repo / "scripts").mkdir()
+        (repo / "scripts" / "guide.md").write_text("See [broken](missing.md) \u2014 bad.\n", encoding="utf-8")
+        (repo / "spikes" / "demo" / "vendor").mkdir(parents=True)
+        (repo / "spikes" / "demo" / "vendor" / "README.md").write_text(
+            "Vendored \u2014 [ignored](nope.md)\n", encoding="utf-8"
+        )
+        errors = cd.check_repo_docs(repo)
+        assert len(errors) == 2
+        assert all("scripts/guide.md" in e for e in errors)
 
 
 class TestPrePushHook:
