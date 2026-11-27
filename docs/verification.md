@@ -45,7 +45,7 @@ Starting rule set, to be reviewed and extended in phase 1:
 The calculations get property tests that run on thousands of generated inputs:
 
 - **Clusters.** A cluster's cost is never more than the sum of its items' standalone costs. Each shared cost is counted exactly once.
-- **Cut line.** Everything above the line fits the budget. Mandatory items are always above it. Moving an item from below to above never lowers the total above the line.
+- **Cut line.** When the budget is feasible, everything above the line fits it. Mandatory items are always above the line. If mandatory items alone exceed the budget, the run is marked infeasible with the shortfall, and nothing discretionary sits above the line. Moving an item from below to above never lowers the total above the line.
 - **Match rate.** It stays between 0 and 100. Accepting a proposal never lowers it.
 - **Baseline.** Scope growth equals the sum of the change events' hour deltas.
 - **Sync.** Running the same sync twice gives the same graph.
@@ -66,7 +66,7 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 
 From phase 4 the spec also covers exercises, the clock, roles, concurrent editors and the change process from [interactive-planning.md](interactive-planning.md).
 
-The same spec also produces example traces, such as "add after freeze, sync, review". A small test harness replays them against the real FastAPI services, which ties the spec to the code rather than letting it drift into a separate document. Demo-mode traces are replayed from phase 4. Planning-mode traces are replayed in phase 8, once those APIs exist.
+The same spec also produces example traces, such as "add after freeze, sync, review". A small test harness replays them against the real FastAPI services, which ties the spec to the code rather than letting it drift into a separate document. Sync and matching traces are replayed from phase 4, baseline and change traces from phase 6, and planning-mode traces in phase 8, each once the APIs they need exist.
 
 ## Where Bend fits
 
