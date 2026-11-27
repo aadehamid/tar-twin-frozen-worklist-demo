@@ -38,7 +38,7 @@ The demo can show one "wave 2" screen that previews 31-f3 with fixed data, clear
 | Component | Role | Stack | Stands in for |
 |---|---|---|---|
 | IMPACT Web API | System of record for scope: turnaround events, work requests, estimates, RIPT scores, review decisions, freeze | FastAPI, SQLModel, PostgreSQL | IMPACT Web |
-| IMPACT Web UI | Where planners and source groups raise, edit, challenge and freeze work requests | React, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Router and Query | IMPACT Web screens |
+| IMPACT Web UI | Where planners and source groups raise and edit work requests, and the TA manager runs the challenge, DRB and freeze | React, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Router and Query | IMPACT Web screens |
 | CMMS / TLM module | Equipment master: tag, description, class, functional location, area, status | Module inside the IMPACT Web service with its own schema and API prefix | Maximo or JDE, plus TLM |
 | Twin API | Plant graph, scope mirror, matching, envelopes, clusters, cut line, baseline, KPIs | FastAPI, Neo4j Python driver, pyDEXPI | The twin platform |
 | Twin UI | Plot plan, P&ID viewer, graph panel, match review, cut line, baseline and KPIs | React, same front-end stack, SVG and d3-zoom for the plot plan, Cytoscape.js for graph drawing, Relate WASM for the in-browser graph | The twin front end |
@@ -62,11 +62,15 @@ The twin can only reach IMPACT Web through its public API, the same way it would
 
 Kept close to how a turnaround work list is managed, and deliberately limited where the real system is limited.
 
+- `exercise`: id, name, mode (demo or planning), starting fixture, clock step. Every table below carries `exercise_id`. Demo mode is one fixed exercise.
 - `turnaround_event`: id, site, unit, name, planned start, duration days, freeze date, budget target.
-- `work_request`: id (for example `WR-200-0147`), event id, title, description (free text), equipment text (free text, no tag lookup), driver (inspection, reliability, regulatory, capital, operations), source group, RIPT score, estimate hours by craft, estimate cost, status (candidate, accepted, rejected, deferred, frozen, added after freeze, deleted after freeze), decision reason, submitted at, updated at.
-- `review_decision`: request id, stage (fit to frame, challenge, DRB), decision, reason, decided by, decided at.
+- `work_request`: id (for example `WR-200-0147`), event id, title, description (free text), equipment text (free text, no tag lookup), driver (inspection, reliability, regulatory, capital, operations), source group, RIPT score, estimate hours by craft, estimate cost, status (candidate, screened out, accepted, rejected, deferred, deleted), version (raised on every edit, used for optimistic locking), decision reason, submitted at, updated at.
+- `review_decision`: request id, request version, stage (fit to frame, challenge, DRB), kind (recommendation or final), decision, reason, decided by, decided at. A decision goes stale when the request moves past its version.
 - `freeze`: event id, frozen at, frozen by, list version.
-- `user` and auth from the template, with roles for planner, source group, TA manager and viewer.
+- `freeze_item`: freeze id, request id, request version, and a copy of the request's fields at freeze. Written once, never changed.
+- `change_request`: request id, base version, type (add, delete, change), schedule impact days, mandatory or discretionary, risk if not done, hours and cost delta, evidence, raised by, status (pending, approved, rejected), decided by, reason.
+- `change_feed`: a sequence number for every committed change to a request, decision, freeze or change request. Writes to the feed take a per-exercise lock, so sequence order matches commit order and the twin never skips a gap. The twin syncs from this feed.
+- `user` and auth from the template. The template only has a superuser flag, so the service adds `exercise_membership` (user, exercise, role) with the roles and permissions in [interactive-planning.md](interactive-planning.md) section 2. The twin's service account has its own read-only role.
 
 The equipment field stays free text on purpose. It mirrors the IMPACT Web code freeze that the workshop described, which is the reason the twin needs a tag registry at all.
 
@@ -92,13 +96,13 @@ Derived plant structure:
 
 Scope and decisions:
 
-- `(:ScopeItem {request_id, title, driver, ripT, hours, cost, status})`, mirrored from IMPACT Web on each sync
+- `(:ScopeItem {exercise_id, request_id, version, title, driver, ript, hours, cost, status})`, mirrored from IMPACT Web on each sync. Every scope and decision node carries `exercise_id`. The plant graph from DEXPI is shared by all exercises, read-only, and keyed on DEXPI ID
 - `(:ScopeItem)-[:RESOLVES_TO {confidence, method, status, reviewed_by}]->(:Equipment)` where method is exact, rule, fuzzy or ai, and status is proposed, accepted or rejected
 - `(:MatchProposal {model, prompt_version, reason, evidence})` for AI proposals, linked to the scope item and the candidate tags
 - `(:Cluster {id, type, shared_hours, shared_cost})` where type is scaffold, isolation or access, with `INCLUDES` to scope items
-- `(:Baseline {event, frozen_at, version})` with `INCLUDES` to scope items as they stood at freeze
-- `(:ChangeEvent {type, at, hours_delta, reason, source_group})` linked to the scope item and the baseline
-- `(:CutLineRun {budget, at})` with `ABOVE` and `BELOW` to scope items
+- `(:Baseline {event, freeze_id, list_version, frozen_at, ready_for_use})` built from IMPACT Web's frozen copy, with `INCLUDES` to the frozen item versions
+- `(:ChangeEvent {change_request_id, type, mandatory, at, hours_delta, reason, source_group})` for approved changes only, unique on change request ID, linked to the scope item and the baseline
+- `(:CutLineRun {name, budget, ranking_rule, scope_version, saved_by, at, feasible, shortfall})` with `ABOVE` and `BELOW` to scope items. Twin-local. Saving one never changes a request
 
 Reserved for later, with no features in release one:
 
@@ -120,10 +124,11 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 
 ### 5.2 Scope sync (read only)
 
-1. The twin scheduler calls `GET /api/v1/work-requests?event_id=…&updated_since=…` on IMPACT Web every minute, and on demand from a "sync now" button.
-2. It upserts `ScopeItem` nodes and records status changes.
-3. Changes after freeze become `ChangeEvent` nodes against the baseline.
-4. The twin never calls a write endpoint on IMPACT Web. The IMPACT Web API gives the twin's service account a read-only role, and a test checks it.
+1. The twin scheduler calls `GET /api/v1/changes?exercise_id=…&after_seq=…` on IMPACT Web every 60 seconds, and on demand from "sync now". Only one sync runs per exercise at a time.
+2. It upserts `ScopeItem` nodes keyed on exercise, request ID and version, and stores the last sequence number it applied in the same Neo4j transaction, so a crash mid-sync resumes cleanly. Replaying a sync changes nothing.
+3. When the feed shows a freeze, the twin reads the frozen copy (`GET /api/v1/freezes/{id}/items`) and builds the baseline from it.
+4. Approved change requests become `ChangeEvent` nodes, unique on change request ID. Pending and rejected ones are mirrored but don't count toward growth.
+5. The twin never calls a write endpoint on IMPACT Web. The IMPACT Web API gives the twin's service account a read-only role, and a test checks it.
 
 ### 5.3 Matching
 
@@ -131,7 +136,7 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 2. **Rules.** Known aliases and patterns, for example "feed/eff exch A" to `E-201A`, or "charge pump south" to `P-201B`, from a small alias table.
 3. **Fuzzy.** rapidfuzz scoring against tag descriptions within the work request's area, if one is given.
 4. **AI.** Anything left below the confidence threshold goes to the AI matcher (section 6).
-5. **Review.** Every match below the auto-accept threshold lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
+5. **Review.** The compatibility check (work type against equipment class) runs first. Exact matches, and rule matches above the auto-accept threshold, that pass it are accepted by the system and say so in the trace. Every other match, and every AI proposal however confident, lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
 6. **Match rate.** The share of active scope items with an accepted match, reported per site, per area and per source group. The gate threshold (default 95 percent) is a setting.
 
 ### 5.4 Mapping trace
@@ -157,8 +162,9 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 
 ### 5.6 Freeze and change simulation
 
-- Freeze happens in IMPACT Web. A TA manager freezes the list, and the next sync creates the twin baseline.
-- A simulation job (`jobs/simulate_late_scope.py`) plays a scripted set of late adds and deletes into IMPACT Web through its API, spread over the weeks after freeze, as different source groups would. The twin picks them up through the normal sync. Scope growth in man-hours rises on the KPI panel.
+- Freeze happens in IMPACT Web. The TA manager freezes the list, IMPACT Web writes the frozen copy, and the next sync builds the twin baseline from it. The race rules are in [interactive-planning.md](interactive-planning.md) section 3.4.
+- The twin marks the baseline ready for 3.1 use only when the match rate on frozen items passes the gate. This is separate from the freeze itself.
+- A simulation job (`jobs/simulate_late_scope.py`) raises a scripted set of change requests in IMPACT Web through its API, and approves or rejects them as the TA manager would, spread over the months after freeze. The twin picks them up through the normal sync. Scope growth in man-hours rises on the KPI panel as approved changes land.
 
 ### 5.7 Browser graph export
 
@@ -184,7 +190,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 - Turnaround event list and event dashboard: counts by status, hours, cost against target, freeze status.
 - Work request list with filters, and a detail and edit form. The equipment field is free text.
 - Review screens for fit to frame, challenge and DRB decisions.
-- Freeze action for the TA manager role.
+- Freeze action for the TA manager role, and the change request process after freeze.
 - A banner showing that the twin reads this system and never writes to it.
 
 ### 7.2 Twin UI
@@ -215,18 +221,19 @@ See [verification.md](verification.md) for the full plan: schemas, SHACL enginee
 
 ## 10. Build phases
 
-Each phase ends with a check-in before the next starts.
+Each phase ends with a check-in before the next starts. Within each phase, the checks are written before the code, and each PR gets a review from a different model before merge ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 | Phase | Work | Exit check |
 |---|---|---|
 | 0. Spikes | Build and render one DEXPI sheet with pyDEXPI. Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Inkling 2 Mini on OpenRouter with a structured-output schema. Run the template without Docker. Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
 | 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec, with schema and SHACL checks on every write | All engineering rules pass, the counts match the spec, and Hamid signs off the scenario |
-| 2. IMPACT Web | Service and UI, including review and freeze | A planner can raise, challenge and freeze the list |
+| 2. IMPACT Web | Service and UI, including review and freeze | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
 | 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |
-| 4. Sync and matching | Read-only sync, matching pipeline, AI matcher, review queue, match rate, mapping trace | Match rate before and after review matches the spec. Every request has a complete trace. The Quint workflow spec passes and its traces replay cleanly against the APIs |
+| 4. Sync and matching | Read-only sync, matching pipeline, AI matcher, review queue, match rate, mapping trace | Match rate before and after review matches the spec. Every request has a complete trace. The Quint workflow spec passes. Its sync and matching traces replay cleanly against the APIs. Baseline and change traces replay in phase 6. Planning-mode parts are checked as a model only until phase 8 |
 | 5. Twin UI | Plot plan, P&ID viewer, graph panel, clusters, cut line | The demo script runs to the end of the cut-line step |
-| 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel | Scope growth after freeze matches the spec |
+| 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel | Scope growth after freeze matches the spec. The Quint baseline and change traces replay cleanly |
 | 7. Hardening | Compose, CI, Playwright, demo script, README | A fresh clone runs the demo with one command |
+| 8. Planning mode | Exercises, roles per exercise, exercise clock, facilitator console, injects, reset, debrief ([interactive-planning.md](interactive-planning.md)) | All checks in section 5 of that document pass, the Quint planning traces replay cleanly, and the demo-mode suite still passes |
 
 ## 11. Risks
 
