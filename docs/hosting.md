@@ -52,7 +52,8 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 
 - **Threat model.** The exe.dev proxy is the only path from outside to the edge's ports. Only Hamid has root on the VM, and only our containers run on it. Anyone with root could fake a header, so root is never shared.
 - **Only the edge can carry a user identity.** The edge is the only container with published ports. The apps publish nothing, so the only way to reach them is through the edge or from another container on the Docker network.
-- **Requests that skip the edge carry no user identity.** The edge adds an `X-Edge-Auth` secret to every request it forwards. The apps read `X-ExeDev-Email` only when that secret is present. A request from any other container, for example the twin calling IMPACT Web, has its identity headers ignored and must use a machine token instead.
+- **The edge only passes identity from the exe.dev proxy.** The edge strips any incoming `X-Edge-Auth` header. It keeps `X-ExeDev-Email` and `X-ExeDev-UserID`, and adds its own `X-Edge-Auth` secret, only for requests from outside the Docker networks, which on this VM means the exe.dev proxy. A request to the edge from a container gets its identity headers stripped and no secret. Phase 0 records the source address the edge sees for proxy traffic. If it can't be told apart from container traffic, the edge runs in host network mode so it can.
+- **The apps check the secret's value.** They read `X-ExeDev-Email` only when `X-Edge-Auth` matches the expected secret, using a constant-time compare. A missing or wrong value means the request is anonymous. A request that doesn't come through the edge, for example the twin calling IMPACT Web, never has the secret and must use a machine token.
 - **Owner-only until verified.** Until the identity checks in section 6 pass on the VM, the VM is shared with Hamid only.
 
 ### People
@@ -65,7 +66,7 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 ### Machines
 
 - The twin's scheduled sync and its membership lookups don't come from a person. They use a machine token for the twin's IMPACT Web service account, sent in `Authorization` over the Docker network.
-- That account has a read-only role, so it can read the change feed, frozen copies and memberships and nothing else.
+- That account has a read-only role. It can read the change feed, frozen copies, memberships and the CMMS equipment master and functional locations (the matcher's tag list), and nothing else.
 - The twin container holds no Postgres credentials, and Postgres accepts connections only from the IMPACT Web container's database user.
 
 ## 4. Secrets
@@ -76,13 +77,14 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 ## 5. Deploying and backups
 
 - `scripts/deploy.sh` runs from Hamid's machine or GitHub Actions. It connects over SSH, pulls the tagged images, runs database migrations, restarts with `docker compose up -d`, and runs the smoke test.
-- Every deploy is tagged with the Git commit, and takes a `pg_dump` before running migrations.
+- Every deploy is tagged with the Git commit. Before running migrations it takes a paired backup of both stores (see "What gets backed up").
 
 ### Database changes and rollback
 
-- **Expand, then contract.** A release may add tables, columns or nodes. It may not drop or rename anything the previous release still uses. Drops happen in a later release, once nothing reads them.
+- **Expand, then contract.** A release may add tables, columns, node labels or properties. It may not drop or rename anything the previous release still uses. Drops happen in a later release, once nothing reads them.
 - **Rollback.** Going back means redeploying the previous tag. Because migrations only expand, the previous release still runs against the new schema.
-- **If a migration must break compatibility,** the PR says so. Its rollback is to restore the pre-deploy dump, and the rollback test exercises that path.
+- **Graph changes are compatible only.** The twin graph never gets a breaking migration. If its model has to change in a breaking way, the release rebuilds the graph from DEXPI and a sync and reimports twin-only state, and rollback does the same with the previous release.
+- **If a Postgres migration must break compatibility,** the PR says so. Its rollback restores the paired pre-deploy backup of both stores, and the rollback test exercises that path.
 
 ### What gets backed up
 
@@ -90,7 +92,8 @@ The data lives in two places, and both are backed up:
 
 - **IMPACT Web (Postgres).** Nightly `pg_dump`.
 - **Twin-only state (Neo4j).** This is the data that exists only in the twin: reviewed matches, AI proposals, findings, saved cut-line options, baseline readiness flags and sync cursors. A nightly export from the twin API writes it to JSON. Everything else in the twin rebuilds from the DEXPI files and an IMPACT Web sync.
-- **Restore** rebuilds the plant graph, resyncs from IMPACT Web, then imports the twin-only export.
+- **Paired, at one watermark.** The nightly backup and the pre-deploy backup put the stack in maintenance mode for about a minute: IMPACT Web refuses writes and the twin pauses its sync. The backup then records the current change-feed sequence number, takes the `pg_dump`, and takes the twin-only export with its sync cursor at that same number. Both files carry the watermark, and a pair whose numbers don't match is rejected.
+- **Restore** puts back the Postgres dump, rebuilds the plant graph from DEXPI, imports the twin-only export, sets the sync cursor to the watermark, and only then starts the sync. The first sync applies nothing older than the watermark and picks up anything newer exactly once.
 - **Off the VM.** Copies on the same VM don't protect against losing the VM. `scripts/pull-backup.sh`, run from Hamid's machine, copies the latest dumps off the VM. exe.dev S3 backups need an S3 bucket and a Workload Identity Federation integration ([exe.dev docs](https://exe.dev/docs/all.md)), so they're an option for later.
 - **Before each team exercise,** Hamid stops the stack, copies the whole VM with exe.dev's `cp` ([exe.dev docs](https://exe.dev/docs/all.md)), starts the stack again, and checks that the copy boots.
 
@@ -101,16 +104,16 @@ The data lives in two places, and both are backed up:
 | Only the edge publishes ports | Post-deploy checks of `docker compose config`, `docker ps` port mappings and `ss -tlnp`. Any listener in 3000 to 9999 other than 8000, 8001 and 8002 fails the deploy |
 | Neo4j and Postgres can't be reached through the proxy | Smoke test as a web-shared, low-privilege user: `:7474`, `:7687` and `:5432` through `tar-twin.exe.xyz` fail |
 | Only shared users get in | Test with an unshared exe.dev account on `:8000`, `:8001` and `:8002`. Each gets the exe.dev login and no app content |
-| A forged identity header doesn't work | From outside: a client-sent `X-ExeDev-Email` on both app ports doesn't change who the app sees. From inside: a container calling an app directly with `X-ExeDev-Email` and no edge secret is treated as anonymous |
+| A forged identity header doesn't work | From outside: a client-sent `X-ExeDev-Email` or `X-Edge-Auth` on both app ports doesn't change who the app sees. From inside: a container calling an app directly with `X-ExeDev-Email` is anonymous, with no secret or a wrong one. A container calling the edge directly gets its identity headers stripped and no secret added |
 | Users without a membership are refused | API test in `AUTH_MODE=exe` with a known email and no membership |
-| Machine sync works without a person and can't write | Test that the twin sync runs on its token with no user session, and that every IMPACT Web write endpoint refuses that token |
+| Machine sync works without a person and can't write | Test that the twin sync and a CMMS master read run on its token with no user session, that each allowed read endpoint answers, and that every IMPACT Web write endpoint and every other endpoint refuses that token |
 | The twin has no database access to IMPACT Web | Check that the twin container's environment holds no Postgres credentials, and that Postgres refuses a connection from the twin container |
 | Demo logins are off when hosted | Test that password login returns 404 in `AUTH_MODE=exe` |
 | The system fits in 4 GB | Soak test: 15 simulated users through a full exercise, including a cold start, the DEXPI load with SHACL checks, concurrent edits, matching, graph exports and a reset. Peak memory stays below 3.5 GB on the VM, `docker stats` peaks are logged per container, and there are no out-of-memory kills, container restarts or 5xx errors. Twin freshness stays inside the targets in [interactive-planning.md](interactive-planning.md) section 7 |
-| Disk stays in budget | Deploy check of VM disk use against the account's 100 GB, with image pruning |
+| Disk stays in budget | Deploy check of the VM's actual filesystem free space with `df`, and of account usage against the 100 GB allowance, with image pruning |
 | Deploys can be reversed | Test deploying tag N, then N-1, then N again with data intact, using a release that adds a real column |
 | A breaking migration can be undone | Test restoring the pre-deploy dump after a breaking migration, then deploying forward again |
-| Backups restore the whole state | Monthly restore into a scratch stack from the off-VM copies: Postgres row counts match, and a sample of reviewed matches, findings and saved cut-line options come back exactly |
+| Backups restore the whole state | Monthly restore into a scratch stack from the off-VM copies: Postgres row counts match, and a sample of reviewed matches, findings and saved cut-line options come back exactly. A test makes a change just before and just after the watermark, restores, and checks that the first sync applies only the later change, exactly once. A pair with mismatched watermarks is refused |
 | A pre-exercise copy is usable | Boot the copied VM and run the smoke test on it |
 | Secrets stay off Git | CI secret scan, plus a check that `.env` is mode 600 on the VM |
 
