@@ -39,7 +39,7 @@ The 3.1 MVP ships five things in release one. The demo walks through each of the
 - **CMMS / TLM (mock)** holds the equipment master: tags, functional locations and classes.
 - **The digital twin** is a second FastAPI service on Neo4j. It builds the plant graph from DEXPI P&IDs, mirrors IMPACT Web scope, and computes matches, isolation envelopes, clusters, the cut line and the baseline.
 - **The twin front end** shows the plot plan, the P&ID sheets and a graph panel. The graph panel runs Relate, Neo4j's embedded Cypher engine, in the browser as WebAssembly. It holds a read-only copy of the twin graph, so a click on a job runs real Cypher in the page and shows the chain from work request to equipment, piping, block valves, isolation envelope and neighbouring jobs.
-- **The AI matcher** handles the tag matches that rules and fuzzy matching can't settle. It calls Perplexity Decider, a decision model, through OpenRouter's Decisions API. Decider picks one of code's candidate tags or none and returns a probability for each. It writes no text, so there's nothing to parse. Other decision models on OpenRouter take the same request, and Decider's weights are open, so a client could host it.
+- **The AI matcher** handles the tag matches that rules and fuzzy matching can't settle. It calls Perplexity Decider, a decision model, through OpenRouter's Decisions API. Decider picks one of code's candidate tags or none and returns a probability for each. It writes no text, so there's nothing to parse. Other decision models on OpenRouter take the same request, and Decider's weights are open, so a client could host it. Inkling 2 Mini then writes a one-line reason for the planner. It never changes the pick.
 
 Both services start from the [full-stack FastAPI template](https://github.com/fastapi/full-stack-fastapi-template).
 
@@ -88,5 +88,6 @@ There's nothing to run yet. Once phase 0 lands, `docker compose up` will start P
 | `DECIDER_URL` | Decisions endpoint for the AI matcher | `https://openrouter.ai/api/alpha/decisions` |
 | `DECIDER_MODEL` | Decision model ID | `perplexity/pplx-decider-v1.3:free` |
 | `DECIDER_API_KEY` | OpenRouter key; leave empty to run rules-only matching | empty |
+| `REASON_MODEL` | Chat model that writes the planner-facing reason; leave empty for no reasons | `thinkingmachines/inkling-2-mini` |
 | `NEO4J_URI` | Twin graph store | `bolt://neo4j:7687` |
 | `POSTGRES_*` | IMPACT Web and CMMS mock database | from the template |

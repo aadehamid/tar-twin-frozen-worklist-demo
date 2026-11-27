@@ -25,6 +25,7 @@ So the showcase makes three claims, and the demo has to back each one with numbe
 | Topology facts | Code | A fixed Cypher query pulls each candidate's DEXPI neighbours, flow position and envelope. Every fact gets an ID and names the tag it belongs to | No |
 | Disambiguate | AI | Reads the request text, the candidates and their facts. Returns one candidate or none with a probability for each, and the fact that best identifies the equipment | No, however confident |
 | Check the AI | Code | See below | No, it can only reject |
+| Explain | AI | Inkling 2 Mini writes one sentence on why the checked pick fits, from that tag's facts only. Code drops it if it names another tag | No, display only |
 | Decide | Planner | Accept, reject or pick another tag in the review queue | Yes |
 
 Two separate rules decide what happens to a tag.
@@ -82,7 +83,7 @@ A Matching lab screen in the twin, with two views.
 1. The raw IMPACT Web text.
 2. Code: normalized text, the regex and alias rules that ran (with rule IDs), any findings, fuzzy candidates with scores.
 3. Code: the topology facts for each candidate, with their IDs.
-4. AI: the pick, a probability bar for each candidate, and the evidence fact, linked to its place in the topology panel.
+4. AI: Decider's pick, a probability bar for each candidate, and the evidence fact, linked to its place in the topology panel. Below it, Inkling's one-line reason once it arrives, labelled as written by AI.
 5. Code: the checks on the AI answer, each pass or fail.
 6. The planner's decision.
 
@@ -124,6 +125,15 @@ These checks come before the code, as [CONTRIBUTING.md](../CONTRIBUTING.md) requ
 | Wrong candidate with a genuine fact about it | Passes the checks, lands in review as a proposal, and the answer key scores it wrong |
 | Instruction row where the AI picks E-201C | Same as above, and the instruction flag shows on the review item |
 | Valid correct pick | Lands in review as a proposal, never auto-accepted |
+
+**Checks on the reason writer.** Recorded Inkling responses, each with a defined outcome:
+
+| Fixture | Expected outcome |
+|---|---|
+| Reason that mentions only the picked tag | Shown on the review item, labelled as written by AI |
+| Reason that names another tag, such as "E-201C" on an E-201B pick | Dropped. The item shows probabilities and evidence only |
+| Broken JSON, timeout or no `REASON_MODEL` | No reason. The item is already in the queue with the same outcome |
+| Any reason at all | The outcome, band and evidence are byte-for-byte the same as without it |
 
 Each fixture runs through the whole path: parser, aliases, fuzzy, facts, the recorded AI answer, the checker and the review queue write. That way a test fails if any earlier step lets the item through.
 

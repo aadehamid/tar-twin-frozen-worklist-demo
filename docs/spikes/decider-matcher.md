@@ -4,13 +4,13 @@ Status: run on 26 November 2026. All gated checks pass.
 
 This spike answers a phase 0 question from [design.md](../design.md) section 9. Can Perplexity Decider v1.3 on OpenRouter do the disambiguation step in [matching-showcase.md](../matching-showcase.md), and does the code checker hold up around it? Six cases can't measure accuracy. That happens in phase 4 on all 200 requests. The six cases show whether the call works, how fast it is and whether the answers are stable.
 
-The spike started with Inkling 2 Mini. Section 4 says what happened and why we dropped it.
+The spike started with Inkling 2 Mini. Section 5 says what happened. Inkling no longer picks tags. It now writes the planner-facing reason after a pick passes the checker (D16).
 
 ## 1. Why a decision model
 
 The matcher never asks the AI to write anything. Code finds the candidates, and the AI picks one or says none. A decision model answers exactly that kind of question. It returns a probability for every option in a fixed list ([Perplexity Decisions docs](https://docs.perplexity.ai/docs/decisions/decisions)), so it can't name a tag code didn't offer, and there's no JSON to break. A reasoning model writes a free-text answer we then have to parse and police.
 
-Decider gives no written reason. The review queue builds its explanation from data instead: the probability for each candidate and the text of the fact Decider picked as evidence.
+Decider gives no written reason. The review queue shows the probability for each candidate and the text of the fact Decider picked as evidence. Inkling adds a one-line reason afterwards, for display only.
 
 ## 2. Setup
 
