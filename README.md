@@ -14,6 +14,11 @@ The 3.1 MVP ships five things in release one. The demo walks through each of the
 4. **Cut line by location.** A budget target splits scope above and below the line, shown on the plant, ready for the DRB review.
 5. **Frozen baseline.** The list is snapshotted at freeze. Every later add or delete is logged with hours and a reason, and scope growth after freeze is tracked in man-hours.
 
+## Two modes
+
+- **Demo mode** runs the scripted 10-minute walkthrough on seeded data.
+- **Planning mode** lets a team rehearse a Unit 200 turnaround. People log in with roles (TA manager, planner, source groups, DRB), raise and challenge requests in IMPACT Web, and watch the twin respond, while a facilitator moves the clock and adds surprises. See [docs/interactive-planning.md](docs/interactive-planning.md).
+
 ## How it works
 
 ```
@@ -56,7 +61,12 @@ compose.yml           Postgres, Neo4j, both services
 - [docs/design.md](docs/design.md) covers the architecture, components, graph model, data flows, AI matching, the Relate browser graph, extension to 4.1 and 4.2, testing and build phases.
 - [docs/scenario-spec.md](docs/scenario-spec.md) covers Unit 200, the turnaround event, the candidate work list, the problems planted in the data and the demo walkthrough.
 - [docs/verification.md](docs/verification.md) covers how everything is checked as it is written: schemas, SHACL engineering rules in Neo4j, property tests, and a Quint (TLA) model of the sync, review and freeze workflow.
+- [docs/interactive-planning.md](docs/interactive-planning.md) covers planning mode: roles, the exercise clock, injects, the debrief, and the checks it must pass.
 - [docs/decisions.md](docs/decisions.md) records the technology choices and the reasons for them.
+
+## How we work
+
+Two rules from [CONTRIBUTING.md](CONTRIBUTING.md) apply to every change. First, decide and write down how a change will be validated before writing it. Second, a different AI model from the author reviews every PR before it merges.
 
 ## Ground rules
 

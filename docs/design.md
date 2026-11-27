@@ -215,7 +215,7 @@ See [verification.md](verification.md) for the full plan: schemas, SHACL enginee
 
 ## 10. Build phases
 
-Each phase ends with a check-in before the next starts.
+Each phase ends with a check-in before the next starts. Within each phase, the checks are written before the code, and each PR gets a review from a different model before merge ([CONTRIBUTING.md](../CONTRIBUTING.md)).
 
 | Phase | Work | Exit check |
 |---|---|---|
@@ -227,6 +227,7 @@ Each phase ends with a check-in before the next starts.
 | 5. Twin UI | Plot plan, P&ID viewer, graph panel, clusters, cut line | The demo script runs to the end of the cut-line step |
 | 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel | Scope growth after freeze matches the spec |
 | 7. Hardening | Compose, CI, Playwright, demo script, README | A fresh clone runs the demo with one command |
+| 8. Planning mode | Exercises, roles per exercise, exercise clock, facilitator console, injects, reset, debrief ([interactive-planning.md](interactive-planning.md)) | All checks in section 5 of that document pass |
 
 ## 11. Risks
 
