@@ -20,7 +20,7 @@ Read from the n10s 5.26.0 source and docs before writing the shapes ([validation
 - Not supported: `sh:or`, `sh:and`, `sh:xone`, general `sh:not` and `sh:node`, qualified value shapes, property pair constraints such as `sh:lessThan`, longer property paths, and SPARQL constraints.
 - `validate()` checks the whole graph, `validateSet(nodes)` checks a set of nodes, and `validateTransaction(...)` runs from an APOC trigger in the `before` phase and throws, which rolls the transaction back.
 
-So any rule that says "if this, then that" has to become a label. For example, "a bundle pull only goes on an exchanger" becomes a `BundlePull` label on the scope item and a shape saying its `RESOLVES_TO` target has the label `Exchanger`. Rules that walk paths or add up numbers can't be shapes at all.
+So a rule that says "if this, then that" needs a way to pick out the "if" nodes. The portable way is a label, and that is what this spike's shapes use. For example, "a bundle pull only goes on an exchanger" becomes a `BundlePull` label on the scope item and a shape saying its `RESOLVES_TO` target has the label `Exchanger`. n10s 5.26 also reads its own `sh:targetQuery`, a Cypher target, which could pick out the "if" nodes without a label. pySHACL and other SHACL engines don't read it, so the spike stays with labels to keep the cross-check. Rules that walk paths or add up numbers can't be shapes at all.
 
 ## 2. The test graph
 
@@ -65,7 +65,7 @@ Before the run script uses them, `test_checks.py` unit-tests the pure parts: the
 | N4 | Shapes load | `import.inline` succeeds, and `listShapes()` covers every target, path and constraint in section 3. RECORD the rows |
 | N5 | Clean graph | `validate()` returns no rows on the test graph |
 | N6 | Mutants | For each mutant in `mutants.py`, applied to a fresh copy of the test graph, `validate()` returns the violations written down for it by hand, as (node key, label, constraint, path). Every shape has at least one mutant. The same graph and shapes are also checked with pySHACL, an independent SHACL engine, on a Turtle rendering of the graph, and pySHACL must report exactly the same set. n10s must agree once min and max count are folded into `CountConstraintComponent` and the range constraints into `ValueRangeConstraintComponent`, the two names n10s uses when a shape has both bounds (finding 1). RECORD how many agree without folding |
-| N7 | Transaction guard | With the trigger installed, each mutant run as a write fails, and afterwards the graph has the same counts and the same property values as before. A valid write, a new scope item with a correct `RESOLVES_TO`, commits |
+| N7 | Transaction guard | With the trigger installed, each mutant run as a write fails with `TransactionHookFailed` and a `SHACLValidationException` in the message, and afterwards the graph reads back identical. A valid write, a new scope item with a correct `RESOLVES_TO`, commits. The loader's readiness check (`lib.guard_ready`: one shapes node, the expected shape rows, the trigger installed and not paused) says yes with the guard in place and no while the trigger is paused or the shapes node is missing. With the shapes node deleted, M01 commits with no error, which is finding 2. After shapes and graph are restored, the readiness check says yes again and M01 is refused again |
 | N8 | Scale | The 5,040 node padded graph from the Relate spike gives its copies tags like `E-201A-P007`, which break the S1, S3 and S4 patterns. On that graph n10s and pySHACL must report the same, non-empty set of violations. With the `-P007` suffix taken off `tag` and `request_id` (node keys keep it), `validate()` returns no rows, and the guarded database accepts the whole graph in one transaction. RECORD the times, whether a batched load gets through the trigger, and Neo4j's resident memory |
 
 N6 is the check that keeps the rest honest. A shape that never fires would pass N5 for the wrong reason, and the hand-written expectations could be wrong in the same way as the shapes. pySHACL comes from a different code base, so if it agrees with n10s and with the expectations on every mutant, all three would have to be wrong in the same way for a bad rule to slip through.
@@ -74,28 +74,32 @@ If n10s can't do something the twin needs, the doc records it and names the fall
 
 ## 6. Results
 
-One clean run on 2026-11-27 took 72 seconds from download check to cleanup. `results.json` holds the full record. Neo4j Community 5.26.34 with n10s 5.26.0 and APOC 5.26.34 core ran on OpenJDK 21.0.13.1 with no Docker on the machine.
+One clean run on 2026-11-27 took 75 seconds from download check to cleanup. `results.json` holds the full record. Neo4j Community 5.26.34 with n10s 5.26.0 and APOC 5.26.34 core ran on OpenJDK 21.0.13.1 with no Docker on the machine.
 
 | ID | Result | What happened |
 |---|---|---|
 | N1 | PASS | Both downloads matched their pinned SHA-256 values, and Neo4j's matched the value dist.neo4j.org publishes. No `docker` command in the script and none on the path |
-| N2 | PASS | Bolt answered after 9.7 seconds, with all three procedures listed |
+| N2 | PASS | Bolt answered after 9.3 seconds, with all three procedures listed |
 | N3 | PASS | 48 nodes and 72 relationships, the counts in the Relate spike's `expected.json`, plus 3 `Exchanger`, 1 `FiredHeater`, 2 `Reactor` and one of each work type label |
 | N4 | PASS | `listShapes()` returned 44 rows, the same (target, path, constraint) set that rdflib reads out of `shapes.ttl` |
 | N5 | PASS | No violations from n10s or from pySHACL on the clean graph |
-| N6 | PASS | pySHACL matched the hand-written expectations on all 18 mutants. n10s matched them exactly on 14 and on all 18 after folding names (finding 1). Every mutant changed at least one thing in the graph |
-| N7 | PASS | All 18 mutants failed with `TransactionHookFailed`, and the graph read back identical after each one. The valid write committed. The trigger was active about a second after install |
-| N8 | PASS | Raw padded graph: n10s and pySHACL both reported the same 1,872 pattern violations. Fixed copy: no violations. `validate()` took 1.5 s, loading took 0.9 s without the trigger and 2.8 s with it in one transaction, and Neo4j used about 1.47 GB resident memory, just inside the 1.5 GB that [hosting.md](../hosting.md) section 2 allows |
+| N6 | PASS | pySHACL matched the hand-written expectations on all 18 mutants. n10s matched them exactly on 14, and on all 18 once min and max results are folded into n10s's merged name for the shapes that have both bounds (finding 1). The fold touches only those shapes. Every mutant changed at least one thing in the graph |
+| N7 | PASS | All 18 mutants were refused by the SHACL trigger, and the graph read back identical after each one. The valid write committed. The readiness check gave yes, no (trigger paused), no (shapes missing) and yes (restored), as expected. With the shapes gone, M01 committed. After the restore, M01 was refused again. The trigger was active about a second after install |
+| N8 | PASS | Raw padded graph: n10s and pySHACL both reported the same 1,872 pattern violations. Fixed copy: no violations, and after the guarded load the stored graph had all 5,040 nodes and 7,560 relationships and still no violations. `validate()` took 2.1 s, loading took 0.9 s without the trigger and 2.8 s with it in one transaction. Neo4j's resident memory read 1.46 GB at the end of the run, one reading rather than a peak, against the 1.5 GB that [hosting.md](../hosting.md) section 2 allows. The fixed copy repeats each tag 105 times, so the timings are a rough size check, not a benchmark |
 
 ### What n10s got right
 
-The questions the spike was written for came out well. n10s reads shapes against a property graph that never came from RDF, as long as the shapes use the `neo4j://graph.schema#` namespace. It catches removed properties (M02, M12) and deleted relationships (M05, M17), not only bad values. Under the trigger it refuses every bad write and leaves nothing behind. On every mutant and on the 1,872 violations at scale it agreed with pySHACL, which shares no code with it.
+The questions the spike was written for came out well. n10s reads shapes against a property graph that never came from RDF, as long as the shapes use the `neo4j://graph.schema#` namespace. It catches removed properties (M02, M12) and deleted relationships (M05, M17), not only bad values. Under the trigger it refused every bad write in the test and left nothing behind, as long as the shapes node was there and the trigger was running (finding 2). On every mutant and on the 1,872 violations at scale it agreed with pySHACL, which shares no code with it.
 
 ### Findings
 
 1. **Merged result names.** When a property shape has both `sh:minCount` and `sh:maxCount`, n10s reports a violation of either as `sh:CountConstraintComponent`. With both a lower and upper bound on a number it reports `sh:ValueRangeConstraintComponent`. Neither name is in SHACL Core. The detection is right, and only the label differs. That is why M02, M05, M09 and M12 didn't match exactly ([SHACLValidator.java](https://github.com/neo4j-labs/neosemantics/blob/5.26.0/src/main/java/n10s/validation/SHACLValidator.java), around lines 568 and 740). The review queue should show the twin's own message for each shape, not the n10s constraint name.
-2. **The guard fails open without shapes.** With the shapes node `_n10sValidatorConfig` deleted and the trigger still installed, M01 (a tag with its dash removed) committed with no error. n10s keeps the shapes as a node in the same database, so `MATCH (n) DETACH DELETE n` takes them out too and quietly switches the guard off. The fallback is cheap. Before each sync the loader checks that the shapes node exists and that `listShapes()` returns the expected rows, and it refuses to write otherwise. Any reset script must keep that node, as the spike's does.
-3. **Every write must leave the graph valid.** The trigger checks each transaction on its own. A batched load that creates nodes in one transaction and their relationships in the next fails at the first batch, because equipment without `ON_SHEET` breaks S2. The loader writes each sync as one transaction. At 5,040 nodes that took 2.8 seconds. If later syncs grow much bigger, the fallback is to stop the trigger, load, run `validate()` and roll back by restoring the snapshot if anything fails.
+2. **The guard fails open.** With the shapes node `_n10sValidatorConfig` deleted and the trigger still installed, M01 (a tag with its dash removed) committed with no error. n10s keeps the shapes as a node in the same database, so `MATCH (n) DETACH DELETE n` takes them out too and quietly switches the guard off. A paused or removed trigger does the same. So the guard holds only while three things are true: the shapes are loaded, the trigger is running, and nobody is changing either. The loader handles it this way:
+   - Before each sync it runs the readiness check from N7 and refuses to write if it fails.
+   - Syncs, resets and shape changes take one lock, so only one runs at a time. A readiness check means nothing if a reset can start between the check and the write.
+   - A reset or restore that stops the trigger runs with that lock held and the twin API in maintenance mode, then runs `validate()` on the result before the trigger comes back. A safer form loads into a second database and swaps it in only when `validate()` is clean. Neo4j Community has one user database, so that form needs a second Neo4j or Enterprise.
+   - Any reset script keeps the shapes node, as the spike's does.
+3. **Every write must leave the graph valid.** The trigger checks each transaction on its own. A batched load that creates nodes in one transaction and their relationships in the next fails at the first batch, because equipment without `ON_SHEET` breaks S2. The loader writes each sync as one transaction. At 5,040 nodes that took 2.8 seconds. If later syncs grow much bigger, the fallback is the staged load from finding 2.
 4. **Accepted matches need their own relationship.** design.md section 4.2 puts proposed, accepted and rejected matches all on `RESOLVES_TO`, with a `status` property. n10s paths are a relationship type only, with no filter on a property, so "at most one accepted match" can't be a shape over that design. Either proposals stay on `MatchProposal` nodes and `RESOLVES_TO` holds only accepted matches, which is what S4 assumes, or the rule becomes a Cypher check. I'd go with the first. It also makes the twin's own queries simpler.
 5. **Smaller points.** n10s returns `focusNode` as the old numeric node id, which Neo4j 5 deprecates, so the spike maps both `id(n)` and `elementId(n)` back to node keys. Tags repeat across the padded copies, and no shape notices, because SHACL in n10s has no uniqueness check. Tag uniqueness belongs in a Neo4j uniqueness constraint. A Neo4j config file with a key set twice stops the server from starting, so the run script comments out the shipped line before it sets its own.
 
@@ -109,21 +113,21 @@ Each rule in [verification.md](../verification.md) section 2, sorted by where it
 | Tag exists in the CMMS master | Cypher check in the sync transaction. The master is a separate list, and a shape can't look it up |
 | Relief path from each vessel, column, reactor and exchanger shell to a PSV | Python or Cypher path query. Paths longer than one hop aren't supported |
 | Every PSV protects at least one item | n10s shape, if protection is a direct relationship |
-| Exchanger nozzles on both sides, in and out | n10s shape, if each nozzle has a side and direction label. Otherwise a Cypher count |
+| Exchanger nozzles on both sides, in and out | Cypher count. All nozzles hang off one `HAS_NOZZLE` type, and an n10s path can't filter by the nozzle's label, so a shape can't ask for one of each kind. It could be four shapes if the exporter wrote four relationship types, such as `HAS_SHELL_INLET` |
 | Pump and compressor block valves | Cypher path query |
 | Isolation envelope is closed | Python graph walk. It is a property of every path leaving the envelope |
 | Plot position inside the area, no footprint overlap | Python geometry check |
 | Scope item has driver, source group, RIPT score, craft split | n10s shape (S4 covers RIPT and exercise ID, and the rest follow the same form) |
 | Craft hours add up, cost fits hours and rates | Python check. SHACL in n10s has no arithmetic |
 | Work type fits equipment class | n10s shape, using a work type label on the scope item and a class label on the equipment (S5 to S7) |
-| Every frozen item has one of four outcomes | n10s shape for "at most one accepted match", given finding 4. The rest is a Cypher check |
+| Every frozen item has one of four outcomes | Cypher check. S4's "at most one `RESOLVES_TO`" works as a shape only if `RESOLVES_TO` holds accepted matches alone (finding 4) |
 | Every accepted AI match has a named reviewer | Cypher check, or an n10s shape if accepted AI matches get their own label |
 
 About half the rules fit n10s, and the rest need a Cypher or Python check. All of them can still run before the sync commits. The Cypher checks run in the same transaction and throw to roll it back. The Python checks run on the rows before they are written.
 
 ### What this changes
 
-- D10 keeps SHACL through n10s, with the loader asserting the shapes node first (finding 2) and writing each sync in one transaction (finding 3).
+- D10 keeps SHACL through n10s, with the readiness check, the lock and the staged restore from finding 2, and one transaction per sync (finding 3).
 - The rules that can't be shapes run as Cypher or Python checks in the loader, per the table above.
 - Phase 1 should settle finding 4 before the matcher writes anything.
 - Local Neo4j from the tarball works without Docker. That covers the last piece of design section 3.3's no-Docker path.

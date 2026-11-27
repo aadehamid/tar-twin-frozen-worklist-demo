@@ -358,6 +358,7 @@ def _run_all(work, dexpi_python):
     check("N5", got == set() and py == set(), n10s=sorted(got), pyshacl=sorted(py))
 
     # N6. Mutants, each on a fresh copy of the graph.
+    both = lib.both_bounds(want_rows)
     per = {}
     with driver.session() as s:
         for m in mutants.MUTANTS:
@@ -371,7 +372,7 @@ def _run_all(work, dexpi_python):
             py_v = lib.pyshacl_violations(lib.to_turtle(mutated), SHAPES)
             per[m["id"]] = {"shape": m["shape"], "what": m["what"], "touched": touched,
                             "n10s_ok": got_v == want_v, "pyshacl_ok": py_v == want_v,
-                            "n10s_ok_merged": lib.merge_bounds(got_v) == lib.merge_bounds(want_v),
+                            "n10s_ok_merged": lib.merge_bounds(got_v, both) == lib.merge_bounds(want_v, both),
                             "expected": sorted(want_v), "n10s": sorted(got_v),
                             "pyshacl": sorted(py_v)}
             log(f"  {m['id']} touched={touched} n10s={'ok' if got_v == want_v else sorted(got_v)} "
@@ -397,15 +398,17 @@ def _run_all(work, dexpi_python):
             time.sleep(0.5)
         trigger_s = round(time.monotonic() - t0, 1)
         before = read_graph(s)
+        ready = {"installed": guard_state(s)}
         guard = {}
         for m in mutants.MUTANTS:
             err = None
             try:
                 s.run(m["cypher"], **m["params"]).consume()
             except Neo4jError as e:
-                err = e.code
+                err = e
             after = read_graph(s)
-            guard[m["id"]] = {"rejected": err is not None, "error": err, "unchanged": after == before}
+            guard[m["id"]] = {"rejected": shacl_rejected(err), "error": err and err.code,
+                              "unchanged": after == before}
             if after != before:  # put the graph back for the next mutant
                 _paused_reset(driver, s, clean)
                 before = read_graph(s)
@@ -421,12 +424,20 @@ def _run_all(work, dexpi_python):
                           "RETURN e.tag AS t", rid="WR-200-0199").value()
         # Fail open or closed? Drop the shapes node, then try the first mutant again.
         _paused_reset(driver, s, clean)
+        with driver.session(database="system") as sys_s:
+            sys_s.run("CALL apoc.trigger.stop('neo4j', 'shacl')").consume()
+        _wait_trigger(s, paused=True)
+        ready["trigger_paused"] = guard_state(s)
+        with driver.session(database="system") as sys_s:
+            sys_s.run("CALL apoc.trigger.start('neo4j', 'shacl')").consume()
+        _wait_trigger(s, paused=False)
         drop_err = None
         try:
             s.run(f"MATCH (c:{CONFIG}) DELETE c").consume()
         except Neo4jError as e:
             drop_err = e.code
         shapes_left = s.run(f"MATCH (c:{CONFIG}) RETURN count(c) AS c").single()["c"]
+        ready["shapes_missing"] = guard_state(s)
         m = mutants.MUTANTS[0]
         open_err = None
         try:
@@ -437,8 +448,22 @@ def _run_all(work, dexpi_python):
                                v=m["params"]["value"]).single()["c"] == 1
         s.run("CALL n10s.validation.shacl.import.inline($t, 'Turtle')", t=SHAPES).consume()
         _paused_reset(driver, s, clean)
+        ready["restored"] = guard_state(s)
+        restored_before = read_graph(s)
+        restored_err = None
+        try:
+            s.run(m["cypher"], **m["params"]).consume()
+        except Neo4jError as e:
+            restored_err = e
+        restored = {"mutant": m["id"], "rejected": shacl_rejected(restored_err),
+                    "unchanged": read_graph(s) == restored_before}
     check("N7", all(v["rejected"] and v["unchanged"] for v in guard.values())
-          and good_err is None and committed == ["E-201A"],
+          and good_err is None and committed == ["E-201A"]
+          and open_committed and open_err is None
+          and ready == {"installed": True, "trigger_paused": False, "shapes_missing": False,
+                        "restored": True}
+          and restored["rejected"] and restored["unchanged"],
+          guard_ready=ready, after_restore=restored,
           trigger_ready_s=trigger_s, rejected=sum(v["rejected"] for v in guard.values()),
           unchanged=sum(v["unchanged"] for v in guard.values()), mutants=guard,
           valid_write_error=good_err, valid_write_committed=committed,
@@ -487,8 +512,12 @@ def _run_all(work, dexpi_python):
             guarded_err = e.code
         load_guarded = round(time.monotonic() - t0, 2)
         n_nodes = s.run(f"MATCH (n) WHERE NOT n:{CONFIG} RETURN count(n) AS c").single()["c"]
+        n_rels = s.run("MATCH ()-[r]->() RETURN count(r) AS c").single()["c"]
+        got_final, _ = n10s_validate(s)
     check("N8", got_raw == py_raw and len(got_raw) > 0 and got_valid == set()
-          and guarded_err is None and n_nodes == len(valid["nodes"]),
+          and guarded_err is None and n_nodes == len(valid["nodes"])
+          and n_rels == len(valid["rels"]) and got_final == set(),
+          stored_nodes=n_nodes, stored_relationships=n_rels, final_violations=len(got_final),
           nodes=len(padded["nodes"]), relationships=len(padded["rels"]),
           raw_violations_n10s=len(got_raw), raw_violations_pyshacl=len(py_raw),
           raw_agree=got_raw == py_raw, valid_violations=len(got_valid), validate_s=validate_s,
@@ -496,6 +525,23 @@ def _run_all(work, dexpi_python):
           guarded_load_error=guarded_err, batched_autocommit_load_error=batched_err,
           neo4j_rss_mb=tree_rss_mb(neo.pid))
     driver.close()
+
+
+def guard_state(session):
+    """What the loader checks before it writes (lib.guard_ready), read from the database."""
+    cfg = session.run(f"MATCH (c:{CONFIG}) RETURN count(c) AS c").single()["c"]
+    listed = set()
+    if cfg:
+        listed = {(r["target"], r["propertyOrRelationshipPath"], r["param"])
+                  for r in session.run("CALL n10s.validation.shacl.listShapes()")}
+    triggers = [r.data() for r in session.run("CALL apoc.trigger.list()")]
+    return lib.guard_ready(cfg, listed, expected_shape_rows(), triggers)
+
+
+def shacl_rejected(err):
+    """A write refused by the n10s trigger, not by anything else."""
+    return (err is not None and err.code == "Neo.ClientError.Transaction.TransactionHookFailed"
+            and "SHACLValidationException" in (err.message or ""))
 
 
 def _paused_reset(driver, session, graph):

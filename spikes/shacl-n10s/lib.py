@@ -147,19 +147,47 @@ def expected_violations(mutant, clean, mutated):
     return out
 
 
-_MERGED = {"MinCountConstraintComponent": "CountConstraintComponent",
-           "MaxCountConstraintComponent": "CountConstraintComponent",
-           "MinInclusiveConstraintComponent": "ValueRangeConstraintComponent",
-           "MaxInclusiveConstraintComponent": "ValueRangeConstraintComponent",
-           "MinExclusiveConstraintComponent": "ValueRangeConstraintComponent",
-           "MaxExclusiveConstraintComponent": "ValueRangeConstraintComponent"}
+_FAMILY = {"minCount": "Count", "maxCount": "Count",
+           "minInclusive": "ValueRange", "maxInclusive": "ValueRange",
+           "minExclusive": "ValueRange", "maxExclusive": "ValueRange"}
+_COMPONENT_FAMILY = {"MinCountConstraintComponent": "Count",
+                     "MaxCountConstraintComponent": "Count",
+                     "MinInclusiveConstraintComponent": "ValueRange",
+                     "MaxInclusiveConstraintComponent": "ValueRange",
+                     "MinExclusiveConstraintComponent": "ValueRange",
+                     "MaxExclusiveConstraintComponent": "ValueRange"}
 
 
-def merge_bounds(violations):
-    """Violations with min/max count and range components folded into the two merged names n10s
-    reports when a property shape has both bounds. Coarser, so only for comparing with n10s."""
-    return {(k, lbl, _MERGED.get(c, c), p) for k, lbl, c, p in violations}
+def both_bounds(shape_rows):
+    """(target, path, family) for every property shape that has a lower and an upper bound of
+    the same family, from (target, path, param) rows. These are the shapes whose results n10s
+    names sh:CountConstraintComponent or sh:ValueRangeConstraintComponent."""
+    seen = {}
+    for target, path, param in shape_rows:
+        fam = _FAMILY.get(param)
+        if fam:
+            seen.setdefault((target, path, fam), set()).add(param.startswith("min"))
+    return {k for k, sides in seen.items() if sides == {True, False}}
 
+
+def merge_bounds(violations, both):
+    """Violations with a min or max component folded into n10s's merged name, but only for a
+    shape listed in `both` (see both_bounds). Everything else is left as it is."""
+    out = set()
+    for k, lbl, c, p in violations:
+        fam = _COMPONENT_FAMILY.get(c)
+        if fam and (lbl, p, fam) in both:
+            c = fam + "ConstraintComponent"
+        out.add((k, lbl, c, p))
+    return out
+
+
+def guard_ready(config_nodes, listed_rows, want_rows, triggers):
+    """True only if the loader may write: exactly one n10s shapes node, the loaded shapes are
+    the expected (target, path, param) set, and the shacl trigger is installed and not paused."""
+    return (config_nodes == 1 and set(listed_rows) == set(want_rows)
+            and any(t.get("name") == "shacl" and t.get("installed", True) and not t.get("paused")
+                    for t in triggers))
 
 def strip_pad_suffix(graph):
     """A copy of a padded graph with the -P001 style suffix taken off `tag` and `request_id`, so

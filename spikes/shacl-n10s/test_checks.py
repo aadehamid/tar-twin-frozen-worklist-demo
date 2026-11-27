@@ -183,14 +183,33 @@ def copy_with_tag(g, key, tag):
     return out
 
 
-def test_merge_bounds_folds_only_count_and_range():
+def test_merge_bounds_folds_only_shapes_with_both_bounds():
+    rows = {("Equipment", "tag", "minCount"), ("Equipment", "tag", "maxCount"),
+            ("ScopeItem", "ript", "minInclusive"), ("ScopeItem", "ript", "maxInclusive"),
+            ("IsolationEnvelope", "CONTAINS", "minCount")}
+    both = lib.both_bounds(rows)
+    assert both == {("Equipment", "tag", "Count"), ("ScopeItem", "ript", "ValueRange")}
     v = {("a", "Equipment", "MinCountConstraintComponent", "tag"),
          ("b", "ScopeItem", "MaxInclusiveConstraintComponent", "ript"),
-         ("c", "Valve", "PatternConstraintComponent", "tag")}
-    assert lib.merge_bounds(v) == {("a", "Equipment", "CountConstraintComponent", "tag"),
-                                   ("b", "ScopeItem", "ValueRangeConstraintComponent", "ript"),
-                                   ("c", "Valve", "PatternConstraintComponent", "tag")}
+         ("c", "Valve", "PatternConstraintComponent", "tag"),
+         ("d", "IsolationEnvelope", "MinCountConstraintComponent", "CONTAINS")}
+    assert lib.merge_bounds(v, both) == {
+        ("a", "Equipment", "CountConstraintComponent", "tag"),
+        ("b", "ScopeItem", "ValueRangeConstraintComponent", "ript"),
+        ("c", "Valve", "PatternConstraintComponent", "tag"),
+        ("d", "IsolationEnvelope", "MinCountConstraintComponent", "CONTAINS")}
 
+
+def test_guard_ready_needs_shapes_rows_and_an_active_trigger():
+    want = {("Equipment", "tag", "pattern")}
+    on = [{"name": "shacl", "installed": True, "paused": False}]
+    assert lib.guard_ready(1, want, want, on)
+    assert not lib.guard_ready(0, want, want, on)
+    assert not lib.guard_ready(2, want, want, on)
+    assert not lib.guard_ready(1, set(), want, on)
+    assert not lib.guard_ready(1, want, want, [{"name": "shacl", "installed": True, "paused": True}])
+    assert not lib.guard_ready(1, want, want, [{"name": "other", "paused": False}])
+    assert not lib.guard_ready(1, want, want, [])
 
 def test_strip_pad_suffix_keeps_keys_and_fixes_patterns():
     g = {"nodes": [{"key": "E_201A-P007", "label": "Equipment", "props": {"tag": "E-201A-P007"}},
