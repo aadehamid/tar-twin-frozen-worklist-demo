@@ -77,9 +77,13 @@ MUTANTS = [
      "old": "    iw_frozen, iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0, // the same guards as iw_raise\n",
      "new": "    iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0,\n"},
     {"id": "Q-M17", "rule": "WorkflowOnly",
-     "what": "the twin stamps the version from its first read, not the request's current version",
+     "what": "the twin stamps a stale base version (0), not the request's current version",
      "old": "    iw_changes' = iw_changes.set(c, { item: i, base: iw_version.get(i),\n                                      target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),",
-     "new": "    iw_changes' = iw_changes.set(c, { item: i, base: 0,\n                                      target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),"}
+     "new": "    iw_changes' = iw_changes.set(c, { item: i, base: 0,\n                                      target: iw_hours.get(i) + d, delta: d, status: \"pending\", via: \"twin\" }),"},
+    {"id": "Q-M18", "rule": "WorkflowOnly",
+     "what": "the twin's raise skips the check that the target hours aren't negative",
+     "old": "    iw_frozen, iw_changes.get(c).status == \"none\", iw_hours.get(i) + d >= 0, // the same guards as iw_raise\n",
+     "new": "    iw_frozen, iw_changes.get(c).status == \"none\",\n"},
 ]
 
 

@@ -17,7 +17,7 @@ What the demo does not try to prove is whether the client's real data will match
 | MVP item | Requirement IDs | What the demo does |
 |---|---|---|
 | Tag registry and match rate | 31-d1, 31-n5 | Resolves free-text equipment references to tags, scores each match, reports match rate per site and per area, and sends weak matches to a review queue |
-| IMPACT Web read and write-through | 31-d3 | Reads work requests through the IMPACT Web API on a schedule. After freeze, a planner can raise a change request from the twin through IMPACT Web's own change request step (section 5.8, demo only, [D9](decisions.md)) |
+| IMPACT Web read and write-through | 31-d3 | Reads work requests through the IMPACT Web API on a schedule. After freeze, a planner can raise a change request from the twin, which IMPACT Web's own change request handler checks and stores (section 5.8, demo only, [D9](decisions.md)) |
 | Scope on the model, shared-cost clusters | 31-f1, 31-f2 | Places jobs on a 2D plot plan and groups jobs that share scaffold, isolation or access |
 | Cut line by location | 31-f5 | Ranks scope against a budget target and shows above and below the line on the plant |
 | Frozen baseline and change log | 31-n1 | Snapshots the list at freeze, logs each later add or delete with hours, reason and source group, and tracks scope growth |
@@ -47,7 +47,7 @@ The demo can show one "wave 2" screen that previews 31-f3 with fixed data, clear
 
 ### 3.2 Why two services
 
-The twin can only reach IMPACT Web through its public API, the same way it would reach a real export or integration. That keeps the code-freeze constraint and the write rule honest: there is no shared database and no back door. The one write the twin makes, raising a change request, goes through the same API endpoint a planner's own form uses (section 5.8). Each mock sits behind a client interface in the twin (`ImpactWebClient`, `CmmsClient`), so a real connector can replace it without touching twin logic.
+The twin can only reach IMPACT Web through its public API, the same way it would reach a real export or integration. That keeps the code-freeze constraint and the write rule honest: there is no shared database and no back door. The one write the twin makes, raising a change request, goes through a single delegated endpoint that runs IMPACT Web's normal change request handler (section 5.8). Each mock sits behind a client interface in the twin (`ImpactWebClient`, `CmmsClient`), so a real connector can replace it without touching twin logic.
 
 ### 3.3 Deployment
 
@@ -129,7 +129,7 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 2. It upserts `ScopeItem` nodes keyed on exercise, request ID and version, and stores the last sequence number it applied in the same Neo4j transaction, so a crash mid-sync resumes cleanly. Replaying a sync changes nothing.
 3. When the feed shows a freeze, the twin reads the frozen copy (`GET /api/v1/freezes/{id}/items`) and builds the baseline from it.
 4. Approved change requests become `ChangeEvent` nodes, unique on change request ID. Pending and rejected ones are mirrored but don't count toward growth.
-5. The sync never writes. The twin's service account has a read-only role, and a test checks it. The only write the twin makes is the change request in section 5.8, which runs as the signed-in user, not the service account.
+5. The sync never writes. Its token has a read-only role, and a test checks it. The only write the twin makes is the change request in section 5.8, which uses a separate delegate token that reaches one endpoint.
 
 ### 5.3 Matching
 
@@ -177,16 +177,24 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 
 ### 5.8 Raising a change request from the twin (demo only)
 
-The scope tool's code is frozen, but its workflow isn't. After freeze, a planner looking at a job in the twin can click "raise change request". The twin calls IMPACT Web's own `POST /api/v1/change-requests`, the endpoint the planner's form in IMPACT Web uses, so no IMPACT Web code changes for the twin.
+The scope tool's code is frozen, but its workflow isn't. After freeze, a planner looking at a job in the twin can click "raise change request", and the request lands in IMPACT Web's normal change request step. This is part of the demo mock. It isn't a proposed change to the real, code-frozen scope tool. The story assumes the real tool's existing API lets an integration raise a request on behalf of a named user; whether it does is a question to confirm, not something the demo proves.
 
-1. The call carries the signed-in user's token, not the service account's. IMPACT Web checks that user's membership and role in the exercise exactly as it would for its own form. The twin can't do anything the user couldn't.
-2. IMPACT Web stores the request as pending, stamped against the request's current version, with `raised_by` set to the user and `raised_via = twin`. The audit trail reads "raised from the twin by J. Planner".
-3. The reason field is prefilled with the twin's evidence and the matched tag, for example "add nozzle N3 on C-201; the column is already open for tray work, so entry, scaffold and isolation ENV-200-06 are shared". The planner can edit it before sending. The tag stays in the twin; IMPACT Web's equipment field is still free text.
-4. The DRB approves or rejects it in IMPACT Web. The next sync picks up the decision, and an approved request counts toward growth like any other.
-5. Each exercise has a `twin_write_through` switch, on by default in demo mode and set by the facilitator in planning mode. When it's off, IMPACT Web refuses the call with a 403, and the twin only flags the issue and shows the prefilled text for the planner to enter in IMPACT Web.
-6. The twin can't approve, edit or withdraw a request, change the freeze or touch the frozen copy. Every such call from the twin gets a 403.
+How the mock identifies and limits the caller:
 
-The Quint spec checks this as the `WorkflowOnly` and `ReadOnlyMode` rules ([verification.md](verification.md)). Where real write-back stops is still an open question from the workshop, which leaned towards starting conservative. This section is for the demo and doesn't change the proposal.
+1. **A separate delegate credential.** The twin holds a second machine token, `TWIN_RAISE_TOKEN`, for its IMPACT Web service account, apart from the read-only sync token. IMPACT Web accepts it on one endpoint only, `POST /api/v1/twin/change-requests`, and refuses it with a 403 everywhere else. The read-only token can't call that endpoint. Planners' own form keeps using `POST /api/v1/change-requests` with their own session.
+2. **Provenance comes from the credential, not the body.** IMPACT Web sets `raised_via = twin` because the delegate token was used, and `raised_via = iw` for every call through the planner's own session. A `raised_via` field in a request body is refused with a 422.
+3. **The user comes from the twin's verified identity.** The body names the exercise, the request, the delta, the reason and `on_behalf_of`, the IMPACT Web user ID of the person signed in to the twin. The twin fills that from its own session: the edge-verified `X-ExeDev-Email` in `AUTH_MODE=exe` (hosting.md section 3), or the JWT user in `AUTH_MODE=local`, looked up through the membership API. It never takes it from the browser.
+4. **The source checks everything again.** IMPACT Web checks, at the time of the call, that the named user is a member of that exercise with a role that may raise change requests, that the exercise is frozen, that the change request is new, that the target hours are not negative, and that the exercise's `twin_write_through` switch is on. Any failure is a 403 or 422, and nothing is stored. So the twin can't do anything that user couldn't do in IMPACT Web.
+5. **What gets stored.** A pending change request stamped against the request's current version, with `raised_by` set to the named user and `raised_via = twin`. The audit trail reads "raised from the twin by J. Planner" and logs the delegate token's ID. IMPACT Web's normal change request handler writes it, so its pending row goes on `change_feed` like any other (section 4.1). The twin never writes the feed directly. A pending request adds no change event and no growth.
+6. **The trust assumption.** The twin is trusted to name the signed-in user truthfully, in the same way the edge is trusted with the identity headers. If the twin were compromised it could raise pending requests in a member's name, which the DRB still has to approve, and every one is marked as from the twin. It still couldn't approve, edit, withdraw, freeze or reach the frozen copy, because the delegate token only reaches the one endpoint.
+
+The rest of the flow:
+
+- The reason field is prefilled with the twin's evidence and the matched tag, for example "add nozzle N3 on C-201; the column is already open for tray work, so entry, scaffold and isolation ENV-200-06 are shared". The planner can edit it before sending. The tag appears only as text in the reason. The normalized tag link stays in the twin, and IMPACT Web's equipment field is still free text.
+- The DRB approves or rejects it in IMPACT Web. The next sync picks up the decision, and an approved request counts toward growth like any other.
+- Each exercise has a `twin_write_through` switch, on by default in demo mode and set by the facilitator in planning mode. When it's off, IMPACT Web refuses delegated raises with a 403, and the twin only flags the issue and shows the prefilled text for the planner to enter in IMPACT Web. The planner's own form works whatever the switch says. Turning the switch off blocks new raises only. Requests already raised from the twin stay pending, approved or rejected as they were.
+
+The Quint spec checks this as the `WorkflowOnly` and `ReadOnlyMode` rules ([verification.md](verification.md)). In the model the switch is fixed for a whole trace, so `ReadOnlyMode` covers exercises that start with write-through off. Turning it off part way through, as walkthrough step 7 does, is covered by the contract tests in section 9, not by the model. Where real write-back stops is still an open question from the workshop, which leaned towards starting conservative. This section is for the demo and doesn't change the proposal.
 
 ## 6. AI matcher
 
@@ -231,7 +239,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 See [verification.md](verification.md) for the full plan: schemas, SHACL engineering rules, property tests and a Quint model of the workflow. The tests below sit alongside it.
 
 - **Backend.** Pytest for both services, with a Neo4j test container or local instance for the twin.
-- **Contract tests.** Twin to IMPACT Web: the twin's service account gets a 403 on any write; a change request raised from the twin is stored as pending, marked `raised_via = twin` with the user as `raised_by`, and stamped against the current version; a user without the planner role gets a 403; the call gets a 403 before freeze and when the exercise's switch is off; and no other write endpoint accepts a call from the twin.
+- **Contract tests.** Twin to IMPACT Web, for section 5.8. The sync token gets a 403 on every write, including the delegated raise. The delegate token gets a 403 on every endpoint but `POST /api/v1/twin/change-requests`. A delegated raise is stored as pending, with `raised_via = twin`, the named user as `raised_by` and the current version as its base, and its pending row appears on the feed with no change event or growth. A body that sets `raised_via` gets a 422. A delegated raise gets a 403 before freeze, for a user who isn't a member or can't raise change requests, and with the switch off, and a 422 for a negative target. The same planner raising the same request through their own session succeeds with the switch off and is marked `raised_via = iw`. Turning the switch off part way through blocks the next delegated raise and leaves earlier twin-raised requests unchanged, and the DRB can still approve them.
 - **Scenario tests.** The seeded Unit 200 data produces the expected match rate before and after review, the expected clusters, and the expected scope growth after the simulation runs.
 - **Front end.** Playwright end-to-end tests that follow the demo script.
 - **CI.** GitHub Actions on each push.

@@ -342,6 +342,7 @@ module worklist {
       iw_changes.get(c).via == "twin",
       iw_changes.get(c).base == iw_version.get(iw_changes.get(c).item),
       iw_changes.get(c).target == iw_hours.get(iw_changes.get(c).item) + iw_changes.get(c).delta,
+      iw_changes.get(c).target >= 0,     // IMPACT Web's own raise refuses a negative target
       CHANGES.forall(e => e != c implies iw_changes.get(e) == g_prev_iw.changes.get(e)),
     }),
   })

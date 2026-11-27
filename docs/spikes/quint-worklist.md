@@ -31,7 +31,7 @@ These are the eight rules from verification.md section 4. `AllRules` is all of t
 
 | Rule | What the model checks |
 |---|---|
-| WorkflowOnly | After any twin step, IMPACT Web's whole state equals what it was before the step, or write-through is on, IMPACT Web is frozen, and the step raised exactly one change request from the twin: pending, against the request's current version, with a target of its current hours plus its delta. Everything else in IMPACT Web is unchanged. This replaced ReadOnly in section 9 |
+| WorkflowOnly | After any twin step, IMPACT Web's whole state equals what it was before the step, or write-through is on, IMPACT Web is frozen, and the step raised exactly one change request from the twin: pending, against the request's current version, with a target of its current hours plus its delta, and not negative. Everything else in IMPACT Web is unchanged. This replaced ReadOnly in section 9 |
 | ReadOnlyMode | With write-through off, no change request is marked as raised from the twin |
 | BaselineFixed | Once the twin has a baseline, no step changes it or takes it away |
 | FreezeExact | The frozen copy is exactly the requests whose current version the DRB accepted, at their hours at the moment of freeze. If the twin has a baseline, IMPACT Web is frozen and the baseline equals that copy |
@@ -60,9 +60,9 @@ The model has a second, smaller instance: one request, hours from {0, 4}, and at
 | Q4 | TLC explores every reachable state of the small instance and no rule breaks |
 | Q5 | The simulator runs 20,000 random traces of up to 30 steps on the full instance and no rule breaks |
 | Q6 | TLC reaches every witness in the small instance, and the simulator reaches every witness in the full instance. The run writes a new late-add trace with one frozen request to its own folder, and publishes it only if the simulator reported it as a counterexample and its last state is the intended one |
-| Q7 | Each of seventeen seeded bugs typechecks, and both TLC on the small instance and Apalache on the full instance report that its rule breaks |
+| Q7 | Each of eighteen seeded bugs typechecks, and both TLC on the small instance and Apalache on the full instance report that its rule breaks |
 
-The seventeen seeded bugs are in `mutants.py`. Each one changes a single snippet of the spec, and `apply` refuses a snippet that appears zero times or more than once. At least one bug targets each rule:
+The eighteen seeded bugs are in `mutants.py`. Each one changes a single snippet of the spec, and `apply` refuses a snippet that appears zero times or more than once. At least one bug targets each rule:
 
 | Bug | Rule | What goes wrong |
 |---|---|---|
@@ -82,7 +82,8 @@ The seventeen seeded bugs are in `mutants.py`. Each one changes a single snippet
 | Q-M14 | ReadOnlyMode | The twin raises a change request with write-through switched off |
 | Q-M15 | WorkflowOnly | The twin's raise applies its delta to the request's live hours straight away |
 | Q-M16 | WorkflowOnly | The twin raises a change request before freeze |
-| Q-M17 | WorkflowOnly | The twin stamps the version from its first read, not the request's current version |
+| Q-M17 | WorkflowOnly | The twin stamps a stale base version (0), not the request's current version |
+| Q-M18 | WorkflowOnly | The twin's raise skips the check that the target hours aren't negative |
 
 `test_mutants.py` checks the bug list itself without running a checker: every bug applies once, every rule has a bug, IDs are unique, and no bug edits a constant that its own rule reads directly. That last test doesn't follow a rule through the helpers it calls.
 
@@ -95,17 +96,17 @@ uv run --no-project --with pytest python -m pytest -q spikes/quint-worklist/test
 
 ## 5. Results
 
-From the run that produced `results.json`, on a 2-core, 8 GB sandbox, after the write-through change in section 9. The whole script took 21 minutes with the CPU to itself. Write-through added a variable and a third twin action, which put Q3 at 674 s, against 419 s before it and 341 s for the first version, and the small instance grew from 73,087 to 346,400 states because every state now comes in both modes. The `outcome` field reads `error` for the two typecheck runs because the label only knows checker messages; both exited 0, and Q2 tests the exit code.
+From the run that produced `results.json`, on a 2-core, 8 GB sandbox, after the write-through change in section 9. The whole script took 21 minutes with the CPU to itself. Write-through added a variable and a third twin action, which put Q3 at 650 s, against 419 s before it and 341 s for the first version, and the small instance grew from 73,087 to 346,400 states because every state now comes in both modes. The `outcome` field reads `error` for the two typecheck runs because the label only knows checker messages; both exited 0, and Q2 tests the exit code.
 
 | Check | Result |
 |---|---|
 | Q1 | Pass. Quint 0.34.0, Apalache 0.62.4, OpenJDK 21, no Docker |
 | Q2 | Pass |
-| Q3 | Pass. No rule breaks in any trace of up to 10 steps, in 674 s |
-| Q4 | Pass. 346,400 distinct states, depth 17, 29 s |
+| Q3 | Pass. No rule breaks in any trace of up to 10 steps, in 650 s |
+| Q4 | Pass. 346,400 distinct states, depth 17, 23 s |
 | Q5 | Pass. 20,000 traces in 12 s |
 | Q6 | Pass. All eleven witnesses reached by both TLC and the simulator, including the closed loop and growth with write-through off. TLC's shortest traces run from 3 to 9 states. The late-add trace passed its end-state check |
-| Q7 | Pass. All seventeen bugs caught by both TLC and Apalache. Apalache needed 12 to 34 s per bug, and TLC's counterexamples run from 2 to 8 states |
+| Q7 | Pass. All eighteen bugs caught by both TLC and Apalache. Apalache needed 12 to 31 s per bug, and TLC's counterexamples run from 2 to 8 states |
 
 ## 6. Findings
 
@@ -114,8 +115,10 @@ From the run that produced `results.json`, on a 2-core, 8 GB sandbox, after the 
 3. **Versions need a cap.** With no limit on edits, versions grow forever and TLC's state space is infinite. `MAX_VERSION` caps direct edits at three per request before freeze. Approvals after freeze aren't capped by it, but there are only two change requests, so a request tops out at version 5. That's enough to reach every witness, including a stale change.
 4. **TLC can't finish the full instance here.** An earlier run on the full instance passed 2.5 million distinct states in about a minute with the queue still growing, and Quint starts TLC with an 8 GB heap on an 8 GB machine. So TLC checks the small instance completely, and the full instance gets Apalache to 10 steps plus the simulator. Apalache at 10 steps took six to seven minutes before write-through and now takes about eleven, which is fine for a nightly job but slow for every commit. CI can run Apalache at 6 steps (under 30 s in a trial) as a smoke check, with the 10-step Apalache run and TLC on the small instance kept for the nightly job. Six steps isn't enough on its own: some of TLC's counterexamples need more steps than that.
 5. **Cross-model review found two rules that were too weak, and the seeded bugs hadn't shown it.** The first version of this spike passed every check, and a reviewer from another model family still found two gaps. NothingMissed only looked at what was in the twin's events. It didn't check that a sync which finished had applied the window it read, so a finish that dropped its window and kept the cursor still passed. FreezeExact compared the baseline with the frozen copy but never asked whether freeze copied the right thing, so a freeze that copied every live request, accepted or not, also passed. Both rules are now stronger. A ghost records the window of the sync that just finished, and another records what freeze ought to copy: the requests whose current version the DRB accepted, which needed a new variable for the version each decision was made on. Three new seeded bugs cover the gaps (Q-M10 to Q-M12). Against the spec as first submitted, the simulator found no violation for Q-M10 or Q-M11 in 20,000 traces of up to 30 steps each, so these rules really were blind to them. Against the new spec, both checkers catch all three. The lesson is that seeded bugs only test the rules someone thought to write. A second reader asking "what would get past this rule?" found what the bugs didn't.
-6. **Write-through didn't need the model to trust the twin.** WorkflowOnly allows exactly one kind of twin write and spells it out: one request goes from not raised to pending, marked as from the twin, against the current version and hours, and nothing else moves. The rule doesn't call `tw_raise`, so the five new bugs can't change the rule with the code. Before the full run, the simulator caught all five plus the retargeted Q-M1 in a quick pass, and the full run confirmed them with both checkers. The rule leans on IMPACT Web's existing approval check for staleness: a request the twin raised against version 2 still has to pass the base-version check at approval, so a twin that raised and then waited can't push a stale change through.
-7. **The bounds are a choice, not a proof for every size.** Two requests and two changes are enough to show overlapping syncs, a change against a request outside the frozen copy, and a change that loses the race on its base version. They don't show anything about 300 requests. That is the normal trade with model checking, and it's why the same rules come back as property tests on real data in phase 4.
+6. **Review found the write-through rule missed one of the source's own checks.** The first version of WorkflowOnly checked that a twin-raised request's target was its current hours plus its delta, but not that the target wasn't negative, which IMPACT Web's own raise refuses. The reviewer dropped just that guard from `tw_raise` and the simulator reached a negative pending target with every rule still passing. The rule now asserts it, and Q-M18 is that bug. The same lesson as finding 5: a rule that lists what a write may do has to list every check the source makes, and the seeded bugs only covered the checks I'd thought of.
+7. **Write-through didn't need the model to trust the twin.** WorkflowOnly allows exactly one kind of twin write and spells it out: one request goes from not raised to pending, marked as from the twin, against the current version and hours, and nothing else moves. The rule doesn't call `tw_raise`, so the new bugs can't change the rule with the code. Before the full run, the simulator caught the first five plus the retargeted Q-M1 in a quick pass, and the full run confirmed them with both checkers. The rule leans on IMPACT Web's existing approval check for staleness: a request the twin raised against version 2 still has to pass the base-version check at approval, so a twin that raised and then waited can't push a stale change through.
+8. **The switch is fixed per trace.** `ReadOnlyMode` covers exercises that start with write-through off. Walkthrough step 7 turns it off part way through, and that case is left to the contract tests in design.md section 9: the next delegated raise is refused, and requests already raised stay as they were. Modelling a live switch would add a step to every trace for little gain.
+9. **The bounds are a choice, not a proof for every size.** Two requests and two changes are enough to show overlapping syncs, a change against a request outside the frozen copy, and a change that loses the race on its base version. They don't show anything about 300 requests. That is the normal trade with model checking, and it's why the same rules come back as property tests on real data in phase 4.
 
 What the model leaves out, on purpose for now: exercises, roles, the clock, deletes and adds as separate change types, cost as well as hours, the material-change flag, and reset. Verification.md section 4 already puts those in from phase 4, as interactive-planning.md lands.
 
@@ -143,6 +146,6 @@ In the spec, change requests gain a `via` field ("iw" or "twin"), and a new vari
 | WT2 | A new rule, `ReadOnlyMode`: with write-through off, no change request is marked as raised from the twin |
 | WT3 | The write-through switch is picked once at the start of each trace and never changes, so every check covers both modes in one run |
 | WT4 | New witnesses, reachable in both instances: a change request raised from the twin that the DRB approved and the twin synced as an event (the closed loop), and growth after freeze with write-through off |
-| WT5 | Q-M1 now targets `WorkflowOnly`. Five new seeded bugs, each caught by TLC and Apalache: the twin's raise approves its own request (Q-M13), ignores the switch (Q-M14, against `ReadOnlyMode`), applies its delta to live hours (Q-M15), runs before freeze (Q-M16), or stamps the version from its first read instead of the current one (Q-M17) |
+| WT5 | Q-M1 now targets `WorkflowOnly`. Five new seeded bugs, each caught by TLC and Apalache: the twin's raise approves its own request (Q-M13), ignores the switch (Q-M14, against `ReadOnlyMode`), applies its delta to live hours (Q-M15), runs before freeze (Q-M16), or stamps a stale base version (Q-M17). Review added a sixth: it skips the check that the target isn't negative (Q-M18) |
 | WT6 | Q1 to Q7 pass again on the changed spec, with the same bounds. They did; section 5 has the numbers |
 | WT7 | Every doc that said the twin never writes is updated to say the same thing as the spec, and no doc names the change for anything but the demo |
