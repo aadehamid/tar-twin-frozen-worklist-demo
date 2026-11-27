@@ -1,0 +1,881 @@
+[
+ {
+  "case": "C1",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201B",
+     "probabilities": {
+      "E-201A": 0.0013125760948832796,
+      "E-201B": 0.9936099619779185,
+      "E-201C": 0.0012213279314926741,
+      "none": 0.0038561339957054468
+     },
+     "confidence": 0.9914799493038914
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201B-1",
+     "probabilities": {
+      "F-E201A-1": 0.0012385620983450514,
+      "F-E201A-2": 0.0004021800940797522,
+      "F-E201A-3": 0.0002876478149492894,
+      "F-E201B-1": 0.9902848299266904,
+      "F-E201B-2": 0.004600410119967927,
+      "F-E201C-1": 0.002716004096800118,
+      "F-E201C-2": 0.00023725220755742928,
+      "F-E201C-3": 0.00023311364161038555
+     },
+     "confidence": 0.9888969484876462
+    }
+   },
+   "usage": {
+    "input_tokens": 543,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753415-33W0hoyPqqxOhsGSfviR",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.514
+ },
+ {
+  "case": "C1",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201B",
+     "probabilities": {
+      "E-201A": 0.0013125760948832796,
+      "E-201B": 0.9936099619779185,
+      "E-201C": 0.0012213279314926741,
+      "none": 0.0038561339957054468
+     },
+     "confidence": 0.9914799493038914
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201B-1",
+     "probabilities": {
+      "F-E201A-1": 0.0012385620983450514,
+      "F-E201A-2": 0.0004021800940797522,
+      "F-E201A-3": 0.0002876478149492894,
+      "F-E201B-1": 0.9902848299266904,
+      "F-E201B-2": 0.004600410119967927,
+      "F-E201C-1": 0.002716004096800118,
+      "F-E201C-2": 0.00023725220755742928,
+      "F-E201C-3": 0.00023311364161038555
+     },
+     "confidence": 0.9888969484876462
+    }
+   },
+   "usage": {
+    "input_tokens": 543,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753416-JPYmeqioXZS2dcjC5syU",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.286
+ },
+ {
+  "case": "C1",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201B",
+     "probabilities": {
+      "E-201A": 0.0013125760948832796,
+      "E-201B": 0.9936099619779185,
+      "E-201C": 0.0012213279314926741,
+      "none": 0.0038561339957054468
+     },
+     "confidence": 0.9914799493038914
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201B-1",
+     "probabilities": {
+      "F-E201A-1": 0.0012385620983450514,
+      "F-E201A-2": 0.0004021800940797522,
+      "F-E201A-3": 0.0002876478149492894,
+      "F-E201B-1": 0.9902848299266904,
+      "F-E201B-2": 0.004600410119967927,
+      "F-E201C-1": 0.002716004096800118,
+      "F-E201C-2": 0.00023725220755742928,
+      "F-E201C-3": 0.00023311364161038555
+     },
+     "confidence": 0.9888969484876462
+    }
+   },
+   "usage": {
+    "input_tokens": 543,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753416-EuuG50lHZe0QU6KqlFzo",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.372
+ },
+ {
+  "case": "C2",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201C",
+     "probabilities": {
+      "E-201A": 0.017290605819204788,
+      "E-201B": 0.015015606759731914,
+      "E-201C": 0.938436573665998,
+      "none": 0.029257213755065164
+     },
+     "confidence": 0.9179154315546639
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201C-2",
+     "probabilities": {
+      "F-E201A-1": 0.009089517577850004,
+      "F-E201A-2": 0.004361441513085967,
+      "F-E201A-3": 0.0007394589531044683,
+      "F-E201B-1": 0.0037985739005133618,
+      "F-E201B-2": 0.005937740442432432,
+      "F-E201C-1": 0.039817541691306746,
+      "F-E201C-2": 0.9343337630336118,
+      "F-E201C-3": 0.0019219628880952347
+     },
+     "confidence": 0.9249528720384135
+    }
+   },
+   "usage": {
+    "input_tokens": 541,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753416-suPWljyNmJ9FZitCYzBh",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.32
+ },
+ {
+  "case": "C2",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201C",
+     "probabilities": {
+      "E-201A": 0.017290605819204788,
+      "E-201B": 0.015015606759731914,
+      "E-201C": 0.938436573665998,
+      "none": 0.029257213755065164
+     },
+     "confidence": 0.9179154315546639
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201C-2",
+     "probabilities": {
+      "F-E201A-1": 0.009089517577850004,
+      "F-E201A-2": 0.004361441513085967,
+      "F-E201A-3": 0.0007394589531044683,
+      "F-E201B-1": 0.0037985739005133618,
+      "F-E201B-2": 0.005937740442432432,
+      "F-E201C-1": 0.039817541691306746,
+      "F-E201C-2": 0.9343337630336118,
+      "F-E201C-3": 0.0019219628880952347
+     },
+     "confidence": 0.9249528720384135
+    }
+   },
+   "usage": {
+    "input_tokens": 541,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753417-hTwRraD374sQHM8tcSFX",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.32
+ },
+ {
+  "case": "C2",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201C",
+     "probabilities": {
+      "E-201A": 0.017290605819204788,
+      "E-201B": 0.015015606759731914,
+      "E-201C": 0.938436573665998,
+      "none": 0.029257213755065164
+     },
+     "confidence": 0.9179154315546639
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201C-2",
+     "probabilities": {
+      "F-E201A-1": 0.009089517577850004,
+      "F-E201A-2": 0.004361441513085967,
+      "F-E201A-3": 0.0007394589531044683,
+      "F-E201B-1": 0.0037985739005133618,
+      "F-E201B-2": 0.005937740442432432,
+      "F-E201C-1": 0.039817541691306746,
+      "F-E201C-2": 0.9343337630336118,
+      "F-E201C-3": 0.0019219628880952347
+     },
+     "confidence": 0.9249528720384135
+    }
+   },
+   "usage": {
+    "input_tokens": 541,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753417-S5DJvzxXW2oYMSPzeRZD",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.284
+ },
+ {
+  "case": "C3",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.008962087372392949,
+      "D-202": 0.0745954784172676,
+      "R-202": 0.014125809230786686,
+      "none": 0.9023166249795528
+     },
+     "confidence": 0.869755499972737
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-D202-1",
+     "probabilities": {
+      "F-E201A-1": 0.01958761278227827,
+      "F-E201A-2": 0.024732317524360403,
+      "F-E201A-3": 0.05072388111782255,
+      "F-D202-1": 0.8569563255038997,
+      "F-R202-1": 0.047999863071639094
+     },
+     "confidence": 0.8211954068798746
+    }
+   },
+   "usage": {
+    "input_tokens": 387,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753417-7cKww0oROf0h2Qum6a0C",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.275
+ },
+ {
+  "case": "C3",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.008962087372392949,
+      "D-202": 0.0745954784172676,
+      "R-202": 0.014125809230786686,
+      "none": 0.9023166249795528
+     },
+     "confidence": 0.869755499972737
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-D202-1",
+     "probabilities": {
+      "F-E201A-1": 0.01958761278227827,
+      "F-E201A-2": 0.024732317524360403,
+      "F-E201A-3": 0.05072388111782255,
+      "F-D202-1": 0.8569563255038997,
+      "F-R202-1": 0.047999863071639094
+     },
+     "confidence": 0.8211954068798746
+    }
+   },
+   "usage": {
+    "input_tokens": 387,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753417-MAB4KuPMh0LHlLNM3Cq4",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.317
+ },
+ {
+  "case": "C3",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.008962087372392949,
+      "D-202": 0.0745954784172676,
+      "R-202": 0.014125809230786686,
+      "none": 0.9023166249795528
+     },
+     "confidence": 0.869755499972737
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-D202-1",
+     "probabilities": {
+      "F-E201A-1": 0.01958761278227827,
+      "F-E201A-2": 0.024732317524360403,
+      "F-E201A-3": 0.05072388111782255,
+      "F-D202-1": 0.8569563255038997,
+      "F-R202-1": 0.047999863071639094
+     },
+     "confidence": 0.8211954068798746
+    }
+   },
+   "usage": {
+    "input_tokens": 387,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753418-mxhVPeNVMuJUHEDvRSW2",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.512
+ },
+ {
+  "case": "C4",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201A",
+     "probabilities": {
+      "E-201A": 0.9886808316255425,
+      "E-201C": 0.010301754402839479,
+      "none": 0.0010174139716179276
+     },
+     "confidence": 0.9830212474383137
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-1",
+     "probabilities": {
+      "F-E201A-1": 0.8985568540908059,
+      "F-E201A-2": 0.0023862918502123775,
+      "F-E201A-3": 0.0010626293342466148,
+      "F-E201C-1": 0.0942333029863532,
+      "F-E201C-2": 0.0020389129469540893,
+      "F-E201C-3": 0.0017220087914280157
+     },
+     "confidence": 0.878268224908967
+    }
+   },
+   "usage": {
+    "input_tokens": 449,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753418-k4QXcJ8WnhQBXaeyGs2L",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.38
+ },
+ {
+  "case": "C4",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201A",
+     "probabilities": {
+      "E-201A": 0.9886808316255425,
+      "E-201C": 0.010301754402839479,
+      "none": 0.0010174139716179276
+     },
+     "confidence": 0.9830212474383137
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-1",
+     "probabilities": {
+      "F-E201A-1": 0.8985568540908059,
+      "F-E201A-2": 0.0023862918502123775,
+      "F-E201A-3": 0.0010626293342466148,
+      "F-E201C-1": 0.0942333029863532,
+      "F-E201C-2": 0.0020389129469540893,
+      "F-E201C-3": 0.0017220087914280157
+     },
+     "confidence": 0.878268224908967
+    }
+   },
+   "usage": {
+    "input_tokens": 449,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753419-SC37E8Ixq4igXVJEHKd4",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.332
+ },
+ {
+  "case": "C4",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "E-201A",
+     "probabilities": {
+      "E-201A": 0.9886808316255425,
+      "E-201C": 0.010301754402839479,
+      "none": 0.0010174139716179276
+     },
+     "confidence": 0.9830212474383137
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-1",
+     "probabilities": {
+      "F-E201A-1": 0.8985568540908059,
+      "F-E201A-2": 0.0023862918502123775,
+      "F-E201A-3": 0.0010626293342466148,
+      "F-E201C-1": 0.0942333029863532,
+      "F-E201C-2": 0.0020389129469540893,
+      "F-E201C-3": 0.0017220087914280157
+     },
+     "confidence": 0.878268224908967
+    }
+   },
+   "usage": {
+    "input_tokens": 449,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753419-wQRFitSTCPvCfpL02YVJ",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.336
+ },
+ {
+  "case": "C5",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "PSV-2105",
+     "probabilities": {
+      "PSV-2104": 0.0008900228456907306,
+      "PSV-2105": 0.988385421402825,
+      "none": 0.010724555751484302
+     },
+     "confidence": 0.9825781321042374
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-PSV2105-1",
+     "probabilities": {
+      "F-PSV2104-1": 0.0006699755975434555,
+      "F-PSV2105-1": 0.9993300244024566
+     },
+     "confidence": 0.9986600488049131
+    }
+   },
+   "usage": {
+    "input_tokens": 261,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753419-k9oAEcV8okxRxZU3QpDa",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.323
+ },
+ {
+  "case": "C5",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "PSV-2105",
+     "probabilities": {
+      "PSV-2104": 0.0008900228456907306,
+      "PSV-2105": 0.988385421402825,
+      "none": 0.010724555751484302
+     },
+     "confidence": 0.9825781321042374
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-PSV2105-1",
+     "probabilities": {
+      "F-PSV2104-1": 0.0006699755975434555,
+      "F-PSV2105-1": 0.9993300244024566
+     },
+     "confidence": 0.9986600488049131
+    }
+   },
+   "usage": {
+    "input_tokens": 261,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753420-U29deVFhYAnSJc3JWrvQ",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.34
+ },
+ {
+  "case": "C5",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "PSV-2105",
+     "probabilities": {
+      "PSV-2104": 0.0008900228456907306,
+      "PSV-2105": 0.988385421402825,
+      "none": 0.010724555751484302
+     },
+     "confidence": 0.9825781321042374
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-PSV2105-1",
+     "probabilities": {
+      "F-PSV2104-1": 0.0006699755975434555,
+      "F-PSV2105-1": 0.9993300244024566
+     },
+     "confidence": 0.9986600488049131
+    }
+   },
+   "usage": {
+    "input_tokens": 261,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753420-kp9CX3NGnP0lop8br33o",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.36
+ },
+ {
+  "case": "C6",
+  "run": 0,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.0017238232451254108,
+      "E-201B": 0.0025785492777446106,
+      "E-201C": 0.004021231323897105,
+      "none": 0.991676396153233
+     },
+     "confidence": 0.988901861537644
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-2",
+     "probabilities": {
+      "F-E201A-1": 0.09663318978202266,
+      "F-E201A-2": 0.2909583094198059,
+      "F-E201A-3": 0.027040313254998262,
+      "F-E201B-1": 0.17984462062497458,
+      "F-E201B-2": 0.05876751357228997,
+      "F-E201C-1": 0.0894091119601922,
+      "F-E201C-2": 0.10503077157329216,
+      "F-E201C-3": 0.1523161698124242
+     },
+     "confidence": 0.18966663933692102
+    }
+   },
+   "usage": {
+    "input_tokens": 536,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753420-NooYKeO9DyAeiH9N7cp6",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.274
+ },
+ {
+  "case": "C6",
+  "run": 1,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.0017238232451254108,
+      "E-201B": 0.0025785492777446106,
+      "E-201C": 0.004021231323897105,
+      "none": 0.991676396153233
+     },
+     "confidence": 0.988901861537644
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-2",
+     "probabilities": {
+      "F-E201A-1": 0.09663318978202266,
+      "F-E201A-2": 0.2909583094198059,
+      "F-E201A-3": 0.027040313254998262,
+      "F-E201B-1": 0.17984462062497458,
+      "F-E201B-2": 0.05876751357228997,
+      "F-E201C-1": 0.0894091119601922,
+      "F-E201C-2": 0.10503077157329216,
+      "F-E201C-3": 0.1523161698124242
+     },
+     "confidence": 0.18966663933692102
+    }
+   },
+   "usage": {
+    "input_tokens": 536,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753421-wadwTyscL3ijEe10x53Q",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.31
+ },
+ {
+  "case": "C6",
+  "run": 2,
+  "status": 200,
+  "retried_429": 0,
+  "response": {
+   "model": "perplexity/pplx-decider-v1.3-20261112",
+   "answers": {
+    "tag": {
+     "type": "choice",
+     "choice": "none",
+     "probabilities": {
+      "E-201A": 0.0017238232451254108,
+      "E-201B": 0.0025785492777446106,
+      "E-201C": 0.004021231323897105,
+      "none": 0.991676396153233
+     },
+     "confidence": 0.988901861537644
+    },
+    "evidence": {
+     "type": "choice",
+     "choice": "F-E201A-2",
+     "probabilities": {
+      "F-E201A-1": 0.09663318978202266,
+      "F-E201A-2": 0.2909583094198059,
+      "F-E201A-3": 0.027040313254998262,
+      "F-E201B-1": 0.17984462062497458,
+      "F-E201B-2": 0.05876751357228997,
+      "F-E201C-1": 0.0894091119601922,
+      "F-E201C-2": 0.10503077157329216,
+      "F-E201C-3": 0.1523161698124242
+     },
+     "confidence": 0.18966663933692102
+    }
+   },
+   "usage": {
+    "input_tokens": 536,
+    "output_tokens": 2,
+    "cost": 0,
+    "is_byok": false,
+    "cost_details": {
+     "upstream_inference_cost": 0,
+     "upstream_inference_prompt_cost": 0,
+     "upstream_inference_completions_cost": 0
+    }
+   },
+   "id": "gen-dec-1795753421-DthmeXYkxGh6UsUz9gHl",
+   "provider": "Perplexity"
+  },
+  "latency_s": 0.336
+ }
+]

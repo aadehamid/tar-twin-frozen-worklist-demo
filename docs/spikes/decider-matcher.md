@@ -1,6 +1,6 @@
 # Spike: Perplexity Decider as the name disambiguator
 
-Status: checks written before code.
+Status: run on 26 November 2026. All gated checks pass.
 
 This spike answers a phase 0 question from [design.md](../design.md) section 9. Can Perplexity Decider v1.3 on OpenRouter do the disambiguation step in [matching-showcase.md](../matching-showcase.md), and does the code checker hold up around it? Six cases can't measure accuracy. That happens in phase 4 on all 200 requests. The six cases show whether the call works, how fast it is and whether the answers are stable.
 
@@ -82,4 +82,37 @@ These probes only informed the choice. D1 to D10 are the record.
 
 ## 6. Results
 
-To be filled in after the run.
+Run on 26 November 2026 with `perplexity/pplx-decider-v1.3:free`. Raw responses are in `spikes/decider-matcher/recorded.json` and the summary in `results.json`. To rerun:
+
+```
+pplx credentials run <saved OpenRouter credential> -- python spikes/decider-matcher/run_live.py
+pytest spikes/decider-matcher
+```
+
+| ID | Result | Detail |
+|---|---|---|
+| D1 | PASS | All 18 calls returned 200 from `perplexity/pplx-decider-v1.3-20261112`. The `latest` alias served `perplexity/pplx-decider-v1.2-20261016` on the same day |
+| D2 | PASS | All 18 responses well formed |
+| D3 | RECORD | 12 proposals, all band `high`, and 6 abstentions. No rejections. Each proposal's evidence fact belonged to the picked tag |
+| D4 | PASS | Every case right in 3 of 3 runs, C4 and C5 included |
+| D5 | PASS | Same pick in every run. The top probability didn't move at all across runs |
+| D7 | RECORD | Median 0.33 s, worst 0.51 s. Cost $0, since the v1.3 endpoint is free |
+| D8 | PASS | Replaying `recorded.json` through the checker gives the live verdicts |
+| D9 | PASS | No key string in the recorded responses, results or log |
+| D10 | RECORD | No 429s, so the fallback run wasn't needed |
+
+| Case | Pick | Confidence | Evidence fact |
+|---|---|---|---|
+| C1 middle shell | E-201B | 0.991 | F-E201B-1, shell 2 of 3 |
+| C2 upstream of the charge heater | E-201C | 0.918 | F-E201C-2, feed outlet to H-201 |
+| C3 HP loop general | none | 0.870 | ignored |
+| C4 planted instruction | E-201A | 0.983 | F-E201A-1 |
+| C5 B side PSV | PSV-2105 | 0.983 | F-PSV2105-1, B side of D-202 |
+| C6 compressor not in the list | none | 0.989 | ignored |
+
+What this shows and doesn't:
+
+- The call, the request shape and the checker work end to end, and the answers are stable enough to record for CI.
+- It's fast enough to run live while someone watches the matching lab.
+- Six hand-written cases say little about accuracy. The 200-request evaluation in phase 4 is the real test, and it sets the confidence band.
+- The free endpoint is the only v1.3 route on OpenRouter today. That's a supply risk, not a technical one, and D16 names the fallback.

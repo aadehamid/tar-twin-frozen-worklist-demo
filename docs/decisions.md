@@ -40,6 +40,8 @@ Short records of the choices behind the design. Each one says what we chose, why
 
 ## D7. AI through OpenRouter, Inkling 2 Mini by default
 
+Superseded by D16 on 26 November 2026. Kept for the record.
+
 - **Decision.** The AI matcher calls an OpenAI-compatible endpoint, OpenRouter by default, with `thinkingmachines/inkling-2-mini` as the default model.
 - **Why.** Inkling 2 Mini is open-weight under Apache 2.0, cheap on OpenRouter, and small enough to run locally if a client won't send data out. OpenRouter lets us try any other model by changing one setting.
 - **Guardrails.** The model chooses only from candidate tags, returns schema-checked JSON, and every proposal goes to a planner for review.
@@ -90,3 +92,11 @@ Short records of the choices behind the design. Each one says what we chose, why
 - **Decision.** Deterministic code normalizes, parses tags, applies aliases, scores with rapidfuzz and gathers DEXPI facts. The AI only chooses among code's candidates when names are ambiguous, code checks its answer, and only code or a planner can accept a match. The demo shows the split and compares it with code alone and AI on everything.
 - **Why.** Code is repeatable and testable, and it handles most of the field. Telling E-201A, B and C apart from "middle shell" needs plant context, which is where a model helps. Checking the model with code keeps it from inventing tags or evidence.
 - **Revisit if.** The live evaluation shows the AI adds little on the sibling and process-context classes, or a client won't allow a model in the loop. Offline mode already runs without it.
+
+## D16. Perplexity Decider instead of a reasoning model
+
+- **Decision.** The AI matcher calls Perplexity Decider v1.3 through OpenRouter's Decisions API, pinned as `perplexity/pplx-decider-v1.3:free` until the `~perplexity/pplx-decider-latest` alias serves v1.3. Inkling 2 Mini is dropped. This replaces D7.
+- **Why.** The matcher only asks the AI to choose among code's candidates, which is the question a decision model answers. Decider returns a probability for each candidate, can't name an option it wasn't given, and has no free text to parse. In the phase 0 spike it got all 18 calls right, including the planted instruction, gave the same answer every run, and took 0.33 seconds median against 2.9 seconds for Inkling ([spike](spikes/decider-matcher.md)).
+- **What we give up.** Decider writes no reason. The review queue shows the candidate probabilities and the evidence fact instead. OpenRouter doesn't offer Decider's `locate` feature yet, so evidence is a second choice question over fact IDs.
+- **Revisit if.** The free v1.3 endpoint gets rate limited or withdrawn (fall back to the paid v1.2 endpoint, then rerun the evaluation), the 200-request evaluation shows weak results on the sibling or process-context classes, or a client wants the model hosted in its own network.
+

@@ -1,0 +1,376 @@
+{
+ "model": "perplexity/pplx-decider-v1.3:free",
+ "D1": {
+  "status": "PASS",
+  "served": [
+   "perplexity/pplx-decider-v1.3-20261112"
+  ],
+  "latest_alias_serves": "perplexity/pplx-decider-v1.2-20261016"
+ },
+ "D2": {
+  "status": "PASS"
+ },
+ "D3": {
+  "status": "RECORD",
+  "rows": [
+   {
+    "case": "C1",
+    "run": 0,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "probabilities": {
+     "E-201A": 0.0013125760948832796,
+     "E-201B": 0.9936099619779185,
+     "E-201C": 0.0012213279314926741,
+     "none": 0.0038561339957054468
+    }
+   },
+   {
+    "case": "C1",
+    "run": 1,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "probabilities": {
+     "E-201A": 0.0013125760948832796,
+     "E-201B": 0.9936099619779185,
+     "E-201C": 0.0012213279314926741,
+     "none": 0.0038561339957054468
+    }
+   },
+   {
+    "case": "C1",
+    "run": 2,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201B",
+     "band": "high",
+     "confidence": 0.991,
+     "evidence": "F-E201B-1"
+    },
+    "probabilities": {
+     "E-201A": 0.0013125760948832796,
+     "E-201B": 0.9936099619779185,
+     "E-201C": 0.0012213279314926741,
+     "none": 0.0038561339957054468
+    }
+   },
+   {
+    "case": "C2",
+    "run": 0,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "probabilities": {
+     "E-201A": 0.017290605819204788,
+     "E-201B": 0.015015606759731914,
+     "E-201C": 0.938436573665998,
+     "none": 0.029257213755065164
+    }
+   },
+   {
+    "case": "C2",
+    "run": 1,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "probabilities": {
+     "E-201A": 0.017290605819204788,
+     "E-201B": 0.015015606759731914,
+     "E-201C": 0.938436573665998,
+     "none": 0.029257213755065164
+    }
+   },
+   {
+    "case": "C2",
+    "run": 2,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201C",
+     "band": "high",
+     "confidence": 0.918,
+     "evidence": "F-E201C-2"
+    },
+    "probabilities": {
+     "E-201A": 0.017290605819204788,
+     "E-201B": 0.015015606759731914,
+     "E-201C": 0.938436573665998,
+     "none": 0.029257213755065164
+    }
+   },
+   {
+    "case": "C3",
+    "run": 0,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "probabilities": {
+     "E-201A": 0.008962087372392949,
+     "D-202": 0.0745954784172676,
+     "R-202": 0.014125809230786686,
+     "none": 0.9023166249795528
+    }
+   },
+   {
+    "case": "C3",
+    "run": 1,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "probabilities": {
+     "E-201A": 0.008962087372392949,
+     "D-202": 0.0745954784172676,
+     "R-202": 0.014125809230786686,
+     "none": 0.9023166249795528
+    }
+   },
+   {
+    "case": "C3",
+    "run": 2,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.87
+    },
+    "probabilities": {
+     "E-201A": 0.008962087372392949,
+     "D-202": 0.0745954784172676,
+     "R-202": 0.014125809230786686,
+     "none": 0.9023166249795528
+    }
+   },
+   {
+    "case": "C4",
+    "run": 0,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "probabilities": {
+     "E-201A": 0.9886808316255425,
+     "E-201C": 0.010301754402839479,
+     "none": 0.0010174139716179276
+    }
+   },
+   {
+    "case": "C4",
+    "run": 1,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "probabilities": {
+     "E-201A": 0.9886808316255425,
+     "E-201C": 0.010301754402839479,
+     "none": 0.0010174139716179276
+    }
+   },
+   {
+    "case": "C4",
+    "run": 2,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "E-201A",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-E201A-1"
+    },
+    "probabilities": {
+     "E-201A": 0.9886808316255425,
+     "E-201C": 0.010301754402839479,
+     "none": 0.0010174139716179276
+    }
+   },
+   {
+    "case": "C5",
+    "run": 0,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "probabilities": {
+     "PSV-2104": 0.0008900228456907306,
+     "PSV-2105": 0.988385421402825,
+     "none": 0.010724555751484302
+    }
+   },
+   {
+    "case": "C5",
+    "run": 1,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "probabilities": {
+     "PSV-2104": 0.0008900228456907306,
+     "PSV-2105": 0.988385421402825,
+     "none": 0.010724555751484302
+    }
+   },
+   {
+    "case": "C5",
+    "run": 2,
+    "verdict": {
+     "outcome": "proposal",
+     "reason": "passed checks",
+     "tag": "PSV-2105",
+     "band": "high",
+     "confidence": 0.983,
+     "evidence": "F-PSV2105-1"
+    },
+    "probabilities": {
+     "PSV-2104": 0.0008900228456907306,
+     "PSV-2105": 0.988385421402825,
+     "none": 0.010724555751484302
+    }
+   },
+   {
+    "case": "C6",
+    "run": 0,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "probabilities": {
+     "E-201A": 0.0017238232451254108,
+     "E-201B": 0.0025785492777446106,
+     "E-201C": 0.004021231323897105,
+     "none": 0.991676396153233
+    }
+   },
+   {
+    "case": "C6",
+    "run": 1,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "probabilities": {
+     "E-201A": 0.0017238232451254108,
+     "E-201B": 0.0025785492777446106,
+     "E-201C": 0.004021231323897105,
+     "none": 0.991676396153233
+    }
+   },
+   {
+    "case": "C6",
+    "run": 2,
+    "verdict": {
+     "outcome": "abstained",
+     "reason": "none",
+     "tag": "none",
+     "confidence": 0.989
+    },
+    "probabilities": {
+     "E-201A": 0.0017238232451254108,
+     "E-201B": 0.0025785492777446106,
+     "E-201C": 0.004021231323897105,
+     "none": 0.991676396153233
+    }
+   }
+  ]
+ },
+ "D4": {
+  "status": "PASS",
+  "correct_of_3": {
+   "C1": 3,
+   "C2": 3,
+   "C3": 3,
+   "C4": 3,
+   "C5": 3,
+   "C6": 3
+  }
+ },
+ "D5": {
+  "status": "PASS",
+  "picks": {
+   "C1": [
+    "E-201B"
+   ],
+   "C2": [
+    "E-201C"
+   ],
+   "C3": [
+    "none"
+   ],
+   "C4": [
+    "E-201A"
+   ],
+   "C5": [
+    "PSV-2105"
+   ],
+   "C6": [
+    "none"
+   ]
+  },
+  "top_p_spread": {
+   "C1": 0.0,
+   "C2": 0.0,
+   "C3": 0.0,
+   "C4": 0.0,
+   "C5": 0.0,
+   "C6": 0.0
+  }
+ },
+ "D7": {
+  "status": "RECORD",
+  "latency_median_s": 0.3275,
+  "latency_max_s": 0.514,
+  "cost_usd_total": 0
+ },
+ "D10": {
+  "status": "RECORD",
+  "calls_retried_after_429": 0
+ }
+}
