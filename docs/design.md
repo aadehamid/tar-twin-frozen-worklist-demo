@@ -54,7 +54,7 @@ The twin can only reach IMPACT Web through its public API, the same way it would
 - `compose.yml` runs Postgres, Neo4j, the IMPACT Web service and the twin service. Each service serves its built front end, following the template.
 - Two front ends under two paths on one port, `/impactweb/` for IMPACT Web and `/twin/` for the twin, each with its own look, so the audience sees two separate systems. Locally they run on two ports as usual. One port on the VM is explained in [hosting.md](hosting.md) section 1.
 - In local development, Neo4j Browser is available on `:7474` for architects who want to query the twin directly. On the hosted VM it is not exposed (see [hosting.md](hosting.md)).
-- Development without Docker is also supported: a local Postgres 18, the Mailpit binary in place of the Compose mail catcher, a local Neo4j and `uv run` for each service. The [template spike](spikes/template-no-docker.md) ran the template's own CI this way.
+- Development without Docker is also supported: a local Postgres 18, the Mailpit binary in place of the Compose mail catcher, a local Neo4j and `uv run` for each service. The [template spike](spikes/template-no-docker.md) ran the template's own CI this way, and the [SHACL spike](spikes/shacl-n10s.md) ran Neo4j 5.26 with n10s from the release tarball.
 - Hosted team exercises run on one exe.dev VM. See [hosting.md](hosting.md).
 
 ## 4. Data model
@@ -229,7 +229,7 @@ Each phase ends with a check-in before the next starts. Within each phase, the c
 
 | Phase | Work | Exit check |
 |---|---|---|
-| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI (done, see [spike](spikes/dexpi-sheet.md)). Seed Relate WASM from a Cypher script and run a traversal in a browser page (done, see [spike](spikes/relate-wasm.md)). Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker (done, see [spike](spikes/template-no-docker.md)). Run SHACL through n10s on a small graph. Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
+| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI (done, see [spike](spikes/dexpi-sheet.md)). Seed Relate WASM from a Cypher script and run a traversal in a browser page (done, see [spike](spikes/relate-wasm.md)). Call Perplexity Decider on OpenRouter's Decisions API (done, see [spike](spikes/decider-matcher.md)). Run the template without Docker (done, see [spike](spikes/template-no-docker.md)). Run SHACL through n10s on a small graph (done, see [spike](spikes/shacl-n10s.md)). Model-check a first Quint spec of freeze and sync. Optional: prove one cost rule in Bend 2 | Each spike works or has a named fallback |
 | 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec, with schema and SHACL checks on every write | All engineering rules pass, the counts match the spec, and Hamid signs off the scenario |
 | 2. IMPACT Web | Service and UI, including review and freeze | Source groups and planners raise requests, the TA manager runs the challenge and DRB and freezes the list, and changes after freeze go through change requests. Permission and freeze-race tests pass |
 | 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |
