@@ -157,7 +157,7 @@ class WithoutRelate(Base):
         self.assertEqual([f for f in os.listdir(self.tmp.name) if f.startswith("project-memory.")], [])
 
     def test_non_json_constants_are_rejected_before_any_write(self):
-        for constant in ("NaN", "Infinity", "-Infinity", "1e309", "-1e309"):
+        for constant in ("NaN", "Infinity", "-Infinity", "1e309", "-1e309", '"\\ud800"'):
             with self.subTest(constant):
                 body = json.dumps(episode("e1", "2026-11-27T10:00:00Z", "pi", [fact("f1", "A fact.")]))
                 p = self.run_memory("remember", "-", stdin=body[:-1] + ', "confidence": ' + constant + "}")
@@ -325,16 +325,33 @@ class WithRelate(Base):
         except ProcessLookupError:
             return False
 
-    def test_old_builds_are_swept_and_fresh_ones_kept(self):
-        old = self.db + ".init.111.1"
-        fresh = self.db + ".init.222.2"
-        os.makedirs(old)
-        os.makedirs(fresh)
-        two_hours_ago = time.time() - 7200
-        os.utime(old, (two_hours_ago, two_hours_ago))
+    def make_build(self, path, hours_old):
+        os.makedirs(path)
+        when = time.time() - hours_old * 3600
+        os.utime(path, (when, when))
+        return path
+
+    def test_old_builds_are_swept_on_every_init_and_fresh_ones_kept(self):
+        self.assertEqual(self.run_memory("init").returncode, 0)
+        old = self.make_build(self.db + ".init.111.1", 2)
+        fresh = self.make_build(self.db + ".init.222.2", 0)
         self.assertEqual(self.run_memory("init").returncode, 0)
         self.assertFalse(os.path.exists(old))
         self.assertTrue(os.path.exists(fresh))
+
+    def test_sweep_matches_the_store_name_literally_and_through_a_symlink(self):
+        real = os.path.join(self.tmp.name, "real")
+        os.makedirs(real)
+        link = os.path.join(self.tmp.name, "link")
+        os.symlink(real, link)
+        db = os.path.join(link, "mem[1]")
+        own = self.make_build(os.path.join(real, "mem[1].init.111.1"), 2)
+        other = self.make_build(os.path.join(real, "mem1.init.111.1"), 2)
+        p = self.run_memory("init", env=dict(self.env, PROJECT_MEMORY_DB=db))
+        self.assertEqual(p.returncode, 0, p.stderr)
+        self.assertFalse(os.path.exists(own))
+        self.assertTrue(os.path.exists(other))
+        self.assertTrue(os.path.isdir(real))
 
     def test_waiters_never_fail_while_another_creates_the_store(self):
         for _ in range(5):

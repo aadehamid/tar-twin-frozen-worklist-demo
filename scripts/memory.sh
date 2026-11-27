@@ -122,17 +122,26 @@ read_query() {
 # first writer builds a private store and renames it into place. A rename onto
 # a folder that already holds a store fails atomically, and the loser drops
 # its copy and uses the winner's. No lock is held, so none can go stale.
-create_store() {
-  local db="$1" parent base
+# A SIGKILL skips the EXIT trap and leaves a private build beside the store.
+# It is never used. Remove builds older than an hour on every init.
+sweep_builds() {
+  local db="$1" parent pattern
   parent="$(dirname "$db")"
-  base="$(basename "$db")"
+  [ -d "$parent" ] || return 0
+  # Escape glob characters in the store name so find matches it literally.
+  pattern="$(basename "$db" | sed 's/[][*?\\]/\\&/g').init.*"
+  find -H "$parent" -mindepth 1 -maxdepth 1 -type d -name "$pattern" -mmin +60 \
+    -exec rm -rf {} + 2>/dev/null || true
+}
+
+create_store() {
+  local db="$1" parent
+  parent="$(dirname "$db")"
   mkdir -p "$parent"
   if [ ! -w "$parent" ]; then
     echo "memory: cannot create the store; $parent is not writable" >&2
     return 1
   fi
-  # Builds left by a SIGKILL are never used; remove ones older than an hour.
-  find "$parent" -maxdepth 1 -name "$base.init.*" -mmin +60 -exec rm -rf {} + 2>/dev/null || true
   build_dir="$db.init.$$.$RANDOM"
   if ! relate query --database "$build_dir" --mode jsonl < "$cypher_dir/schema.cypher" > /dev/null 2>&1; then
     echo "memory: could not create the store at $db" >&2
@@ -156,6 +165,7 @@ init() {
   refuse_on_conflicts
   local out db
   db="$(store)"
+  sweep_builds "$db"
   [ -d "$db" ] || create_store "$db"
   if ! out="$(write "$cypher_dir/schema.cypher" 2>&1)"; then
     printf '%s\n' "$out" >&2
@@ -181,6 +191,7 @@ def finite_float(text):
 try:
     with open(path, encoding="utf-8") as fh:
         m = json.load(fh, parse_constant=reject_constant, parse_float=finite_float)
+    json.dumps(m, ensure_ascii=False).encode("utf-8")
 except (OSError, ValueError) as exc:
     sys.exit(f"memory: {path} is not readable JSON: {exc}")
 KINDS = {"decision", "preference", "correction", "finding", "handoff", "tool_call"}
