@@ -34,5 +34,6 @@ Load only the document matching the current task:
 - **Planning mode roles, exercise clock, injects, debrief:** [docs/interactive-planning.md](docs/interactive-planning.md)
 - **exe.dev VM hosting, auth headers, 4 GB memory budget:** [docs/hosting.md](docs/hosting.md)
 - **Recorded architecture choices (D1 to D16):** [docs/decisions.md](docs/decisions.md)
+- **Shared facts and cross-line repo search (`summary`, `check`, `find`):** [scripts/repo_facts.py](scripts/repo_facts.py)
 - **Phase 0 spike results and rerun commands:** [docs/spikes/](docs/spikes/)
 - **PR body checklist:** [.github/pull_request_template.md](.github/pull_request_template.md)
