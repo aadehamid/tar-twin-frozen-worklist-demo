@@ -83,7 +83,7 @@ The engine itself took about 60 ms to initialise in the browser, and fetching th
 
 ### Limits of this result
 
-- The padded copies aren't connected to each other or to the real sheet. Both queries start from one tag, so they only ever touch one 48-node component. The 5,040-node figure tests seeding cost and index lookups at that size, not a walk across a large connected envelope. The real HP loop envelope has 38 boundary valves over several sheets, and phase 1 has to measure the walk on that.
+- The padded copies aren't connected to each other or to the real sheet. Both queries start from one tag, so they only ever touch one 48-node component. The 5,040-node figure tests seeding cost and index lookups at that size, not a walk across a large connected envelope. The scenario spec's target envelope has 38 boundary valves over several sheets, and phase 1 has to measure the walk on that.
 - The page runs the queries on load, not on a click. The click handler in the real panel calls the same worker messages.
 - Seeding trusts the script it's given. The worker only takes scripts from its own list, but it runs whatever Cypher is in them. In phase 1 the source is the twin's own export endpoint on the same origin. The worker has no connection to Neo4j, so nothing in the browser can change the master graph.
 

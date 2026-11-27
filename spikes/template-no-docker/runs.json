@@ -1,0 +1,162 @@
+{
+  "note": "Summary of every full run of run_spike.py on 2026-11-27 UTC. results.json is run 7. One further attempt, between runs 1 and 2, stopped at T2 on a GitHub API 403 rate limit before the Mailpit SHA-256 was pinned in the script; it produced no results and is not counted.",
+  "runs": [
+    {
+      "run": 1,
+      "failed_checks": [
+        "T9"
+      ],
+      "T9_counts": {
+        "passed": 61,
+        "failed": 0,
+        "flaky": 1,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 117.6,
+      "rss_mb": {
+        "postgres": 137.3,
+        "mailpit": 30.6,
+        "backend": 164.5
+      }
+    },
+    {
+      "run": 2,
+      "failed_checks": [],
+      "T9_counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 97.5,
+      "rss_mb": {
+        "postgres": 139.2,
+        "mailpit": 28.2,
+        "backend": 164.0
+      }
+    },
+    {
+      "run": 3,
+      "failed_checks": [],
+      "T9_counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 97.0,
+      "rss_mb": {
+        "postgres": 139.1,
+        "mailpit": 28.2,
+        "backend": 164.4
+      }
+    },
+    {
+      "run": 4,
+      "failed_checks": [],
+      "T9_counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 95.9,
+      "rss_mb": {
+        "postgres": 136.2,
+        "mailpit": 28.7,
+        "backend": 164.6
+      }
+    },
+    {
+      "run": 5,
+      "failed_checks": [
+        "T9"
+      ],
+      "T9_counts": {
+        "passed": 61,
+        "failed": 0,
+        "flaky": 1,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 104.7,
+      "rss_mb": {
+        "postgres": 138.5,
+        "mailpit": 30.7,
+        "backend": 164.8
+      }
+    },
+    {
+      "run": 6,
+      "failed_checks": [],
+      "T9_counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 261.9,
+      "rss_mb": {
+        "postgres": 140.1,
+        "mailpit": 30.7,
+        "backend": 168.6
+      },
+      "T11": {
+        "repeats": 20,
+        "as_is": {
+          "passed": 119,
+          "failed": 2,
+          "flaky": 0,
+          "skipped": 0,
+          "did_not_run": 0
+        },
+        "patched": {
+          "passed": 121,
+          "failed": 0,
+          "flaky": 0,
+          "skipped": 0,
+          "did_not_run": 0
+        }
+      }
+    },
+    {
+      "run": 7,
+      "failed_checks": [],
+      "T9_counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "total_seconds": 561.7,
+      "rss_mb": {
+        "postgres": 154.6,
+        "mailpit": 33.5,
+        "backend": 170.6
+      },
+      "T11": {
+        "repeats": 60,
+        "as_is": {
+          "passed": 360,
+          "failed": 1,
+          "flaky": 0,
+          "skipped": 0,
+          "did_not_run": 0
+        },
+        "patched": {
+          "passed": 361,
+          "failed": 0,
+          "flaky": 0,
+          "skipped": 0,
+          "did_not_run": 0
+        }
+      }
+    }
+  ]
+}

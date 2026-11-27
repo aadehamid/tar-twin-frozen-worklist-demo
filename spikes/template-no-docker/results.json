@@ -1,0 +1,256 @@
+{
+  "template": {
+    "repo": "https://github.com/fastapi/full-stack-fastapi-template",
+    "commit": "f8c6c147b12bb1c4d3253cc1b06f8b5ef81b10dd"
+  },
+  "checks": {
+    "T1": {
+      "pass": true,
+      "docker_commands": [],
+      "docker_on_path": false
+    },
+    "T2": {
+      "pass": true,
+      "commit": "f8c6c147b12bb1c4d3253cc1b06f8b5ef81b10dd",
+      "bun_sha256_ok": true,
+      "mailpit_sha256_ok": true,
+      "mailpit_api_digest": "unavailable (HTTPError)",
+      "versions": {
+        "uv": "uv 0.13.4 (x86_64-unknown-linux-gnu)",
+        "bun": "1.3.12",
+        "postgres": "postgres (PostgreSQL) 18.6 (Ubuntu 18.6-0ubuntu0.26.04.1)",
+        "mailpit": "/tmp/decrun/tplrun/tools/mailpit v1.34.0 compiled with go1.27.4 on linux/amd64",
+        "os": "Linux-6.1.155-x86_64-with-glibc2.43"
+      }
+    },
+    "T3": {
+      "pass": true,
+      "postgres_ready_s": 0.0,
+      "mailpit_ready_s": 0.5,
+      "started_in_s": 0.6
+    },
+    "T4": {
+      "pass": true,
+      "tables": [
+        "alembic_version",
+        "item",
+        "user"
+      ],
+      "alembic_current": [
+        "fe56fa70289e"
+      ],
+      "alembic_heads": [
+        "fe56fa70289e"
+      ],
+      "users": [
+        "admin@example.com|t"
+      ]
+    },
+    "T5": {
+      "pass": true,
+      "exit": 0,
+      "tail": [
+        "+ ty check app",
+        "+ ruff check app",
+        "+ ruff format app --check"
+      ]
+    },
+    "T6": {
+      "pass": true,
+      "exit": 0,
+      "counts": {
+        "passed": 58,
+        "failed": 0,
+        "errors": 0,
+        "skipped": 0
+      },
+      "coverage": 92.0
+    },
+    "T7": {
+      "pass": true,
+      "bun_ci": 0,
+      "generate_client": 0,
+      "client_changes": [],
+      "build": 0,
+      "index_html": true,
+      "all_changes": [
+        " M .env"
+      ]
+    },
+    "T8": {
+      "pass": true,
+      "ready_s": 1.5,
+      "root_status": 200,
+      "root_has_app": true,
+      "me": "admin@example.com"
+    },
+    "T9": {
+      "pass": true,
+      "exit": 0,
+      "counts": {
+        "passed": 62,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "reset_password_tests": 6,
+      "seconds": 52.3
+    },
+    "T11": {
+      "pass": true,
+      "repeats": 60,
+      "as_is": {
+        "passed": 360,
+        "failed": 1,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      },
+      "patched": {
+        "passed": 361,
+        "failed": 0,
+        "flaky": 0,
+        "skipped": 0,
+        "did_not_run": 0
+      }
+    },
+    "T10": {
+      "pass": true,
+      "rss_mb": {
+        "postgres": 154.6,
+        "mailpit": 33.5,
+        "backend": 170.6
+      },
+      "step_seconds": {
+        "clone_init": 0.0,
+        "clone_fetch": 0.5,
+        "clone_checkout": 0.0,
+        "initdb": 0.5,
+        "pg_start": 0.1,
+        "createdb": 0.0,
+        "uv_sync": 0.4,
+        "prestart_1": 2.7,
+        "alembic_current": 0.7,
+        "alembic_heads": 0.5,
+        "prestart_2": 1.2,
+        "lint": 9.3,
+        "tests": 11.7,
+        "bun_ci": 0.6,
+        "generate_client": 2.1,
+        "build": 7.6,
+        "dropdb": 0.0,
+        "createdb_2": 0.1,
+        "prestart_3": 1.4,
+        "playwright_install": 0.5,
+        "playwright": 52.3,
+        "race_as_is": 233.0,
+        "race_patched": 231.9
+      }
+    }
+  },
+  "steps": {
+    "clone_init": {
+      "exit": 0,
+      "seconds": 0.0
+    },
+    "clone_fetch": {
+      "exit": 0,
+      "seconds": 0.5
+    },
+    "clone_checkout": {
+      "exit": 0,
+      "seconds": 0.0
+    },
+    "initdb": {
+      "exit": 0,
+      "seconds": 0.5
+    },
+    "pg_start": {
+      "exit": 0,
+      "seconds": 0.1
+    },
+    "createdb": {
+      "exit": 0,
+      "seconds": 0.0
+    },
+    "uv_sync": {
+      "exit": 0,
+      "seconds": 0.4
+    },
+    "prestart_1": {
+      "exit": 0,
+      "seconds": 2.7
+    },
+    "alembic_current": {
+      "exit": 0,
+      "seconds": 0.7
+    },
+    "alembic_heads": {
+      "exit": 0,
+      "seconds": 0.5
+    },
+    "prestart_2": {
+      "exit": 0,
+      "seconds": 1.2
+    },
+    "lint": {
+      "exit": 0,
+      "seconds": 9.3
+    },
+    "tests": {
+      "exit": 0,
+      "seconds": 11.7
+    },
+    "bun_ci": {
+      "exit": 0,
+      "seconds": 0.6
+    },
+    "generate_client": {
+      "exit": 0,
+      "seconds": 2.1
+    },
+    "build": {
+      "exit": 0,
+      "seconds": 7.6
+    },
+    "dropdb": {
+      "exit": 0,
+      "seconds": 0.0
+    },
+    "createdb_2": {
+      "exit": 0,
+      "seconds": 0.1
+    },
+    "prestart_3": {
+      "exit": 0,
+      "seconds": 1.4
+    },
+    "playwright_install": {
+      "exit": 0,
+      "seconds": 0.5
+    },
+    "playwright": {
+      "exit": 0,
+      "seconds": 52.3
+    },
+    "race_as_is": {
+      "exit": 1,
+      "seconds": 233.0
+    },
+    "race_patched": {
+      "exit": 0,
+      "seconds": 231.9
+    }
+  },
+  "fresh_database_for_e2e": {
+    "users_left_by_tests": [
+      "0"
+    ],
+    "prestart_exit": 0,
+    "users": [
+      "admin@example.com"
+    ]
+  },
+  "total_seconds": 561.7
+}
