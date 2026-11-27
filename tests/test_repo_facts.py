@@ -72,9 +72,9 @@ def test_summary_pins_current_repo_figures():
         "docs/scenario-spec.md",
         "docs/matching-showcase.md",
     }
-    assert data["decisions"]["count"] == 16
+    assert data["decisions"]["count"] == 17
     assert data["decisions"]["ids"][0] == "D1"
-    assert data["decisions"]["ids"][-1] == "D16"
+    assert data["decisions"]["ids"][-1] == "D17"
     assert "D7" in data["decisions"]["superseded"]
 
     assert data["spikes"]["count"] == 8
@@ -152,13 +152,13 @@ def test_check_fails_when_agents_decision_range_drifts(tmp_path: Path):
     repo = _copy_minimal_repo(tmp_path)
     agents_path = repo / "AGENTS.md"
     text = agents_path.read_text(encoding="utf-8")
-    broken = text.replace("D1 to D16", "D1 to D15", 1)
+    broken = text.replace("D1 to D17", "D1 to D16", 1)
     assert broken != text
     agents_path.write_text(broken, encoding="utf-8")
 
     res = _run_facts(repo, "check")
     assert res.returncode != 0
-    assert "D16" in (res.stdout + res.stderr)
+    assert "D17" in (res.stdout + res.stderr)
 
 
 def test_check_fails_when_spike_dir_missing_writeup(tmp_path: Path):

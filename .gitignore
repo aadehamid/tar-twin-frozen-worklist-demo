@@ -18,3 +18,7 @@ postgres-data/
 .DS_Store
 .idea/
 .vscode/
+
+# Shared agent memory (scripts/memory.sh, docs/decisions.md D17). Git ignores it; Dropbox syncs it.
+.relate-memory/
+.relate-memory.*

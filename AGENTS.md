@@ -14,6 +14,7 @@ This repository holds the 3.1 Frozen Work List turnaround digital twin demo (syn
 3. Check for open pull requests (`gh pr list --state open`) and finish watching them before starting unrelated work.
 4. Confirm available cross-model reviewers before the first push. The author model and reviewer model must differ ([CONTRIBUTING.md](CONTRIBUTING.md)).
 5. Confirm you are on a feature branch off current `main`. Commit directly to branches and merge through reviewed PRs.
+6. Read shared project memory with `scripts/memory.sh brief`. Before you finish, save decisions, corrections and findings. Read [.agents/skills/project-memory/SKILL.md](.agents/skills/project-memory/SKILL.md) before your first save ([docs/decisions.md](docs/decisions.md) D17).
 
 ## Project boundaries
 
@@ -33,7 +34,7 @@ Load only the document matching the current task:
 - **Deterministic vs AI matching split, difficulty classes, evaluation fixtures:** [docs/matching-showcase.md](docs/matching-showcase.md)
 - **Planning mode roles, exercise clock, injects, debrief:** [docs/interactive-planning.md](docs/interactive-planning.md)
 - **exe.dev VM hosting, auth headers, 4 GB memory budget:** [docs/hosting.md](docs/hosting.md)
-- **Recorded architecture choices (D1 to D16):** [docs/decisions.md](docs/decisions.md)
+- **Recorded architecture choices (D1 to D17):** [docs/decisions.md](docs/decisions.md)
 - **Shared facts and cross-line repo search (`summary`, `check`, `find`):** [scripts/repo_facts.py](scripts/repo_facts.py)
 - **Phase 0 spike results and rerun commands:** [docs/spikes/](docs/spikes/)
 - **PR body checklist:** [.github/pull_request_template.md](.github/pull_request_template.md)
