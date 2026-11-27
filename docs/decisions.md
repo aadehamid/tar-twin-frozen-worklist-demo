@@ -65,6 +65,7 @@ Superseded by D16 on 26 November 2026. Kept for the record.
 
 - **Decision.** Check data with Pydantic and SHACL (through n10s), calculations with Hypothesis property tests, and the sync, review and freeze workflow with a Quint spec checked by Apalache or TLC. Bend 2 is an optional spike for proving the cost rules.
 - **Why.** Each tool fits one kind of mistake. SHACL catches bad plant and scope data, property tests catch bad maths, and model checking catches workflow states nobody thought to test. Quint reads more like code than TLA+ and still compiles to TLA+. Bend 2 is promising but young, and it can't run inside the Python services yet.
+- **Status.** The SHACL half passed its phase 0 spike on 2026-11-27 ([spike](spikes/shacl-n10s.md)). n10s found the same violations as pySHACL on 18 mutants and at 5,040 nodes, and its trigger refused every bad write. Two things change. The guard lets writes through if the shapes node is missing, so the loader checks the shapes are there before each sync. The trigger checks each transaction on its own, so each sync is one transaction. Rules that walk paths or do arithmetic run as Cypher or Python checks in the loader.
 - **Revisit if.** Bend 2 gains a Python target and a stable checker, or the client wants TLA+ itself, which Quint can produce.
 
 ## D11. Validation first, and cross-model PR review
