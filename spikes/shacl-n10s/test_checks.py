@@ -200,16 +200,27 @@ def test_merge_bounds_folds_only_shapes_with_both_bounds():
         ("d", "IsolationEnvelope", "MinCountConstraintComponent", "CONTAINS")}
 
 
-def test_guard_ready_needs_shapes_rows_and_an_active_trigger():
-    want = {("Equipment", "tag", "pattern")}
-    on = [{"name": "shacl", "installed": True, "paused": False}]
-    assert lib.guard_ready(1, want, want, on)
-    assert not lib.guard_ready(0, want, want, on)
-    assert not lib.guard_ready(2, want, want, on)
-    assert not lib.guard_ready(1, set(), want, on)
-    assert not lib.guard_ready(1, want, want, [{"name": "shacl", "installed": True, "paused": True}])
-    assert not lib.guard_ready(1, want, want, [{"name": "other", "paused": False}])
-    assert not lib.guard_ready(1, want, want, [])
+def test_guard_ready_needs_pinned_shapes_and_the_exact_trigger():
+    q = "CALL n10s.validation.shacl.validateTransaction(...)"
+    listed = [{"target": "ScopeItem", "propertyOrRelationshipPath": "ript",
+               "param": "maxInclusive", "value": 25}]
+    pinned = lib.shape_rows(listed)
+    on = {"name": "shacl", "query": q, "selector": {"phase": "before"},
+          "installed": True, "paused": False}
+    assert lib.guard_ready(1, pinned, pinned, [on], q)
+    assert not lib.guard_ready(0, pinned, pinned, [on], q)
+    assert not lib.guard_ready(2, pinned, pinned, [on], q)
+    assert not lib.guard_ready(1, set(), pinned, [on], q)
+    wrong_bound = lib.shape_rows([dict(listed[0], value=30)])
+    assert not lib.guard_ready(1, wrong_bound, pinned, [on], q)
+    assert not lib.guard_ready(1, pinned, pinned, [dict(on, paused=True)], q)
+    assert not lib.guard_ready(1, pinned, pinned, [dict(on, query="RETURN 1")], q)
+    assert not lib.guard_ready(1, pinned, pinned, [dict(on, selector={"phase": "after"})], q)
+    assert not lib.guard_ready(1, pinned, pinned, [{k: x for k, x in on.items() if k != "paused"}], q)
+    assert not lib.guard_ready(1, pinned, pinned, [{k: x for k, x in on.items() if k != "installed"}], q)
+    assert not lib.guard_ready(1, pinned, pinned, [on, on], q)
+    assert not lib.guard_ready(1, pinned, pinned, [dict(on, name="other")], q)
+    assert not lib.guard_ready(1, pinned, pinned, [], q)
 
 def test_strip_pad_suffix_keeps_keys_and_fixes_patterns():
     g = {"nodes": [{"key": "E_201A-P007", "label": "Equipment", "props": {"tag": "E-201A-P007"}},

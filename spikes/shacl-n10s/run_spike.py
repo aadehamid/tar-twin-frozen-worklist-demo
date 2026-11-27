@@ -216,6 +216,26 @@ def expected_shape_rows():
     return out
 
 
+SCALAR_PARAMS = ("minCount", "maxCount", "minInclusive", "maxInclusive", "pattern")
+
+
+def expected_shape_values():
+    """(target, path, param) to value for the scalar constraints in shapes.ttl, read with
+    rdflib, so N4 can check the values n10s lists and not only the keys."""
+    import rdflib
+    g = rdflib.Graph().parse(data=SHAPES, format="turtle")
+    sh = rdflib.Namespace(lib.SH)
+    out = {}
+    for ns, ps in g.subject_objects(sh.property):
+        target = lib._local(g.value(ns, sh.targetClass))
+        path = lib._local(g.value(ps, sh.path))
+        for p, o in g.predicate_objects(ps):
+            name = lib._local(p)
+            if name in SCALAR_PARAMS:
+                out[(target, path, name)] = o.toPython()
+    return out
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--keep", action="store_true")
@@ -347,7 +367,14 @@ def _run_all(work, dexpi_python):
         listed = [r.data() for r in s.run("CALL n10s.validation.shacl.listShapes()")]
     got_rows = {(r["target"], r["propertyOrRelationshipPath"], r["param"]) for r in listed}
     want_rows = expected_shape_rows()
-    check("N4", got_rows == want_rows and len(loaded) == len(listed), rows=len(listed),
+    want_values = expected_shape_values()
+    got_values = {(r["target"], r["propertyOrRelationshipPath"], r["param"]): r["value"]
+                  for r in listed if r["param"] in SCALAR_PARAMS}
+    value_diff = sorted(str(k) for k in set(want_values) | set(got_values)
+                        if want_values.get(k) != got_values.get(k))
+    PINNED["rows"] = lib.shape_rows(listed)
+    check("N4", got_rows == want_rows and len(loaded) == len(listed) and not value_diff,
+          rows=len(listed), scalar_values_checked=len(want_values), value_diff=value_diff,
           missing=sorted(want_rows - got_rows), unexpected=sorted(got_rows - want_rows),
           listed=listed)
 
@@ -459,7 +486,7 @@ def _run_all(work, dexpi_python):
                     "unchanged": read_graph(s) == restored_before}
     check("N7", all(v["rejected"] and v["unchanged"] for v in guard.values())
           and good_err is None and committed == ["E-201A"]
-          and open_committed and open_err is None
+          and open_committed and open_err is None and drop_err is None and shapes_left == 0
           and ready == {"installed": True, "trigger_paused": False, "shapes_missing": False,
                         "restored": True}
           and restored["rejected"] and restored["unchanged"],
@@ -527,15 +554,17 @@ def _run_all(work, dexpi_python):
     driver.close()
 
 
+PINNED = {}  # listShapes() rows, values included, taken once N4 has checked them
+
+
 def guard_state(session):
     """What the loader checks before it writes (lib.guard_ready), read from the database."""
     cfg = session.run(f"MATCH (c:{CONFIG}) RETURN count(c) AS c").single()["c"]
     listed = set()
     if cfg:
-        listed = {(r["target"], r["propertyOrRelationshipPath"], r["param"])
-                  for r in session.run("CALL n10s.validation.shacl.listShapes()")}
+        listed = lib.shape_rows(r.data() for r in session.run("CALL n10s.validation.shacl.listShapes()"))
     triggers = [r.data() for r in session.run("CALL apoc.trigger.list()")]
-    return lib.guard_ready(cfg, listed, expected_shape_rows(), triggers)
+    return lib.guard_ready(cfg, listed, PINNED["rows"], triggers, TRIGGER)
 
 
 def shacl_rejected(err):

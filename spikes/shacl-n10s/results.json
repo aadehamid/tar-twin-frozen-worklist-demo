@@ -21,7 +21,7 @@
     },
     "N2": {
       "pass": true,
-      "ready_s": 9.3,
+      "ready_s": 9.8,
       "missing": []
     },
     "N3": {
@@ -58,138 +58,32 @@
     "N4": {
       "pass": true,
       "rows": 44,
+      "scalar_values_checked": 22,
+      "value_diff": [],
       "missing": [],
       "unexpected": [],
       "listed": [
         {
-          "target": "Retube",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "Retube",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "class",
-          "value": "Exchanger"
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "exercise_id",
-          "param": "maxCount",
-          "value": 1
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "exercise_id",
-          "param": "minCount",
-          "value": 1
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "ript",
-          "param": "maxCount",
-          "value": 1
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "ript",
-          "param": "minCount",
-          "value": 1
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "ript",
-          "param": "minInclusive",
-          "value": 1
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "ript",
-          "param": "maxInclusive",
-          "value": 25
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "class",
-          "value": "Equipment"
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "maxCount",
-          "value": 1
-        },
-        {
-          "target": "BundlePull",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "BundlePull",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "class",
-          "value": "Exchanger"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "CONTAINS",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "CONTAINS",
-          "param": "class",
-          "value": "Equipment"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "CONTAINS",
-          "param": "minCount",
-          "value": 1
-        },
-        {
-          "target": "CatalystChangeout",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "CatalystChangeout",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "class",
-          "value": "Reactor"
-        },
-        {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "request_id",
+          "target": "Valve",
+          "propertyOrRelationshipPath": "tag",
           "param": "datatype",
           "value": "string"
         },
         {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "request_id",
+          "target": "Valve",
+          "propertyOrRelationshipPath": "tag",
           "param": "pattern",
-          "value": "^WR-200-[0-9]{4}$"
+          "value": "^(HV|XV|FV|LV|PV|PSV)-2[0-9]{3}$"
         },
         {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "request_id",
+          "target": "Valve",
+          "propertyOrRelationshipPath": "tag",
           "param": "maxCount",
           "value": 1
         },
         {
-          "target": "ScopeItem",
-          "propertyOrRelationshipPath": "request_id",
+          "target": "Valve",
+          "propertyOrRelationshipPath": "tag",
           "param": "minCount",
           "value": 1
         },
@@ -218,6 +112,72 @@
           "value": 1
         },
         {
+          "target": "CatalystChangeout",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "CatalystChangeout",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "class",
+          "value": "Reactor"
+        },
+        {
+          "target": "Retube",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "Retube",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "class",
+          "value": "Exchanger"
+        },
+        {
+          "target": "HeaterDecoke",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "HeaterDecoke",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "class",
+          "value": "FiredHeater"
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "BOUNDED_BY",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "BOUNDED_BY",
+          "param": "class",
+          "value": "Valve"
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "BOUNDED_BY",
+          "param": "minCount",
+          "value": 1
+        },
+        {
+          "target": "Equipment",
+          "propertyOrRelationshipPath": "HAS_NOZZLE",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "Equipment",
+          "propertyOrRelationshipPath": "HAS_NOZZLE",
+          "param": "class",
+          "value": "Nozzle"
+        },
+        {
           "target": "Equipment",
           "propertyOrRelationshipPath": "tag",
           "param": "datatype",
@@ -242,26 +202,86 @@
           "value": 1
         },
         {
-          "target": "Valve",
-          "propertyOrRelationshipPath": "tag",
-          "param": "datatype",
-          "value": "string"
+          "target": "BundlePull",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "NodeKind",
+          "value": "IRI"
         },
         {
-          "target": "Valve",
-          "propertyOrRelationshipPath": "tag",
-          "param": "pattern",
-          "value": "^(HV|XV|FV|LV|PV|PSV)-2[0-9]{3}$"
+          "target": "BundlePull",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "class",
+          "value": "Exchanger"
         },
         {
-          "target": "Valve",
-          "propertyOrRelationshipPath": "tag",
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
+          "param": "class",
+          "value": "Equipment"
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "RESOLVES_TO",
           "param": "maxCount",
           "value": 1
         },
         {
-          "target": "Valve",
-          "propertyOrRelationshipPath": "tag",
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "exercise_id",
+          "param": "maxCount",
+          "value": 1
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "exercise_id",
+          "param": "minCount",
+          "value": 1
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "request_id",
+          "param": "datatype",
+          "value": "string"
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "request_id",
+          "param": "pattern",
+          "value": "^WR-200-[0-9]{4}$"
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "request_id",
+          "param": "maxCount",
+          "value": 1
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "request_id",
+          "param": "minCount",
+          "value": 1
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "CONTAINS",
+          "param": "NodeKind",
+          "value": "IRI"
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "CONTAINS",
+          "param": "class",
+          "value": "Equipment"
+        },
+        {
+          "target": "IsolationEnvelope",
+          "propertyOrRelationshipPath": "CONTAINS",
           "param": "minCount",
           "value": 1
         },
@@ -289,46 +309,28 @@
           "value": 1
         },
         {
-          "target": "HeaterDecoke",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "NodeKind",
-          "value": "IRI"
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "ript",
+          "param": "maxCount",
+          "value": 1
         },
         {
-          "target": "HeaterDecoke",
-          "propertyOrRelationshipPath": "RESOLVES_TO",
-          "param": "class",
-          "value": "FiredHeater"
-        },
-        {
-          "target": "Equipment",
-          "propertyOrRelationshipPath": "HAS_NOZZLE",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "Equipment",
-          "propertyOrRelationshipPath": "HAS_NOZZLE",
-          "param": "class",
-          "value": "Nozzle"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "BOUNDED_BY",
-          "param": "NodeKind",
-          "value": "IRI"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "BOUNDED_BY",
-          "param": "class",
-          "value": "Valve"
-        },
-        {
-          "target": "IsolationEnvelope",
-          "propertyOrRelationshipPath": "BOUNDED_BY",
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "ript",
           "param": "minCount",
           "value": 1
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "ript",
+          "param": "minInclusive",
+          "value": 1
+        },
+        {
+          "target": "ScopeItem",
+          "propertyOrRelationshipPath": "ript",
+          "param": "maxInclusive",
+          "value": 25
         }
       ]
     },
@@ -952,7 +954,7 @@
         "rejected": true,
         "unchanged": true
       },
-      "trigger_ready_s": 1.0,
+      "trigger_ready_s": 0.5,
       "rejected": 18,
       "unchanged": 18,
       "mutants": {
@@ -1070,17 +1072,17 @@
       "raw_violations_pyshacl": 1872,
       "raw_agree": true,
       "valid_violations": 0,
-      "validate_s": 2.06,
-      "load_s_without_trigger": 0.87,
-      "load_s_with_trigger_one_tx": 2.84,
+      "validate_s": 1.74,
+      "load_s_without_trigger": 0.83,
+      "load_s_with_trigger_one_tx": 2.82,
       "guarded_load_error": null,
       "batched_autocommit_load_error": "Neo.ClientError.Transaction.TransactionHookFailed",
-      "neo4j_rss_mb": 1459.3
+      "neo4j_rss_mb": 1454.4
     }
   },
   "steps": {
-    "export_pad0": 2.6,
+    "export_pad0": 2.5,
     "export_pad104": 2.5
   },
-  "total_seconds": 75.0
+  "total_seconds": 74.6
 }

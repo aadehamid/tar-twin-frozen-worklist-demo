@@ -182,12 +182,22 @@ def merge_bounds(violations, both):
     return out
 
 
-def guard_ready(config_nodes, listed_rows, want_rows, triggers):
-    """True only if the loader may write: exactly one n10s shapes node, the loaded shapes are
-    the expected (target, path, param) set, and the shacl trigger is installed and not paused."""
-    return (config_nodes == 1 and set(listed_rows) == set(want_rows)
-            and any(t.get("name") == "shacl" and t.get("installed", True) and not t.get("paused")
-                    for t in triggers))
+def shape_rows(listed):
+    """listShapes() rows as a comparable set, values included, so a changed bound shows up."""
+    return {(r["target"], r["propertyOrRelationshipPath"], r["param"],
+             json.dumps(r["value"], sort_keys=True, default=str)) for r in listed}
+
+
+def guard_ready(config_nodes, listed_rows, pinned_rows, triggers, trigger_query):
+    """True only if the loader may write: exactly one n10s shapes node, the loaded shapes equal
+    the pinned set (values included), and exactly one trigger named shacl whose query is the
+    expected validator call, in the before phase, explicitly installed and not paused."""
+    shacl = [t for t in triggers if t.get("name") == "shacl"]
+    if config_nodes != 1 or set(listed_rows) != set(pinned_rows) or len(shacl) != 1:
+        return False
+    t = shacl[0]
+    return (t.get("query") == trigger_query and (t.get("selector") or {}).get("phase") == "before"
+            and t.get("installed") is True and t.get("paused") is False)
 
 def strip_pad_suffix(graph):
     """A copy of a padded graph with the -P001 style suffix taken off `tag` and `request_id`, so
