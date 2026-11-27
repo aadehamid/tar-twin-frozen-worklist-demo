@@ -136,8 +136,8 @@ DEXPI describes process connectivity, not where equipment sits on the plot. A se
 1. **Exact.** A tag pattern in the equipment text or description that matches a CMMS tag.
 2. **Rules.** Known aliases and patterns, for example "feed/eff exch A" to `E-201A`, or "charge pump south" to `P-201B`, from a small alias table.
 3. **Fuzzy.** rapidfuzz scoring against tag descriptions within the work request's area, if one is given.
-4. **AI.** Anything left below the confidence threshold goes to the AI matcher (section 6).
-5. **Review.** The compatibility check (work type against equipment class) runs first. Exact matches, and rule matches above the auto-accept threshold, that pass it are accepted by the system and say so in the trace. Every other match, and every AI proposal however confident, lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
+4. **AI.** Anything left below the confidence threshold goes to the AI matcher (section 6). Code gathers the candidates and their DEXPI facts first, and code checks the AI's answer afterwards. The split, and how the demo shows it, is in [matching-showcase.md](matching-showcase.md).
+5. **Review.** A tag is eligible as a candidate only if it is active, in Unit 200 (a unit prefix in the text counts) and passes the compatibility check (work type against equipment class). An ineligible tag gets a `Finding` in the trace and is left out of the candidates. Code accepts a match on its own only when the text yields exactly one eligible tag and, for an alias, the rule scores above the auto-accept threshold. The trace says so. Eligible tags that miss this stay candidates. Every other match, and every AI proposal however confident, lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
 6. **Match rate.** The share of active scope items with an accepted match, reported per site, per area and per source group. The gate threshold (default 95 percent) is a setting.
 
 ### 5.4 Mapping trace
@@ -178,7 +178,7 @@ The trace is stored on the `RESOLVES_TO` relationship and its `MatchProposal`, s
 
 - **Model.** `thinkingmachines/inkling-2-mini` through OpenRouter by default. Inkling 2 Mini is an open-weight model released under Apache 2.0 on 20 November 2026, with 26.4B total and 3.4B active parameters. It runs in about 20 GB, so a local fallback through Ollama is practical. Any OpenRouter model can replace it through `LLM_MODEL`.
 - **Input.** The work request text, the area if known, and up to 20 candidate tags from the fuzzy step, each with its class, description, area and DEXPI neighbours (for example "downstream of R-201, upstream of A-201").
-- **Output.** Structured JSON: chosen tag or none, confidence 0 to 1, a one-sentence reason, and the evidence fields it relied on. The schema is enforced. Output that fails validation counts as "no proposal".
+- **Output.** Structured JSON: chosen tag or none, confidence 0 to 1, a one-sentence reason, and the IDs of the facts it relied on. "None" with a valid schema is an abstention and creates no proposal. For a picked tag, code checks the schema, that the tag is a candidate, that every cited fact ID was in the input, that at least one cited fact belongs to the picked tag, and the compatibility rule. A pick that fails any check counts as "no proposal".
 - **Guardrails.** The model can only choose from the candidate list. It never creates tags. Every proposal goes to the review queue, however confident. Prompts are versioned, and each proposal records model, prompt version and latency.
 - **Offline mode.** With no API key the matcher skips the AI step and more items go to review. The demo still runs.
 
@@ -201,6 +201,7 @@ Built to look like an enterprise system of record, plain and dense, so it reads 
 - **Graph panel.** Relate in the browser, Cytoscape.js drawing and the Cypher text.
 - **Mapping trace.** Pick any IMPACT Web request and see each step from raw text to equipment (section 5.4). The plot plan, P&ID and graph panel highlight the result together. A side-by-side mode shows the IMPACT Web record on the left and the twin equipment on the right.
 - **Match review.** The queue with method, confidence, AI reason and evidence, plus accept, reject and pick-another actions. Match rate by area and source group.
+- **Matching lab.** Steps through one request showing what code did and what the AI did, in different colours, and compares code only, code then AI, and AI on everything against the answer key. See [matching-showcase.md](matching-showcase.md).
 - **Clusters and cut line.** Cluster list with shared hours and cost counted once, the budget slider and the above and below totals.
 - **Baseline and KPIs.** Scope growth after freeze in man-hours, tag match rate per site, and hours bundled or removed at the challenge. A value panel uses the brief's default assumptions, labeled unvalidated.
 

@@ -40,6 +40,8 @@ Starting rule set, to be reviewed and extended in phase 1:
   - Every frozen item ends in one of four outcomes: matched (exactly one accepted equipment match), unresolved, unit general, or incompatible.
   - Every accepted AI match has a named reviewer.
 
+The checks on the matcher itself, deterministic and AI, are in [matching-showcase.md](matching-showcase.md) section 5.
+
 ## 3. Properties (Hypothesis)
 
 The calculations get property tests that run on thousands of generated inputs:
