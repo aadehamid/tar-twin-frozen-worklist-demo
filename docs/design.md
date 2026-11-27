@@ -1,0 +1,222 @@
+# Design: frozen work list demo
+
+Version 0.1, for review. Nothing in this document has been built yet.
+
+## 1. Purpose
+
+The demo shows a client audience what the 3.1 Frozen Work List MVP would look like in use. It has to be convincing to turnaround planners and to architects. Planners need to recognise their own work: the work list, the scope challenge, the freeze, late adds. Architects need to see that the parts are real: a system of record, a separate twin, a one-way sync, a graph built from a standard P&ID format, and AI that proposes rather than decides.
+
+The demo also has to grow. 4.1 (Work Instructions & Job Packages) and 4.2 (Finalized Execution Plan) should be able to attach to the same graph later without a rewrite.
+
+What the demo does not try to prove is whether the client's real data will match well enough. That is what the match-rate gate (31-n5) tests at the pilot site.
+
+## 2. Scope
+
+### In release one of the demo
+
+| MVP item | Requirement IDs | What the demo does |
+|---|---|---|
+| Tag registry and match rate | 31-d1, 31-n5 | Resolves free-text equipment references to tags, scores each match, reports match rate per site and per area, and sends weak matches to a review queue |
+| IMPACT Web read | 31-d3 | Reads work requests through the IMPACT Web API on a schedule. No writes back |
+| Scope on the model, shared-cost clusters | 31-f1, 31-f2 | Places jobs on a 2D plot plan and groups jobs that share scaffold, isolation or access |
+| Cut line by location | 31-f5 | Ranks scope against a budget target and shows above and below the line on the plant |
+| Frozen baseline and change log | 31-n1 | Snapshots the list at freeze, logs each later add or delete with hours, reason and source group, and tracks scope growth |
+
+### Out of release one
+
+- Set-level what-if (31-f3), which waits for standardized Phase 3 estimates (31-d8).
+- Remote estimating (31-f6), which waits for craft-level actual hours (31-n6).
+- Any write-back to IMPACT Web.
+- 3D. The demo is 2D. The plot-plan layer is built so a 3D view can read it later.
+
+The demo can show one "wave 2" screen that previews 31-f3 with fixed data, clearly labeled as a preview.
+
+## 3. Architecture
+
+### 3.1 Components
+
+| Component | Role | Stack | Stands in for |
+|---|---|---|---|
+| IMPACT Web API | System of record for scope: turnaround events, work requests, estimates, RIPT scores, review decisions, freeze | FastAPI, SQLModel, PostgreSQL | IMPACT Web |
+| IMPACT Web UI | Where planners and source groups raise, edit, challenge and freeze work requests | React, TypeScript, Vite, Tailwind, shadcn/ui, TanStack Router and Query | IMPACT Web screens |
+| CMMS / TLM module | Equipment master: tag, description, class, functional location, area, status | Module inside the IMPACT Web service with its own schema and API prefix | Maximo or JDE, plus TLM |
+| Twin API | Plant graph, scope mirror, matching, envelopes, clusters, cut line, baseline, KPIs | FastAPI, Neo4j Python driver, pyDEXPI | The twin platform |
+| Twin UI | Plot plan, P&ID viewer, graph panel, match review, cut line, baseline and KPIs | React, same front-end stack, SVG and d3-zoom for the plot plan, Cytoscape.js for graph drawing, Relate WASM for the in-browser graph | The twin front end |
+| Ingest jobs | DEXPI to Neo4j load, IMPACT Web and CMMS sync, browser graph export | Python, run by the twin service's scheduler or by CLI | Databricks jobs |
+| AI matcher | Proposes tags for hard matches with a reason and cited evidence | OpenAI-compatible client, OpenRouter by default | A client-approved LLM endpoint |
+
+### 3.2 Why two services
+
+The twin can only reach IMPACT Web through its public API, the same way it would reach a real export or integration. That keeps the code-freeze constraint and the read-only rule honest: there is no shared database and no back door. Each mock sits behind a client interface in the twin (`ImpactWebClient`, `CmmsClient`), so a real connector can replace it without touching twin logic.
+
+### 3.3 Deployment
+
+- `compose.yml` runs Postgres, Neo4j, the IMPACT Web service and the twin service. Each service serves its built front end, following the template.
+- Two front ends on two ports, for example `:8001` for IMPACT Web and `:8002` for the twin, so the audience sees two separate systems.
+- Neo4j Browser stays available on `:7474` for architects who want to query the twin directly.
+- Development without Docker is also supported: a local Postgres, a local Neo4j and `uv run` for each service.
+
+## 4. Data model
+
+### 4.1 IMPACT Web (Postgres)
+
+Kept close to how a turnaround work list is managed, and deliberately limited where the real system is limited.
+
+- `turnaround_event`: id, site, unit, name, planned start, duration days, freeze date, budget target.
+- `work_request`: id (for example `WR-200-0147`), event id, title, description (free text), equipment text (free text, no tag lookup), driver (inspection, reliability, regulatory, capital, operations), source group, RIPT score, estimate hours by craft, estimate cost, status (candidate, accepted, rejected, deferred, frozen, added after freeze, deleted after freeze), decision reason, submitted at, updated at.
+- `review_decision`: request id, stage (fit to frame, challenge, DRB), decision, reason, decided by, decided at.
+- `freeze`: event id, frozen at, frozen by, list version.
+- `user` and auth from the template, with roles for planner, source group, TA manager and viewer.
+
+The equipment field stays free text on purpose. It mirrors the IMPACT Web code freeze that the workshop described, which is the reason the twin needs a tag registry at all.
+
+### 4.2 CMMS / TLM (Postgres, separate schema)
+
+- `equipment`: tag (for example `E-201A`), description, class (exchanger, vessel, column, heater, reactor, pump, compressor, air cooler, PSV, valve, instrument), functional location, area, parent tag, status.
+- `functional_location`: code, description, parent.
+
+### 4.3 Twin graph (Neo4j)
+
+Plant, from DEXPI:
+
+- `(:Equipment {tag, dexpi_id, class, description})`
+- `(:Nozzle {id})`, `(:PipingSegment {line_number, spec, size})`, `(:Valve {tag, type, role})` where role is block, control, check or relief
+- `(:Instrument {tag, type})`
+- `(:PidSheet {number, title, svg_path})`
+- `(:Area {code, name})`, `(:PlotPosition {x, y, elevation, footprint})`
+- Relationships: `HAS_NOZZLE`, `CONNECTED_TO` (directed, following the DEXPI connectivity), `ON_SHEET`, `LOCATED_IN`, `POSITIONED_AT`, `PART_OF`
+
+Derived plant structure:
+
+- `(:IsolationEnvelope {id, boundary_valve_count, blind_estimate})` with `CONTAINS` to equipment and `BOUNDED_BY` to block valves. Computed by walking `CONNECTED_TO` from each piece of equipment until every path ends at a block valve, a blind point or a boundary.
+
+Scope and decisions:
+
+- `(:ScopeItem {request_id, title, driver, ripT, hours, cost, status})`, mirrored from IMPACT Web on each sync
+- `(:ScopeItem)-[:RESOLVES_TO {confidence, method, status, reviewed_by}]->(:Equipment)` where method is exact, rule, fuzzy or ai, and status is proposed, accepted or rejected
+- `(:MatchProposal {model, prompt_version, reason, evidence})` for AI proposals, linked to the scope item and the candidate tags
+- `(:Cluster {id, type, shared_hours, shared_cost})` where type is scaffold, isolation or access, with `INCLUDES` to scope items
+- `(:Baseline {event, frozen_at, version})` with `INCLUDES` to scope items as they stood at freeze
+- `(:ChangeEvent {type, at, hours_delta, reason, source_group})` linked to the scope item and the baseline
+- `(:CutLineRun {budget, at})` with `ABOVE` and `BELOW` to scope items
+
+Reserved for later, with no features in release one:
+
+- 4.1: `(:WorkPackage)-[:FOR]->(:ScopeItem)`, `(:Standard)`, `(:Material)`, `(:Redline)`
+- 4.2: `(:Activity {start, end})-[:EXECUTES]->(:ScopeItem)`, `(:LogisticsObject {type, footprint, active_from, active_to})` for cranes, laydown, scaffold and tanks, `(:Permit)`
+
+### 4.4 Plot plan layer
+
+DEXPI describes process connectivity, not where equipment sits on the plot. A separate file, `data/scenario/plot-plan.json`, gives each major tag an area, x and y position, elevation and footprint. The twin loads it into `PlotPosition` nodes. Shared scaffold and access are computed from it: jobs on equipment within a set distance and at similar elevation in the same area are scaffold candidates.
+
+## 5. Data flows
+
+### 5.1 Plant load
+
+1. `jobs/load_dexpi.py` reads each DEXPI XML sheet in `data/scenario/dexpi/` with pyDEXPI.
+2. It exports the pyDEXPI graph (NetworkX) and writes nodes and relationships to Neo4j with `MERGE` on DEXPI IDs.
+3. It renders each sheet to SVG with pyDEXPI and stores the file path on the `PidSheet` node.
+4. It loads the plot-plan layer and computes isolation envelopes.
+
+### 5.2 Scope sync (read only)
+
+1. The twin scheduler calls `GET /api/v1/work-requests?event_id=…&updated_since=…` on IMPACT Web every minute, and on demand from a "sync now" button.
+2. It upserts `ScopeItem` nodes and records status changes.
+3. Changes after freeze become `ChangeEvent` nodes against the baseline.
+4. The twin never calls a write endpoint on IMPACT Web. The IMPACT Web API gives the twin's service account a read-only role, and a test checks it.
+
+### 5.3 Matching
+
+1. **Exact.** A tag pattern in the equipment text or description that matches a CMMS tag.
+2. **Rules.** Known aliases and patterns, for example "feed/eff exch A" to `E-201A`, or "charge pump south" to `P-201B`, from a small alias table.
+3. **Fuzzy.** rapidfuzz scoring against tag descriptions within the work request's area, if one is given.
+4. **AI.** Anything left below the confidence threshold goes to the AI matcher (section 6).
+5. **Review.** Every match below the auto-accept threshold lands in the review queue. A planner accepts, rejects or picks another tag. The decision is stored on `RESOLVES_TO`.
+6. **Match rate.** The share of active scope items with an accepted match, reported per site, per area and per source group. The gate threshold (default 95 percent) is a setting.
+
+### 5.4 Clusters and the cut line
+
+- **Isolation clusters.** Scope items whose resolved equipment sits in the same isolation envelope. The shared blinding and isolation cost is counted once.
+- **Scaffold clusters.** Scope items whose equipment is close together at similar elevation.
+- **Access clusters.** Scope items in the same congested area that need the same crane or laydown.
+- **Cut line.** Scope is ranked by RIPT score, mandatory drivers first, then by cost per risk point using clustered (not summed) shared costs. The budget target sets the line. The plot plan colours above and below the line.
+
+### 5.5 Freeze and change simulation
+
+- Freeze happens in IMPACT Web. A TA manager freezes the list, and the next sync creates the twin baseline.
+- A simulation job (`jobs/simulate_late_scope.py`) plays a scripted set of late adds and deletes into IMPACT Web through its API, spread over the weeks after freeze, as different source groups would. The twin picks them up through the normal sync. Scope growth in man-hours rises on the KPI panel.
+
+### 5.6 Browser graph export
+
+- `GET /api/v1/graph/export.cypher?event_id=…` on the twin returns a Cypher script for the plant graph and the event's scope.
+- The twin UI loads Relate WASM in a module worker, creates an in-memory store and runs the script.
+- The graph panel then runs Cypher locally. Example: click `WR-200-0147` and the page runs a fixed query that returns the work request, its resolved equipment, the connected piping and block valves, the isolation envelope and the other scope items inside it. The panel shows the query text next to the drawing.
+- The browser copy opens read-only after seeding. Neo4j stays the master.
+
+## 6. AI matcher
+
+- **Model.** `thinkingmachines/inkling-2-mini` through OpenRouter by default. Inkling 2 Mini is an open-weight model released under Apache 2.0 on 20 November 2026, with 26.4B total and 3.4B active parameters. It runs in about 20 GB, so a local fallback through Ollama is practical. Any OpenRouter model can replace it through `LLM_MODEL`.
+- **Input.** The work request text, the area if known, and up to 20 candidate tags from the fuzzy step, each with its class, description, area and DEXPI neighbours (for example "downstream of R-201, upstream of A-201").
+- **Output.** Structured JSON: chosen tag or none, confidence 0 to 1, a one-sentence reason, and the evidence fields it relied on. The schema is enforced. Output that fails validation counts as "no proposal".
+- **Guardrails.** The model can only choose from the candidate list. It never creates tags. Every proposal goes to the review queue, however confident. Prompts are versioned, and each proposal records model, prompt version and latency.
+- **Offline mode.** With no API key the matcher skips the AI step and more items go to review. The demo still runs.
+
+## 7. Front ends
+
+### 7.1 IMPACT Web UI
+
+Built to look like an enterprise system of record, plain and dense, so it reads as a different product from the twin.
+
+- Turnaround event list and event dashboard: counts by status, hours, cost against target, freeze status.
+- Work request list with filters, and a detail and edit form. The equipment field is free text.
+- Review screens for fit to frame, challenge and DRB decisions.
+- Freeze action for the TA manager role.
+- A banner showing that the twin reads this system and never writes to it.
+
+### 7.2 Twin UI
+
+- **Plot plan.** Unit 200 in 2D, with areas, equipment footprints and job markers. Layers for match status, clusters, cut line and changes after freeze.
+- **P&ID viewer.** DEXPI sheets as SVG, with the selected job's equipment and envelope boundary valves highlighted.
+- **Graph panel.** Relate in the browser, Cytoscape.js drawing and the Cypher text.
+- **Match review.** The queue with method, confidence, AI reason and evidence, plus accept, reject and pick-another actions. Match rate by area and source group.
+- **Clusters and cut line.** Cluster list with shared hours and cost counted once, the budget slider and the above and below totals.
+- **Baseline and KPIs.** Scope growth after freeze in man-hours, tag match rate per site, and hours bundled or removed at the challenge. A value panel uses the brief's default assumptions, labeled unvalidated.
+
+## 8. Extending to 4.1 and 4.2
+
+- **4.1.** Work packages attach to `ScopeItem` and `Equipment`. Alpacka-style drafting would read twin context through a twin API, which keeps the Alpacka boundary decision open. A `jobs/` loader would add standards, materials and redlines.
+- **4.2.** Activities from a P6-like schedule attach to `ScopeItem` with time windows. Logistics objects (cranes, laydown, scaffold) are the one place the twin is the system of record, as the brief proposes (42-p5). The plot-plan layer already holds the positions a 4D view needs.
+- **The shared base** is the tag registry, the frozen and tagged list, and the isolation envelopes. 3.1 builds them, and 4.1 and 4.2 consume them, which matches the build order on the proposal's dependency slide.
+
+## 9. Testing
+
+- **Backend.** Pytest for both services, with a Neo4j test container or local instance for the twin.
+- **Contract tests.** Twin to IMPACT Web, including a test that the twin's service account gets a 403 on any write.
+- **Scenario tests.** The seeded Unit 200 data produces the expected match rate before and after review, the expected clusters, and the expected scope growth after the simulation runs.
+- **Front end.** Playwright end-to-end tests that follow the demo script.
+- **CI.** GitHub Actions on each push.
+
+## 10. Build phases
+
+Each phase ends with a check-in before the next starts.
+
+| Phase | Work | Exit check |
+|---|---|---|
+| 0. Spikes | Build and render one DEXPI sheet with pyDEXPI. Seed Relate WASM from a Cypher script and run a traversal in a browser page. Call Inkling 2 Mini on OpenRouter with a structured-output schema. Run the template without Docker | Each spike works or has a named fallback |
+| 1. Scenario data | Generate the Unit 200 DEXPI sheets, plot plan, equipment master and work list from the scenario spec | The data passes the scenario tests' expected counts |
+| 2. IMPACT Web | Service and UI, including review and freeze | A planner can raise, challenge and freeze the list |
+| 3. Twin plant graph | DEXPI load, plot plan, isolation envelopes | Envelopes match the scenario spec |
+| 4. Sync and matching | Read-only sync, matching pipeline, AI matcher, review queue, match rate | Match rate before and after review matches the spec |
+| 5. Twin UI | Plot plan, P&ID viewer, graph panel, clusters, cut line | The demo script runs to the end of the cut-line step |
+| 6. Baseline and KPIs | Freeze baseline, late-scope simulation, KPIs, value panel | Scope growth after freeze matches the spec |
+| 7. Hardening | Compose, CI, Playwright, demo script, README | A fresh clone runs the demo with one command |
+
+## 11. Risks
+
+| Risk | Effect | Mitigation |
+|---|---|---|
+| pyDEXPI cannot render a sheet built in code to SVG, because it lacks drawing data | No P&ID view | Write drawing positions into the generated sheets, or render our own SVG from DEXPI topology |
+| Relate WASM limits, such as no multi-statement transactions and no loading a saved file in the browser | Seeding is slower or larger | Seed from a script in batches. The graph is small (a few thousand nodes) |
+| An LLM proposes a plausible but wrong tag | Loss of trust | Candidate-only choices, every proposal reviewed, evidence shown |
+| The demo looks too clean | Planners don't believe it | Plant the problems the workshop named, at realistic rates (see the scenario spec) |
+| Scope creep into 4.1 or 4.2 | Release one slips | Schema slots only, no features |
