@@ -10,9 +10,10 @@ This repository holds the 3.1 Frozen Work List turnaround digital twin demo (syn
 ## Session start
 
 1. Read [CONTRIBUTING.md](CONTRIBUTING.md) and [docs/decisions.md](docs/decisions.md). Where this repository states a project rule, follow it.
-2. Check for open pull requests (`gh pr list --state open`) and finish watching them before starting unrelated work.
-3. Confirm available cross-model reviewers before the first push. The author model and reviewer model must differ ([CONTRIBUTING.md](CONTRIBUTING.md)).
-4. Confirm you are on a feature branch off current `main`. Commit directly to branches and merge through reviewed PRs.
+2. Wire the pre-push hook on a fresh clone with `git config core.hooksPath scripts/hooks`, and run `scripts/check.sh` to confirm the baseline passes.
+3. Check for open pull requests (`gh pr list --state open`) and finish watching them before starting unrelated work.
+4. Confirm available cross-model reviewers before the first push. The author model and reviewer model must differ ([CONTRIBUTING.md](CONTRIBUTING.md)).
+5. Confirm you are on a feature branch off current `main`. Commit directly to branches and merge through reviewed PRs.
 
 ## Project boundaries
 
