@@ -15,6 +15,11 @@ DECISION_HEADING_RE = re.compile(r"^##\s+(D(\d+))\.\s+(.+?)\s*$")
 SUPERSEDED_RE = re.compile(r"\bSuperseded by D\d+\b")
 TARGET_RE = re.compile(r"\(target:\s*(\d+)\b", re.IGNORECASE)
 AGENTS_DECISION_RANGE_RE = re.compile(r"\bD(\d+)\s+to\s+D(\d+)\b")
+SPIKE_LINK_RE = re.compile(r"\bspikes/([a-z0-9-]+)\.md\b")
+
+EXPECTED_BOUNDARY_VALVES = 112
+EXPECTED_WORK_REQUEST_CATEGORIES = 12
+EXPECTED_DIFFICULTY_CLASSES = 9
 
 
 def _clean_git_env() -> dict[str, str]:
@@ -238,10 +243,16 @@ def check_consistency(repo: Path) -> list[str]:
     spikes = facts["spikes"]
     doc_set = set(spikes["doc_slugs"])
     dir_set = set(spikes["dir_slugs"])
+    decisions_text = (repo_root / "docs" / "decisions.md").read_text(encoding="utf-8")
+    cited_spikes = set(SPIKE_LINK_RE.findall(decisions_text))
     for missing_doc in sorted(dir_set - doc_set):
         errors.append(f"spikes/{missing_doc}: missing write-up docs/spikes/{missing_doc}.md")
     for missing_dir in sorted(doc_set - dir_set):
         errors.append(f"docs/spikes/{missing_dir}.md: missing folder spikes/{missing_dir}/")
+    for missing_cited in sorted(cited_spikes - (doc_set & dir_set)):
+        errors.append(
+            f"docs/decisions.md cites spikes/{missing_cited}.md, which is missing from docs/spikes/ or spikes/"
+        )
 
     scenario = facts["scenario"]
     for label, actual_key, target_key in (
@@ -259,7 +270,23 @@ def check_consistency(repo: Path) -> list[str]:
                 f"docs/scenario-spec.md: {label} table counts {actual}, heading target is {target}"
             )
 
+    if scenario["boundary_valve_total"] != EXPECTED_BOUNDARY_VALVES:
+        errors.append(
+            f"docs/scenario-spec.md: isolation envelope boundary valves sum to "
+            f"{scenario['boundary_valve_total']}, expected {EXPECTED_BOUNDARY_VALVES}"
+        )
+    if scenario["work_request_category_count"] != EXPECTED_WORK_REQUEST_CATEGORIES:
+        errors.append(
+            f"docs/scenario-spec.md: work request mix has "
+            f"{scenario['work_request_category_count']} categories, expected {EXPECTED_WORK_REQUEST_CATEGORIES}"
+        )
+
     matching = facts["matching"]
+    if matching["difficulty_class_count"] != EXPECTED_DIFFICULTY_CLASSES:
+        errors.append(
+            f"docs/matching-showcase.md: difficulty classes table has "
+            f"{matching['difficulty_class_count']} classes, expected {EXPECTED_DIFFICULTY_CLASSES}"
+        )
     if matching["difficulty_class_total"] != scenario["work_request_total"]:
         errors.append(
             "docs/matching-showcase.md: difficulty classes sum to "

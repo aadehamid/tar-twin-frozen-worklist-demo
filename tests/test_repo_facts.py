@@ -169,6 +169,53 @@ def test_check_fails_when_spike_dir_missing_writeup(tmp_path: Path):
     assert "orphan-spike" in (res.stdout + res.stderr)
 
 
+def test_check_fails_when_paired_spike_doc_and_dir_are_deleted(tmp_path: Path):
+    repo = _copy_minimal_repo(tmp_path)
+    (repo / "docs" / "spikes" / "bend-cost.md").unlink()
+    shutil.rmtree(repo / "spikes" / "bend-cost")
+    res = _run_facts(repo, "check")
+    assert res.returncode != 0
+    assert "bend-cost" in (res.stdout + res.stderr)
+
+
+def test_check_fails_when_boundary_valve_total_drifts(tmp_path: Path):
+    repo = _copy_minimal_repo(tmp_path)
+    spec_path = repo / "docs" / "scenario-spec.md"
+    text = spec_path.read_text(encoding="utf-8")
+    broken = text.replace("| 14 |", "| 15 |", 1)
+    assert broken != text
+    spec_path.write_text(broken, encoding="utf-8")
+    res = _run_facts(repo, "check")
+    assert res.returncode != 0
+    assert "113" in (res.stdout + res.stderr)
+
+
+def test_check_fails_when_work_request_category_dropped_at_same_total(tmp_path: Path):
+    repo = _copy_minimal_repo(tmp_path)
+    spec_path = repo / "docs" / "scenario-spec.md"
+    text = spec_path.read_text(encoding="utf-8")
+    broken = text.replace("| Capital tie-in | 4 |", "| Capital tie-in | 6 |", 1)
+    broken = "\n".join(line for line in broken.splitlines() if not line.startswith("| General prep |")) + "\n"
+    spec_path.write_text(broken, encoding="utf-8")
+    res = _run_facts(repo, "check")
+    assert res.returncode != 0
+    assert "11 categories" in (res.stdout + res.stderr)
+
+
+def test_check_fails_when_matching_class_dropped_at_same_total(tmp_path: Path):
+    repo = _copy_minimal_repo(tmp_path)
+    showcase_path = repo / "docs" / "matching-showcase.md"
+    text = showcase_path.read_text(encoding="utf-8")
+    broken = text.replace("| Clean tag | 80 |", "| Clean tag | 82 |", 1)
+    broken = "\n".join(
+        line for line in broken.splitlines() if not line.startswith("| Text with instructions in it |")
+    ) + "\n"
+    showcase_path.write_text(broken, encoding="utf-8")
+    res = _run_facts(repo, "check")
+    assert res.returncode != 0
+    assert "8 classes" in (res.stdout + res.stderr)
+
+
 def test_find_matches_phrase_split_across_lines(tmp_path: Path):
     repo = _copy_minimal_repo(tmp_path)
     note = repo / "docs" / "wrapped.md"
