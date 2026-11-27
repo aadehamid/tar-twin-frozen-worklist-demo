@@ -19,6 +19,8 @@ The data is synthetic, but it has to hold up in front of turnaround planners and
 
 ## 2. Engineering rules (SHACL)
 
+SHACL runs on the twin's graph, so it can refuse a bad twin load but not an IMPACT Web save that already happened. The two sides split the work. IMPACT Web checks its own fields when they're saved. The twin checks everything that needs the plant model, such as work type against equipment class, and holds a failing item in the review queue with a clear message instead of matching it.
+
 Neosemantics can validate a Neo4j graph against SHACL shapes, either for the whole graph or as a check inside a transaction that rolls back if a change breaks a rule ([Neo4j Labs, n10s validation](https://neo4j.com/labs/neosemantics/4.2/validation/)). The twin loader runs its writes this way, so a graph that breaks a rule never gets stored.
 
 Starting rule set, to be reviewed and extended in phase 1:
@@ -35,7 +37,7 @@ Starting rule set, to be reviewed and extended in phase 1:
   - Every scope item has a driver, a source group, a RIPT score and an estimate split by craft.
   - Craft hours add up to the item's total, and cost is consistent with hours at the scenario's labor rates.
   - Work type fits equipment class. A bundle pull only goes on an exchanger. A tray inspection only goes on a column. A PSV recertification only goes on a PSV.
-  - Every frozen item has exactly one accepted equipment match or is flagged as unit general.
+  - Every frozen item ends in one of four outcomes: matched (exactly one accepted equipment match), unresolved, unit general, or incompatible.
   - Every accepted AI match has a named reviewer.
 
 ## 3. Properties (Hypothesis)
@@ -56,12 +58,15 @@ The workflow is where bugs would hurt credibility most: a change slipping past t
 
 - **Read only.** No step lets the twin change IMPACT Web state.
 - **Baseline fixed.** After freeze, the baseline never changes.
-- **Nothing missed.** Every add or delete after freeze shows up as exactly one change event, once the next sync runs.
-- **Humans decide.** No match becomes accepted without a reviewer step.
-- **Growth adds up.** Scope growth always equals the sum of logged change deltas.
-- **Gate.** The baseline can't be marked ready if the match rate is below the gate.
+- **Nothing missed.** Every approved change after freeze shows up as exactly one change event, once the next sync runs, however syncs overlap or repeat.
+- **Freeze is exact.** The twin baseline always equals IMPACT Web's frozen copy, whichever order a freeze and an edit arrive in.
+- **Humans decide.** No AI proposal becomes accepted without a reviewer step. System acceptance is limited to exact and high-scoring rule matches, and the trace records it.
+- **Growth adds up.** Scope growth always equals the sum of approved change deltas. Pending and rejected changes add nothing.
+- **Gate.** The twin can't mark the baseline ready for use if the match rate on frozen items is below the gate. The freeze itself doesn't depend on the gate.
 
-The same spec also produces example traces, such as "add after freeze, sync, review". A small test harness replays them against the real FastAPI services, which ties the spec to the code rather than letting it drift into a separate document.
+From phase 4 the spec also covers exercises, the clock, roles, concurrent editors and the change process from [interactive-planning.md](interactive-planning.md).
+
+The same spec also produces example traces, such as "add after freeze, sync, review". A small test harness replays them against the real FastAPI services, which ties the spec to the code rather than letting it drift into a separate document. Demo-mode traces are replayed from phase 4. Planning-mode traces are replayed in phase 8, once those APIs exist.
 
 ## Where Bend fits
 

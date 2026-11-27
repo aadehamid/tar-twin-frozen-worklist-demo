@@ -79,7 +79,7 @@ A 2D layout about 120 m by 80 m. A pipe rack runs east to west through the middl
 | Driver | Catalyst end of run |
 | Planned duration | 28 days, feed out to feed in |
 | Candidate list | Target 200 work requests, about 120,000 estimated man-hours, about $28M |
-| Budget target at DRB | About $22M, so roughly a fifth of the candidate cost has to come out or be justified |
+| Budget target at DRB | About $22M. The candidate list is about 27% over target, so about $6M (21% of candidate cost) has to come out or be justified |
 
 ### Timeline (illustrative, months before feed out)
 
@@ -147,10 +147,10 @@ These are the problems the workshop described. The demo has to find each one.
 | Shared isolation | 6 envelopes | Jobs inside ENV-200-02 share one blind list, counted once |
 | Shared access and lifting | 3 clusters | E-201A/B/C bundle pulls sharing one crane setup and laydown |
 | Wrong-unit or retired tags | 4 items | Caught by the match step and sent to review |
-| Over budget at DRB | About 20% over target | Cut line by location shows what falls below the line |
-| Late adds and deletes after freeze | 18 adds, 6 deletes | Scope growth climbs on the KPI panel, each change with a reason and source group |
+| Over budget at DRB | About 27% over target | Cut line by location shows what falls below the line |
+| Changes after freeze | 18 adds and 6 deletes approved, plus 5 rejected | Scope growth climbs on the KPI panel, each change with a reason and source group |
 
-Target scope growth after freeze: about 4,000 man-hours net of deletes, which is about 3% to 4% of the frozen baseline.
+Target scope growth after freeze: about 4,000 man-hours from approved changes net of deletes, which is about 3% to 4% of the frozen baseline.
 
 ## 6. Value panel
 

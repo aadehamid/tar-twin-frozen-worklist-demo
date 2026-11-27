@@ -6,6 +6,8 @@
 
 ## Validation (written before the code)
 
+For docs-only PRs, say so and list the dash and link scan result instead of the table.
+
 | Criterion | Check | Failed before | Passes now |
 |---|---|---|---|
 | | | | |
@@ -21,4 +23,4 @@
 - Author model:
 - Reviewer model (must differ):
 - Review comment link:
-- Blocking findings resolved: [ ]
+- [ ] Blocking findings resolved

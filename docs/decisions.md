@@ -65,10 +65,10 @@ Short records of the choices behind the design. Each one says what we chose, why
 ## D11. Validation first, and cross-model PR review
 
 - **Decision.** Every change starts with acceptance criteria and checks that fail before the code exists. Every PR is reviewed by a different AI model from its author before merge.
-- **Why.** Hamid's rule for this repo. Writing the checks first stops the tests from being shaped to fit whatever the code does. A second model catches mistakes the author model is blind to.
+- **Why.** Hamid's rule for this repo. Writing the checks first stops the tests from being shaped to fit whatever the code does. A second model tends to catch mistakes the author model misses.
 
 ## D12. One codebase, two modes
 
 - **Decision.** Demo mode and planning mode share the same services. Planning mode adds exercises, per-exercise roles, an exercise clock and a facilitator console.
-- **Why.** A team rehearsal uses the exact system the demo shows, so nothing in the demo is staged.
+- **Why.** A team rehearsal uses the exact system the demo shows, so the demo shows the same system a team would use.
 - **Revisit if.** Planning-mode needs, such as many teams at once, start to slow the demo down.

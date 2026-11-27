@@ -16,13 +16,13 @@ No code is written until the checks that will prove it works are written down. F
    - Playwright tests for user flows
    - Expected counts in the scenario tests for data changes
 3. **Code.** Write the change until the checks pass.
-4. **Evidence.** The PR shows the checks failing before and passing after, or explains why a check could not fail first.
+4. **Evidence.** The PR shows the checks failing before and passing after, or explains why a check could not fail first. Docs-only PRs are the one standing exception: their evidence is the cross-model review plus a scan for dashes and broken links.
 
 See [docs/verification.md](docs/verification.md) for the layers and tools.
 
 ## Rule 2. A different model reviews every PR before merge
 
-- Each PR is reviewed by a different AI model from the one that wrote the change. The reviewer gets the PR diff, the acceptance criteria and the relevant docs, and checks correctness, the validation evidence, realism against the scenario spec, and the ground rules (synthetic data only, no writes to IMPACT Web).
+- Each PR is reviewed by a different AI model from the one that wrote the change. The reviewer gets the PR diff, the acceptance criteria and the relevant docs, and checks correctness, the validation evidence, realism against the scenario spec, and the ground rules (synthetic data only, no writes to IMPACT Web, value figures labeled unvalidated).
 - The reviewer's findings are posted on the PR as a comment, with the reviewing model named.
 - Blocking findings are fixed, or answered with a reason, before merge.
 - Hamid can review or block any PR. Changes to scope, the scenario numbers or the ground rules need his approval as well as the model review.
