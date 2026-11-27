@@ -58,7 +58,7 @@ The facilitator creates an exercise from one of three starting points. Each star
 - **Partial.** 100 of them, plus briefing packs per source group listing the rest of their area's needs.
 - **Blank.** No requests, just the briefing packs.
 
-Every row and node carries an `exercise_id`. Request IDs are unique within an exercise, so two exercises can both hold `WR-200-0147` without clashing.
+Every exercise-owned row and node carries an `exercise_id`. The read-only plant graph from DEXPI is shared by all exercises. Request IDs are unique within an exercise, so two exercises can both hold `WR-200-0147` without clashing.
 
 ### 3.2 Membership
 
@@ -72,8 +72,8 @@ The clock controls which actions are open (section 2). Reaching the freeze step 
 
 ### 3.4 Freeze
 
-1. The TA manager presses Freeze. IMPACT Web takes a lock on the exercise's list, writes a `freeze` record with a new list version, and copies every request whose DRB final decision is accept, at its current version, into `freeze_item` rows. Rejected, deferred, screened-out and deleted requests are left out, as are accepted requests whose DRB decision is stale (3.9). That copy is the frozen list and never changes.
-2. Any edit that committed before the lock is in the frozen list. Any edit that arrives after it gets refused with a message saying the list is frozen and pointing to the change process.
+1. The TA manager presses Freeze. IMPACT Web takes a lock on the exercise's list, writes a `freeze` record with a new list version, then looks at the latest committed version of every request at the moment of the lock. It copies into `freeze_item` rows only those whose current version has a final DRB decision of accept. Rejected, deferred, screened-out and deleted requests are left out, as are requests edited after their DRB decision (3.9). That copy is the frozen list and never changes.
+2. Any edit that arrives after the lock gets refused with a message saying the list is frozen and pointing to the change process.
 3. The twin builds its baseline from the frozen copy (`GET /freezes/{id}/items`), not from the live rows. Its baseline therefore always matches what IMPACT Web froze, even if edits arrive between two syncs.
 4. The twin's readiness check is separate from the freeze. The twin marks the baseline "ready for 3.1 use" only when the match rate on frozen items passes the gate. If it doesn't, the twin shows the gap and the items to fix. The freeze still stands, as it would at a real site.
 
@@ -141,7 +141,7 @@ Every fit-to-frame, challenge and DRB decision records the request version it wa
 - **Cut-line options are twin-local.** A saved option is a `CutLineRun` against a named scope version: a budget, the ranking rule and the above and below sets. It doesn't change any request. It isn't the set-level what-if (31-f3), which changes estimates and stays out of release one.
 - **Checks on both sides.** IMPACT Web checks its own fields when they're saved (required fields, craft hours add up, valid driver and source group). It can't check work type against equipment class, because its equipment field is free text. The twin does that after sync. The compatibility check runs before any match is accepted, including exact matches. An incompatible item, like a bundle pull on a pump, gets a `Finding` node with the reason and sits in the review queue. No `RESOLVES_TO` link is accepted for it.
 - **Every item ends in one of four match outcomes:** matched, unresolved, unit general, or incompatible.
-- **Synthetic data only.** All typed text (requests, comments, custom injects) passes a filter for real company names, real tag patterns and personal details before it is stored or sent to the matcher. A hit blocks the save with a message. The filter fails closed: if it can't run, the text is not sent out. The facilitator can also switch an exercise to rules-only or local-model matching, so no typed text leaves the host.
+- **Synthetic data only.** All typed text (requests, comments, custom injects) passes a filter for real company names, real tag patterns and personal details before it is stored or sent to the matcher. A hit blocks the save with a message. The filter fails closed: if it can't run, the text is not sent out. In planning mode, matching of participant-typed text is rules-only or local-model by default, so no typed text leaves the host. The facilitator can turn on the outside model for an exercise.
 - **Value figures** stay labeled as the brief's unvalidated defaults wherever they appear, including the debrief report.
 
 ## 5. Validation for this mode (decided before any code)
