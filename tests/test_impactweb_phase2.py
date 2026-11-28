@@ -582,4 +582,5 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
     updated_wr = client.get(f"/api/v1/work-requests/{new_req_id}?exercise_id=EX-OTHER", headers=sync_hdr).json()
     assert updated_wr["equipment_text"] == "C-201 nozzle N3 lower seam"
     assert updated_wr["estimate_hours"] == 160
+    assert sum(updated_wr["estimate_hours_by_craft"].values()) == 160
     assert updated_wr["version"] == 2

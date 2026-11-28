@@ -187,6 +187,25 @@ def _compute_hours_and_cost(by_craft: dict[str, int]) -> tuple[int, int]:
     return total_hrs, round(total_cost)
 
 
+def _apply_hours_delta_to_crafts(by_craft: dict[str, int], hours_delta: int) -> dict[str, int]:
+    """Adjust craft breakdown atomically so sum(crafts) always equals estimate_hours."""
+    updated = {k: max(0, int(v)) for k, v in by_craft.items()}
+    if hours_delta == 0:
+        return updated
+    if hours_delta > 0:
+        primary = max(updated, key=lambda k: updated[k]) if updated else "boilermaker"
+        updated[primary] = updated.get(primary, 0) + hours_delta
+        return updated
+    remaining = -hours_delta
+    for craft in sorted(updated, key=lambda k: updated[k], reverse=True):
+        if remaining <= 0:
+            break
+        take = min(updated[craft], remaining)
+        updated[craft] -= take
+        remaining -= take
+    return updated
+
+
 def _serialize_wr(session: Session, wr: WorkRequest) -> dict:
     decisions = session.exec(
         select(ReviewDecision).where(
@@ -1185,7 +1204,12 @@ def create_app(
                         )
                     if wr.estimate_hours + cr.hours_delta < 0:
                         raise HTTPException(status_code=422, detail="Target hours cannot be negative")
+                    updated_crafts = _apply_hours_delta_to_crafts(
+                        json.loads(wr.estimate_hours_by_craft_json),
+                        cr.hours_delta,
+                    )
                     wr.estimate_hours += cr.hours_delta
+                    wr.estimate_hours_by_craft_json = json.dumps(updated_crafts)
                     wr.estimate_cost_usd = max(0, wr.estimate_cost_usd + cr.cost_delta_usd)
                     if cr.change_type == "delete":
                         wr.status = "deleted"
