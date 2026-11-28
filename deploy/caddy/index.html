@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Unit 200 Frozen Work List Demo</title>
+    <style>
+      :root {
+        --bg: #0b1322;
+        --surface: #111c30;
+        --border: #223554;
+        --ink: #edf3fb;
+        --muted: #9eb2cb;
+        --accent: #38bdf8;
+        --amber: #f59e0b;
+      }
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        background: var(--bg);
+        color: var(--ink);
+        font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem 1.25rem;
+        line-height: 1.5;
+      }
+      main {
+        width: 100%;
+        max-width: 920px;
+      }
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: clamp(1.85rem, 3.2vw, 2.6rem);
+        letter-spacing: -0.03em;
+        font-weight: 700;
+      }
+      .sub {
+        margin: 0 0 2rem;
+        color: var(--muted);
+        max-width: 62ch;
+        font-size: 1rem;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1.25rem;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 1.35rem 1.4rem;
+        text-decoration: none;
+        color: inherit;
+        transition: border-color 160ms ease-out, background-color 160ms ease-out;
+      }
+      .card:hover {
+        border-color: var(--accent);
+        background: #15233c;
+      }
+      .card h2 {
+        margin: 0 0 0.4rem;
+        font-size: 1.2rem;
+        font-weight: 600;
+      }
+      .card p {
+        margin: 0 0 1rem;
+        color: var(--muted);
+        font-size: 0.9375rem;
+      }
+      .cta {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--accent);
+      }
+      .note {
+        margin-top: 1.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border);
+        color: var(--muted);
+        font-size: 0.875rem;
+      }
+      @media (max-width: 680px) {
+        .grid { grid-template-columns: minmax(0, 1fr); }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .card { transition-duration: 0.01ms; }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Unit 200 Frozen Work List Demo</h1>
+      <p class="sub">
+        Two separate applications for the synthetic Unit 200 diesel hydrotreater turnaround (TAR-200-2028). Open IMPACT Web to manage work requests, review decisions, and freeze; open the Digital Twin to explore the plant graph, matching trace, clusters, cut line, and post-freeze KPIs.
+      </p>
+
+      <div class="grid">
+        <a class="card" href="/impactweb/">
+          <div>
+            <h2>IMPACT Web (system of record)</h2>
+            <p>
+              Enterprise work list, free-text equipment field, fit-to-frame, challenge, DRB decisions, freeze lock, and change request approval.
+            </p>
+          </div>
+          <span class="cta">Open /impactweb/</span>
+        </a>
+
+        <a class="card" href="/twin/">
+          <div>
+            <h2>Unit 200 Digital Twin</h2>
+            <p>
+              2D plot plan, DEXPI P&ID sheets, in-browser Relate WASM graph, natural-language Explore bar, match review queue, clusters, cut line, and baseline KPIs.
+            </p>
+          </div>
+          <span class="cta">Open /twin/</span>
+        </a>
+      </div>
+
+      <p class="note">
+        Synthetic Unit 200 demo data only. IMPACT Web remains the system of record; the twin reads through the public API and can raise pending change requests only when the exercise write-through switch is on.
+      </p>
+    </main>
+  </body>
+</html>

@@ -866,3 +866,71 @@ class SyncEngine:
             "default_source_group": "operations",
             "default_driver": "operations",
         }
+
+    def export_twin_only_backup(self) -> dict[str, Any]:
+        """Export twin-only state + per-exercise cursor watermarks (docs/hosting.md section 5)."""
+        exercise_ids = sorted(set(self._states.keys()) | {"EX-DEMO"})
+        cutoffs: dict[str, int] = {}
+        exercises: dict[str, dict[str, Any]] = {}
+        for ex_id in exercise_ids:
+            st = self._get_state(ex_id)
+            cutoffs[ex_id] = int(st.cursor_seq)
+            exercises[ex_id] = {
+                "cursor_seq": int(st.cursor_seq),
+                "epoch": int(st.epoch),
+                "manual_reviews": copy.deepcopy(st.manual_reviews),
+                "saved_cut_line_runs": copy.deepcopy(st.saved_cut_line_runs),
+                "match_by_version": copy.deepcopy(st.match_by_version),
+            }
+        return {
+            "format_version": 1,
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "cutoffs": cutoffs,
+            "exercises": exercises,
+        }
+
+    def import_twin_only_backup(self, bundle: dict[str, Any]) -> dict[str, Any]:
+        """Restore twin-only state after verifying cutoffs match live IMPACT Web / twin cursors."""
+        bundle_cutoffs = bundle.get("cutoffs") or {}
+        exercises_data = bundle.get("exercises") or {}
+
+        live_cutoffs: dict[str, int] | None = None
+        if self.impactweb_client is not None:
+            try:
+                live_cutoffs = {
+                    k: int(v) for k, v in (self.impactweb_client.get_watermarks().get("cutoffs") or {}).items()
+                }
+            except Exception:
+                live_cutoffs = None
+
+        # Refuse mismatched cutoffs (docs/hosting.md section 5 & 6)
+        for ex_id, expected_seq in bundle_cutoffs.items():
+            st = self._get_state(ex_id)
+            exp_int = int(expected_seq)
+            if live_cutoffs is not None and ex_id in live_cutoffs and live_cutoffs[ex_id] != exp_int:
+                raise RuntimeError(
+                    f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, IMPACT Web={live_cutoffs[ex_id]}"
+                )
+            if st.cursor_seq != exp_int:
+                raise RuntimeError(
+                    f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, twin cursor={st.cursor_seq}"
+                )
+
+        restored_exercises: list[str] = []
+        for ex_id, payload in exercises_data.items():
+            with self._locks[ex_id]:
+                st = self._get_state(ex_id)
+                st.manual_reviews = copy.deepcopy(payload.get("manual_reviews") or {})
+                st.saved_cut_line_runs = copy.deepcopy(payload.get("saved_cut_line_runs") or [])
+                if payload.get("match_by_version"):
+                    st.match_by_version.update(copy.deepcopy(payload["match_by_version"]))
+                # Re-apply manual reviews to current scope items
+                for rid, manual in st.manual_reviews.items():
+                    item = st.scope_items.get(rid)
+                    if item is not None and item.get("equipment_text") == manual.get("equipment_text"):
+                        self._apply_manual_decision_to_item(item, manual)
+                        st.match_by_version[f"{rid}@v{item['version']}"] = self._match_snapshot(item)
+                self._push_scope_to_graph_store(st)
+                restored_exercises.append(ex_id)
+
+        return {"restored_exercises": sorted(restored_exercises), "cutoffs": bundle_cutoffs}

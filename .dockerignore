@@ -1,0 +1,11 @@
+.git
+.env
+.venv
+.pytest_cache
+.relate-memory
+.relate-memory.*
+**/node_modules
+**/__pycache__
+**/*.db
+backups
+spikes

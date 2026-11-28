@@ -1,0 +1,9 @@
+# Optional local development override exposing Neo4j Browser on loopback only.
+# Usage: docker compose -f compose.yml -f compose.local.yml up
+# Never use on the hosted exe.dev VM.
+
+services:
+  neo4j:
+    ports:
+      - "127.0.0.1:7474:7474"
+      - "127.0.0.1:7687:7687"

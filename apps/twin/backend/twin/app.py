@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hmac
 import os
 from pathlib import Path
 from typing import Literal
@@ -445,6 +446,38 @@ def create_app(
             raise HTTPException(status_code=exc.response.status_code, detail=detail) from exc
         except RuntimeError as exc:
             raise HTTPException(status_code=503, detail=str(exc)) from exc
+
+    # --- Paired Backup Export / Import (docs/hosting.md section 5) ---
+
+    def _require_backup_auth(request: Request) -> None:
+        hdr = request.headers.get("Authorization", "")
+        if hdr.startswith("Bearer "):
+            tok = hdr[len("Bearer ") :].strip()
+            if sync_tok and hmac.compare_digest(tok, sync_tok):
+                return
+        member = resolve_authenticated_member(
+            request,
+            exercise_id="EX-DEMO",
+            auth_mode=mode,
+            jwt_secret=j_secret,
+            edge_auth_secret=e_secret,
+            impactweb_client=iw_cli,
+        )
+        if member.role != "facilitator":
+            raise HTTPException(status_code=403, detail="Backup endpoints require sync token or facilitator role")
+
+    @api.get("/api/v1/backup/export")
+    def backup_export(request: Request) -> dict:
+        _require_backup_auth(request)
+        return sync_engine.export_twin_only_backup()
+
+    @api.post("/api/v1/backup/import")
+    def backup_import(bundle: dict, request: Request) -> dict:
+        _require_backup_auth(request)
+        try:
+            return sync_engine.import_twin_only_backup(bundle)
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
     app.include_router(api)
     app.include_router(api, prefix="/twin")

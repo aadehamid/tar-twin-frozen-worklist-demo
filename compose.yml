@@ -1,0 +1,122 @@
+# Unit 200 Frozen Work List Digital Twin Demo stack (docs/hosting.md sections 1-3).
+# Only `edge` runs in host network mode (127.0.0.1:8000).
+# `impactweb` (127.0.0.1:18001) and `twin` (127.0.0.1:18002) sit outside exe.dev's 3000-9999 proxy range.
+# `postgres` and `neo4j` publish zero host ports.
+
+services:
+  postgres:
+    image: postgres:16.10-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-impactweb}
+      POSTGRES_USER: ${POSTGRES_USER:-impactweb}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-impactweb-local-pass}
+    command: ["postgres", "-c", "shared_buffers=128MB", "-c", "max_connections=60"]
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-impactweb} -d ${POSTGRES_DB:-impactweb}"]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+    mem_limit: 384m
+
+  neo4j:
+    build:
+      context: .
+      dockerfile: deploy/neo4j/Dockerfile
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: neo4j/${NEO4J_PASSWORD:-neo4j-local-pass}
+      NEO4J_dbms_security_procedures_unrestricted: n10s.*,apoc.*
+      NEO4J_dbms_security_procedures_allowlist: n10s.*,apoc.*
+      NEO4J_server_memory_heap_initial__size: 512m
+      NEO4J_server_memory_heap_max__size: 768m
+      NEO4J_server_memory_pagecache_size: 384m
+    volumes:
+      - neo4j_data:/data
+    healthcheck:
+      test: ["CMD-SHELL", "cypher-shell -u neo4j -p ${NEO4J_PASSWORD:-neo4j-local-pass} 'RETURN 1' >/dev/null 2>&1"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+      start_period: 25s
+    mem_limit: 1536m
+
+  impactweb:
+    build:
+      context: .
+      dockerfile: apps/impactweb/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18001:8000"
+    environment:
+      DATABASE_URL: postgresql+psycopg2://${POSTGRES_USER:-impactweb}:${POSTGRES_PASSWORD:-impactweb-local-pass}@postgres:5432/${POSTGRES_DB:-impactweb}
+      AUTH_MODE: ${AUTH_MODE:-local}
+      JWT_SECRET: ${JWT_SECRET:-local-dev-jwt-secret-change-me}
+      EDGE_AUTH_SECRET: ${EDGE_AUTH_SECRET:-local-dev-edge-secret-change-me}
+      TWIN_SYNC_TOKEN: ${TWIN_SYNC_TOKEN:-local-dev-twin-sync-token}
+      TWIN_RAISE_TOKEN: ${TWIN_RAISE_TOKEN:-local-dev-twin-raise-token}
+      FACILITATOR_EMAILS: ${FACILITATOR_EMAILS:-facilitator@demo.local}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/utils/health-check/')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+    mem_limit: 384m
+
+  twin:
+    build:
+      context: .
+      dockerfile: apps/twin/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      neo4j:
+        condition: service_healthy
+      impactweb:
+        condition: service_healthy
+    ports:
+      - "127.0.0.1:18002:8000"
+    environment:
+      NEO4J_URI: bolt://neo4j:7687
+      NEO4J_USER: neo4j
+      NEO4J_PASSWORD: ${NEO4J_PASSWORD:-neo4j-local-pass}
+      IMPACTWEB_URL: http://impactweb:8000
+      AUTH_MODE: ${AUTH_MODE:-local}
+      EDGE_AUTH_SECRET: ${EDGE_AUTH_SECRET:-local-dev-edge-secret-change-me}
+      TWIN_SYNC_TOKEN: ${TWIN_SYNC_TOKEN:-local-dev-twin-sync-token}
+      TWIN_RAISE_TOKEN: ${TWIN_RAISE_TOKEN:-local-dev-twin-raise-token}
+      DECIDER_API_KEY: ${DECIDER_API_KEY:-}
+      DECIDER_URL: ${DECIDER_URL:-https://openrouter.ai/api/alpha/decisions}
+      DECIDER_MODEL: ${DECIDER_MODEL:-perplexity/pplx-decider-v1.3:free}
+      REASON_MODEL: ${REASON_MODEL:-thinkingmachines/inkling-2-mini}
+    healthcheck:
+      test: ["CMD-SHELL", "python3 -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/utils/health-check/')\""]
+      interval: 10s
+      timeout: 5s
+      retries: 15
+      start_period: 15s
+    mem_limit: 768m
+
+  edge:
+    image: caddy:2.9-alpine
+    restart: unless-stopped
+    network_mode: host
+    depends_on:
+      impactweb:
+        condition: service_healthy
+      twin:
+        condition: service_healthy
+    environment:
+      EDGE_AUTH_SECRET: ${EDGE_AUTH_SECRET:-local-dev-edge-secret-change-me}
+    volumes:
+      - ./deploy/caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./deploy/caddy/index.html:/srv/landing/index.html:ro
+    mem_limit: 128m
+
+volumes:
+  pg_data:
+  neo4j_data:
