@@ -11,7 +11,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Literal
 
-from fastapi import Depends, FastAPI, HTTPException, Query, Request, status
+from fastapi import APIRouter, Depends, FastAPI, HTTPException, Query, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -427,7 +427,7 @@ def create_app(
         if change_type in {"change", "delete"} and request_id is None:
             raise HTTPException(status_code=422, detail=f"change_type='{change_type}' requires a target request_id")
         try:
-            assert_synthetic_text(title, equipment_text, reason, evidence, risk_if_not_done)
+            assert_synthetic_text(title, equipment_text, category, area, reason, evidence, risk_if_not_done)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -507,15 +507,17 @@ def create_app(
             users = {u.id: u.full_name for u in session.exec(select(UserAccount)).all()}
             return _serialize_cr(cr, users)
 
-    @app.get("/api/v1/utils/health-check/")
+    api = APIRouter()
+
+    @api.get("/api/v1/utils/health-check/")
     def health_check() -> bool:
         return True
 
-    @app.get("/api/v1/auth/mode")
+    @api.get("/api/v1/auth/mode")
     def auth_mode_info() -> dict[str, str]:
         return {"auth_mode": mode}
 
-    @app.post("/api/v1/auth/login")
+    @api.post("/api/v1/auth/login")
     def login(body: LoginBody, session: Session = Depends(get_session)) -> dict:
         if mode == "exe":
             raise HTTPException(status_code=404, detail="Password login is disabled in AUTH_MODE=exe")
@@ -525,7 +527,7 @@ def create_app(
         token = issue_jwt(user.id, user.email, j_secret)
         return {"access_token": token, "token_type": "bearer", "user": {"id": user.id, "email": user.email, "full_name": user.full_name}}
 
-    @app.get("/api/v1/auth/me")
+    @api.get("/api/v1/auth/me")
     def auth_me(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> dict:
         user = _require_user(caller)
         mems = session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all()
@@ -538,7 +540,7 @@ def create_app(
             ],
         }
 
-    @app.get("/api/v1/exercises")
+    @api.get("/api/v1/exercises")
     def list_exercises(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _forbid_delegate_token(caller)
         exs = session.exec(select(Exercise)).all()
@@ -568,7 +570,7 @@ def create_app(
             )
         return out
 
-    @app.get("/api/v1/exercises/{exercise_id}")
+    @api.get("/api/v1/exercises/{exercise_id}")
     def get_exercise(exercise_id: str, caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> dict:
         _require_exercise_read(session, caller, exercise_id)
         ex = session.get(Exercise, exercise_id)
@@ -589,7 +591,7 @@ def create_app(
             "event": ev.model_dump() if ev else None,
         }
 
-    @app.get("/api/v1/exercises/{exercise_id}/memberships")
+    @api.get("/api/v1/exercises/{exercise_id}/memberships")
     def list_memberships(exercise_id: str, caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _require_exercise_read(session, caller, exercise_id)
         mems = session.exec(select(ExerciseMembership).where(ExerciseMembership.exercise_id == exercise_id)).all()
@@ -606,7 +608,7 @@ def create_app(
             for m in mems
         ]
 
-    @app.patch("/api/v1/exercises/{exercise_id}/write-through")
+    @api.patch("/api/v1/exercises/{exercise_id}/write-through")
     def toggle_write_through(
         exercise_id: str,
         body: WriteThroughToggleBody,
@@ -634,7 +636,7 @@ def create_app(
             session.commit()
             return {"exercise_id": ex.id, "twin_write_through": ex.twin_write_through}
 
-    @app.get("/api/v1/work-requests")
+    @api.get("/api/v1/work-requests")
     def list_work_requests(
         exercise_id: str = Query(default="EX-DEMO"),
         area: str | None = None,
@@ -664,7 +666,7 @@ def create_app(
             out.append(_serialize_wr(session, wr))
         return out
 
-    @app.get("/api/v1/work-requests/{request_id}")
+    @api.get("/api/v1/work-requests/{request_id}")
     def get_work_request(
         request_id: str,
         exercise_id: str = Query(default="EX-DEMO"),
@@ -677,7 +679,7 @@ def create_app(
             raise HTTPException(status_code=404, detail="Work request not found")
         return _serialize_wr(session, wr)
 
-    @app.post("/api/v1/work-requests", status_code=201)
+    @api.post("/api/v1/work-requests", status_code=201)
     def create_work_request(
         body: CreateWorkRequestBody,
         caller: Caller = Depends(get_caller),
@@ -691,7 +693,14 @@ def create_app(
             raise HTTPException(status_code=403, detail="Source group lead can only raise requests for their own group")
 
         try:
-            assert_synthetic_text(body.title, body.description, body.equipment_text)
+            assert_synthetic_text(
+                body.title,
+                body.description,
+                body.equipment_text,
+                body.category,
+                body.work_type_label,
+                body.area,
+            )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -733,7 +742,7 @@ def create_app(
             session.refresh(wr)
             return _serialize_wr(session, wr)
 
-    @app.patch("/api/v1/work-requests/{request_id}")
+    @api.patch("/api/v1/work-requests/{request_id}")
     def patch_work_request(
         request_id: str,
         body: PatchWorkRequestBody,
@@ -747,7 +756,7 @@ def create_app(
             raise HTTPException(status_code=403, detail="Role not permitted to edit work requests")
 
         try:
-            assert_synthetic_text(body.title, body.description, body.equipment_text)
+            assert_synthetic_text(body.title, body.description, body.equipment_text, body.area)
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
@@ -806,7 +815,7 @@ def create_app(
             session.refresh(wr)
             return _serialize_wr(session, wr)
 
-    @app.post("/api/v1/work-requests/{request_id}/decisions", status_code=201)
+    @api.post("/api/v1/work-requests/{request_id}/decisions", status_code=201)
     def record_review_decision(
         request_id: str,
         body: ReviewDecisionBody,
@@ -898,7 +907,7 @@ def create_app(
                 "decided_by": dec.decided_by,
             }
 
-    @app.post("/api/v1/work-requests/bulk-decisions", status_code=201)
+    @api.post("/api/v1/work-requests/bulk-decisions", status_code=201)
     def bulk_review_decisions(
         body: BulkDecisionBody,
         caller: Caller = Depends(get_caller),
@@ -964,7 +973,7 @@ def create_app(
             session.commit()
             return {"exercise_id": body.exercise_id, "applied_count": applied}
 
-    @app.post("/api/v1/freezes", status_code=201)
+    @api.post("/api/v1/freezes", status_code=201)
     def freeze_work_list(
         body: FreezeBody,
         caller: Caller = Depends(get_caller),
@@ -1042,7 +1051,7 @@ def create_app(
             session.commit()
             return {"id": freeze_id, "exercise_id": body.exercise_id, "list_version": 1, "item_count": copied}
 
-    @app.get("/api/v1/freezes/{freeze_id}/items")
+    @api.get("/api/v1/freezes/{freeze_id}/items")
     def get_freeze_items(
         freeze_id: str,
         caller: Caller = Depends(get_caller),
@@ -1082,7 +1091,7 @@ def create_app(
             for it in items
         ]
 
-    @app.get("/api/v1/change-requests")
+    @api.get("/api/v1/change-requests")
     def list_change_requests(
         exercise_id: str = Query(default="EX-DEMO"),
         caller: Caller = Depends(get_caller),
@@ -1095,7 +1104,7 @@ def create_app(
         users = {u.id: u.full_name for u in session.exec(select(UserAccount)).all()}
         return [_serialize_cr(cr, users) for cr in crs]
 
-    @app.post("/api/v1/change-requests", status_code=201)
+    @api.post("/api/v1/change-requests", status_code=201)
     def raise_change_request_direct(
         body: DirectChangeRequestBody,
         caller: Caller = Depends(get_caller),
@@ -1105,10 +1114,19 @@ def create_app(
         mem = get_membership(session, body.exercise_id, user.id)
         if mem is None or mem.role not in {"ta_manager", "planner", "source_group"}:
             raise HTTPException(status_code=403, detail="Role not permitted to raise change requests")
-        if mem.role == "source_group" and body.request_id:
-            wr = session.get(WorkRequest, (body.request_id, body.exercise_id))
-            if wr is not None and wr.source_group != mem.source_group:
-                raise HTTPException(status_code=403, detail="Source group lead may only change own group's items")
+        effective_source_group = body.source_group
+        if mem.role == "source_group":
+            if body.request_id:
+                wr = session.get(WorkRequest, (body.request_id, body.exercise_id))
+                if wr is not None and wr.source_group != mem.source_group:
+                    raise HTTPException(status_code=403, detail="Source group lead may only change own group's items")
+            if body.change_type == "add":
+                if effective_source_group is None:
+                    effective_source_group = mem.source_group
+                elif effective_source_group != mem.source_group:
+                    raise HTTPException(status_code=403, detail="Source group lead may only add scope for own group")
+            elif effective_source_group is not None and effective_source_group != mem.source_group:
+                raise HTTPException(status_code=403, detail="Source group lead may not reassign request to another group")
         return _raise_change_request_shared(
             session,
             exercise_id=body.exercise_id,
@@ -1123,7 +1141,7 @@ def create_app(
             equipment_text=body.equipment_text,
             category=body.category,
             driver=body.driver,
-            source_group=body.source_group,
+            source_group=effective_source_group,
             area=body.area,
             evidence=body.evidence,
             reason=body.reason,
@@ -1132,7 +1150,7 @@ def create_app(
             delegate_token_id=None,
         )
 
-    @app.post("/api/v1/twin/change-requests", status_code=201)
+    @api.post("/api/v1/twin/change-requests", status_code=201)
     def raise_change_request_from_twin(
         body: TwinChangeRequestBody,
         caller: Caller = Depends(get_caller),
@@ -1169,7 +1187,7 @@ def create_app(
             delegate_token_id=caller.token_id,
         )
 
-    @app.post("/api/v1/change-requests/{change_id}/decide")
+    @api.post("/api/v1/change-requests/{change_id}/decide")
     def decide_change_request(
         change_id: str,
         body: DecideChangeRequestBody,
@@ -1181,6 +1199,10 @@ def create_app(
         mem = get_membership(session, exercise_id, user.id)
         if mem is None or mem.role != "ta_manager":
             raise HTTPException(status_code=403, detail="Only TA manager can approve or reject change requests")
+        try:
+            assert_synthetic_text(body.reason)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
         with locks[exercise_id]:
             ex = session.get(Exercise, exercise_id)
@@ -1312,7 +1334,7 @@ def create_app(
             users = {u.id: u.full_name for u in session.exec(select(UserAccount)).all()}
             return _serialize_cr(cr, users)
 
-    @app.get("/api/v1/changes")
+    @api.get("/api/v1/changes")
     def read_change_feed(
         exercise_id: str = Query(default="EX-DEMO"),
         after_seq: int = Query(default=0, ge=0),
@@ -1341,17 +1363,20 @@ def create_app(
 
     # --- CMMS / TLM module endpoints ---
 
-    @app.get("/api/v1/cmms/equipment")
+    @api.get("/api/v1/cmms/equipment")
     def list_cmms_equipment(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _forbid_delegate_token(caller)
         rows = session.exec(select(CmmsEquipment).order_by(CmmsEquipment.tag)).all()
         return [r.model_dump() for r in rows]
 
-    @app.get("/api/v1/cmms/functional-locations")
+    @api.get("/api/v1/cmms/functional-locations")
     def list_cmms_flocs(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _forbid_delegate_token(caller)
         rows = session.exec(select(CmmsFunctionalLocation).order_by(CmmsFunctionalLocation.code)).all()
         return [r.model_dump() for r in rows]
+
+    app.include_router(api)
+    app.include_router(api, prefix="/impactweb")
 
     # Serve built React frontend if present (both at / and /impactweb/)
     if (dist_dir / "index.html").exists():

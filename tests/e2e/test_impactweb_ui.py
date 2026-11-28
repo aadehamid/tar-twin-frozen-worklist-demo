@@ -198,6 +198,11 @@ def test_impactweb_all_frontend_interactions(tmp_path: Path):
             assert overflow <= 1, f"Mobile horizontal overflow detected: {overflow}px"
             page.screenshot(path=str(screenshot_dir / "impactweb-mobile.png"))
 
+            # 11. Prefixed /impactweb/ mount loads and communicates with /impactweb/api/v1/...
+            page.set_viewport_size({"width": 1440, "height": 900})
+            page.goto(f"{base_url}/impactweb/", wait_until="networkidle")
+            page.get_by_text("Work requests (201)").wait_for(timeout=10_000)
+
             browser.close()
 
         unexpected_console = [e for e in console_errors if "422 (Unprocessable Entity)" not in e]

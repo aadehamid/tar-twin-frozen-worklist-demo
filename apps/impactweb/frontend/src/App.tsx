@@ -97,6 +97,7 @@ export default function App() {
   const [crTitle, setCrTitle] = useState("");
   const [crEquipText, setCrEquipText] = useState("");
   const [crArea, setCrArea] = useState("200-E");
+  const [crSourceGroup, setCrSourceGroup] = useState("fixed_equipment");
   const [crReason, setCrReason] = useState("");
 
   const exerciseId = "EX-DEMO";
@@ -167,6 +168,12 @@ export default function App() {
 
   const role = membership?.role ?? "viewer";
   const userSourceGroup = membership?.source_group ?? null;
+
+  useEffect(() => {
+    if (userSourceGroup) {
+      setCrSourceGroup(userSourceGroup);
+    }
+  }, [userSourceGroup]);
 
   const canCreateWr =
     !exercise?.frozen && (role === "ta_manager" || role === "planner" || role === "source_group");
@@ -341,6 +348,7 @@ export default function App() {
           cost_delta_usd: Number(crCostDelta) || 0,
           title: crTitle.trim(),
           equipment_text: crEquipText.trim() || null,
+          source_group: crType === "add" ? (role === "source_group" && userSourceGroup ? userSourceGroup : crSourceGroup) : null,
           area: crType === "add" ? crArea : null,
           reason: crReason.trim(),
         }),
@@ -1194,16 +1202,32 @@ export default function App() {
                       ))}
                     </select>
                   </div>
-                  <div className="field" style={{ justifyContent: "flex-end" }}>
-                    <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
-                      <input
-                        type="checkbox"
-                        checked={crMandatory}
-                        onChange={(e) => setCrMandatory(e.target.checked)}
-                      />
-                      Mandatory safety or regulatory change
-                    </label>
+                  <div className="field">
+                    <label htmlFor="cr-source-group">Source group (new scope)</label>
+                    <select
+                      id="cr-source-group"
+                      className="select"
+                      disabled={crType !== "add" || (role === "source_group" && Boolean(userSourceGroup))}
+                      value={role === "source_group" && userSourceGroup ? userSourceGroup : crSourceGroup}
+                      onChange={(e) => setCrSourceGroup(e.target.value)}
+                    >
+                      {SOURCE_GROUPS.map((sg) => (
+                        <option key={sg} value={sg}>
+                          {labelize(sg)}
+                        </option>
+                      ))}
+                    </select>
                   </div>
+                </div>
+                <div className="field">
+                  <label style={{ display: "inline-flex", alignItems: "center", gap: 8 }}>
+                    <input
+                      type="checkbox"
+                      checked={crMandatory}
+                      onChange={(e) => setCrMandatory(e.target.checked)}
+                    />
+                    Mandatory safety or regulatory change
+                  </label>
                 </div>
                 <div className="field">
                   <label htmlFor="cr-reason">Justification</label>

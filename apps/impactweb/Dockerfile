@@ -14,5 +14,5 @@ COPY data/scenario /app/data/scenario
 RUN uv pip install --system --no-cache fastapi "uvicorn[standard]" sqlmodel psycopg2-binary pydantic
 ENV PYTHONPATH=/app/apps/impactweb/backend
 ENV SCENARIO_DIR=/app/data/scenario
-EXPOSE 8001
-CMD ["uvicorn", "impactweb.asgi:app", "--host", "0.0.0.0", "--port", "8001"]
+EXPOSE 8000
+CMD ["uvicorn", "impactweb.asgi:app", "--host", "0.0.0.0", "--port", "8000"]

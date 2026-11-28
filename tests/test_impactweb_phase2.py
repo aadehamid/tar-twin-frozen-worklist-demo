@@ -584,3 +584,74 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
     assert updated_wr["estimate_hours"] == 160
     assert sum(updated_wr["estimate_hours_by_craft"].values()) == 160
     assert updated_wr["version"] == 2
+
+    # Prefixed /impactweb/api/v1/... endpoints work directly (matches docs/design.md /impactweb/ URL)
+    assert client.get("/impactweb/api/v1/auth/mode").status_code == 200
+    assert len(client.get("/impactweb/api/v1/work-requests?exercise_id=EX-DEMO", headers=sync_hdr).json()) == 200
+
+    # Synthetic-data filter checks category/area/work_type_label, not only title
+    r_bad_cat = client.post(
+        "/api/v1/work-requests",
+        json={
+            "exercise_id": "EX-DEMO",
+            "event_id": "TAR-200-2028",
+            "title": "Clean synthetic valve inspection",
+            "description": "Clean synthetic description",
+            "equipment_text": "HV-2001",
+            "category": "Chevron tie-in scope",
+            "driver": "inspection",
+            "source_group": "fixed_equipment",
+            "area": "200-A",
+            "ript_score": 10,
+            "estimate_hours_by_craft": {"pipefitter": 24},
+        },
+        headers=ta_hdr,
+    )
+    assert r_bad_cat.status_code == 422
+
+    # Post-freeze add by source-group lead enforces own-group boundary
+    with Session(client.app.state.engine) as s:
+        s.add(ExerciseMembership(exercise_id="EX-OTHER", user_id="usr-rotating", role="source_group", source_group="rotating"))
+        s.commit()
+
+    r_bad_sg = client.post(
+        "/api/v1/change-requests",
+        json={
+            "exercise_id": "EX-OTHER",
+            "request_id": None,
+            "change_type": "add",
+            "hours_delta": 40,
+            "cost_delta_usd": 9800,
+            "title": "Cross-group add attempt",
+            "source_group": "fixed_equipment",
+            "reason": "Should be blocked",
+        },
+        headers=rot_hdr,
+    )
+    assert r_bad_sg.status_code == 403
+
+    r_own_sg = client.post(
+        "/api/v1/change-requests",
+        json={
+            "exercise_id": "EX-OTHER",
+            "request_id": None,
+            "change_type": "add",
+            "hours_delta": 40,
+            "cost_delta_usd": 9800,
+            "title": "P-201A seal flush check",
+            "equipment_text": "P-201A mechanical seal",
+            "reason": "Rotating post-freeze addition",
+        },
+        headers=rot_hdr,
+    )
+    assert r_own_sg.status_code == 201, r_own_sg.text
+    assert r_own_sg.json()["source_group"] == "rotating"
+    r_own_app = client.post(
+        f"/api/v1/change-requests/{r_own_sg.json()['id']}/decide",
+        params={"exercise_id": "EX-OTHER"},
+        json={"decision": "approved", "reason": "Approved for rotating group"},
+        headers=ta_hdr,
+    )
+    assert r_own_app.status_code == 200
+    added_wr = client.get(f"/api/v1/work-requests/{r_own_app.json()['request_id']}?exercise_id=EX-OTHER", headers=sync_hdr).json()
+    assert added_wr["source_group"] == "rotating"
