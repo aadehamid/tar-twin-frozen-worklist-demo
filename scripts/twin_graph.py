@@ -212,32 +212,25 @@ def _parse_rules(repo: Path) -> list[dict[str, object]]:
         if not current_layer:
             continue
 
+        stripped = line.lstrip(" ")
+        if not stripped.startswith("- "):
+            continue
+        body = stripped[2:].strip()
+
         if current_layer == "engineering":
             if line in ("- Plant", "- Scope"):
-                current_sub = line[2:].strip().lower()
+                current_sub = body.lower()
                 continue
-            if line.startswith("  - ") and current_sub:
-                body = line[4:].strip()
-                rule_idx += 1
-                rules.append({
-                    "id": f"RULE-ENG-{rule_idx:02d}",
-                    "layer": f"engineering:{current_sub}",
-                    "text": body,
-                    "decisions": sorted(set(DECISION_REF_RE.findall(body))),
-                    "source": "docs/verification.md",
-                })
-            elif line.startswith("- "):
-                body = line[2:].strip()
-                rule_idx += 1
-                rules.append({
-                    "id": f"RULE-ENG-{rule_idx:02d}",
-                    "layer": "engineering:general",
-                    "text": body,
-                    "decisions": sorted(set(DECISION_REF_RE.findall(body))),
-                    "source": "docs/verification.md",
-                })
-        elif line.startswith("- "):
-            body = line[2:].strip()
+            rule_idx += 1
+            sub = current_sub if line.startswith(" ") and current_sub else "general"
+            rules.append({
+                "id": f"RULE-ENG-{rule_idx:02d}",
+                "layer": f"engineering:{sub}",
+                "text": body,
+                "decisions": sorted(set(DECISION_REF_RE.findall(body))),
+                "source": "docs/verification.md",
+            })
+        else:
             rule_idx += 1
             m_name = re.match(r"^\*\*([^*]+?)\.?\*\*", body)
             slug = re.sub(r"[^A-Za-z0-9]+", "_", m_name.group(1)).strip("_") if m_name else f"{rule_idx:02d}"

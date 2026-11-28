@@ -354,16 +354,24 @@ def test_detects_rule_without_decision(tmp_path: Path):
     payload = json.loads(res.stdout)
     assert any("Orphan_rule" in e and "decision" in e.lower() for e in payload["errors"])
 
-    # Adversarial probe: top-level bullet in section 2 outside Plant/Scope must also be parsed and checked
+    # Adversarial probe: top-level and deeply indented bullets in section 2 must also be parsed and checked
     sec2_target = "- Plant\n"
     assert sec2_target in text
     ver.write_text(
-        text.replace(sec2_target, "- Every twin sync is one transaction with no decision link.\n" + sec2_target, 1),
+        text.replace(
+            sec2_target,
+            "- Every twin sync is one transaction with no decision link.\n"
+            "    - Four-space orphan rule with no decision link.\n"
+            + sec2_target,
+            1,
+        ),
         encoding="utf-8",
     )
     res_sec2 = _run_tg(repo, "check", "--json")
     assert res_sec2.returncode != 0
-    assert any("one transaction" in e for e in json.loads(res_sec2.stdout)["errors"])
+    sec2_errors = json.loads(res_sec2.stdout)["errors"]
+    assert any("one transaction" in e for e in sec2_errors)
+    assert any("Four-space orphan rule" in e for e in sec2_errors)
 
 
 def test_detects_spike_sheet_title_clash_and_neo4j_snapshot_mismatch(tmp_path: Path):
