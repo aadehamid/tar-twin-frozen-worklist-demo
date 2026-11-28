@@ -12,6 +12,9 @@ python3 "$REPO_ROOT/scripts/tree_guard.py" --repo "$REPO_ROOT" -- bash -euo pipe
   echo "==> Checking repository fact consistency"
   python3 "$repo/scripts/repo_facts.py" --repo "$repo" check
 
+  echo "==> Checking twin specification graph in Relate"
+  python3 "$repo/scripts/twin_graph.py" --repo "$repo" check
+
   echo "==> Running repository pytest suite"
   uv run --no-project --with pytest python -m pytest -p no:cacheprovider -q "$repo/tests"
 ' _ "$REPO_ROOT"

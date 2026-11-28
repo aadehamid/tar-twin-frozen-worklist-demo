@@ -64,7 +64,7 @@ Supporting tags bring the total to about 400 (target 380 to 450): about 30 PSVs 
 | ENV-200-05 LP separation | D-203, P-204A/B | 10 |
 | ENV-200-06 Stripper | C-201, E-203, D-205, P-202A/B, P-203A/B, E-204 | 22 |
 
-The HP reaction loop is the big one. Every job inside it shares one blind list, which is where most of the isolation cluster saving comes from.
+The HP reaction loop is the big one. Every job inside it shares one blind list, which is where most of the isolation cluster saving comes from. `KT-201` is the steam turbine driver for `K-201` and stays outside the hydrocarbon isolation envelopes.
 
 ### 2.5 Plot plan
 

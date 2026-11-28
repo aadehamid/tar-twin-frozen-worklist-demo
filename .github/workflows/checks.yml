@@ -19,5 +19,10 @@ jobs:
         with:
           enable-cache: true
 
+      - name: Install Relate
+        run: |
+          curl -sSfL https://relatedb.ai/install.sh | bash
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
       - name: Run check script
         run: bash scripts/check.sh
