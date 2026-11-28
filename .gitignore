@@ -8,6 +8,11 @@ __pycache__/
 # Node
 node_modules/
 dist/
+bun.lock
+*.tsbuildinfo
+apps/impactweb/backend/impactweb/frontend/
+apps/twin/backend/twin/frontend/
+*.db
 # Env and secrets
 .env
 *.local
