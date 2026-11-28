@@ -1,17 +1,49 @@
-"""Unit 200 Digital Twin FastAPI service (Phase 3 plant graph foundation)."""
+"""Unit 200 Digital Twin FastAPI service (plant graph, sync, matching, clusters, cut line)."""
 
 from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import Literal
 
-from fastapi import APIRouter, FastAPI, HTTPException, Query
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel, ConfigDict, Field
 
+from twin.auth import resolve_authenticated_member
+from twin.clients import CmmsClient, ImpactWebClient
+from twin.explorer import STARTER_PROMPTS, run_explore_query
 from twin.graph_store import MemoryPlantStore
+from twin.matcher import AiClientConfig
 from twin.plant_loader import build_plant_graph
+from twin.sync import SyncEngine
+
+
+class ExploreQueryPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    exercise_id: str = "EX-DEMO"
+    query: str = Field(min_length=2, max_length=500)
+    allow_external_ai: bool = False
+
+
+class ReviewDecisionPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    action: Literal["accept", "reject", "pick_another"]
+    tag: str | None = None
+    reason: str = Field(default="", max_length=1000)
+
+
+class CutLineEvaluatePayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    exercise_id: str = "EX-DEMO"
+    budget_usd: int = Field(ge=0)
+    save_name: str | None = None
+    saved_by: str = ""
 
 
 def create_app(
@@ -21,6 +53,14 @@ def create_app(
     neo4j_uri: str | None = None,
     neo4j_user: str | None = None,
     neo4j_password: str | None = None,
+    impactweb_url: str | None = None,
+    twin_sync_token: str | None = None,
+    twin_raise_token: str | None = None,
+    auth_mode: str | None = None,
+    jwt_secret: str | None = None,
+    edge_auth_secret: str | None = None,
+    impactweb_client: ImpactWebClient | None = None,
+    cmms_client: CmmsClient | None = None,
     frontend_dist_dir: Path | None = None,
 ) -> FastAPI:
     repo_root = Path(__file__).resolve().parents[4]
@@ -29,6 +69,12 @@ def create_app(
     n_uri = neo4j_uri or os.environ.get("NEO4J_URI", "")
     n_user = neo4j_user or os.environ.get("NEO4J_USER", "neo4j")
     n_pass = neo4j_password or os.environ.get("NEO4J_PASSWORD", "")
+    iw_url = impactweb_url or os.environ.get("IMPACTWEB_URL", "")
+    sync_tok = twin_sync_token or os.environ.get("TWIN_SYNC_TOKEN", "demo-twin-sync-token")
+    raise_tok = twin_raise_token or os.environ.get("TWIN_RAISE_TOKEN", "")
+    mode = auth_mode or os.environ.get("AUTH_MODE", "local")
+    j_secret = jwt_secret if jwt_secret is not None else os.environ.get("JWT_SECRET", "")
+    e_secret = edge_auth_secret or os.environ.get("EDGE_AUTH_SECRET", "")
     dist_dir = frontend_dist_dir or (Path(__file__).resolve().parent / "frontend")
 
     if n_uri:
@@ -45,7 +91,22 @@ def create_app(
         if (scen_dir / "dexpi").is_dir():
             store.load_plant_graph(build_plant_graph(scen_dir))
 
-    app = FastAPI(title="Unit 200 Turnaround Digital Twin API", version="0.1.0")
+    iw_cli = impactweb_client
+    cmms_cli = cmms_client
+    if iw_cli is None and iw_url:
+        iw_cli = ImpactWebClient(base_url=iw_url, sync_token=sync_tok, raise_token=raise_tok)
+    if cmms_cli is None and iw_url:
+        cmms_cli = CmmsClient(base_url=iw_url, sync_token=sync_tok)
+
+    sync_engine = SyncEngine(
+        plant_store=store,
+        scenario_dir=scen_dir,
+        impactweb_client=iw_cli,
+        cmms_client=cmms_cli,
+        ai_config=AiClientConfig.from_env(),
+    )
+
+    app = FastAPI(title="Unit 200 Turnaround Digital Twin API", version="0.2.0")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
@@ -54,6 +115,7 @@ def create_app(
         allow_headers=["*"],
     )
     app.state.store = store
+    app.state.sync_engine = sync_engine
     app.state.scenario_dir = scen_dir
 
     api = APIRouter()
@@ -61,6 +123,8 @@ def create_app(
     @api.get("/api/v1/utils/health-check/")
     def health_check() -> bool:
         return True
+
+    # --- Plant Graph Endpoints (Phase 3) ---
 
     @api.get("/api/v1/plant/summary")
     def plant_summary() -> dict:
@@ -118,6 +182,116 @@ def create_app(
         if not store.has_exercise(exercise_id):
             raise HTTPException(status_code=404, detail=f"Unknown exercise_id {exercise_id}")
         return store.export_cypher(exercise_id=exercise_id)
+
+    # --- Sync, Matching, Clusters, and Cut Line Endpoints (Phase 4) ---
+
+    @api.post("/api/v1/sync")
+    def trigger_sync(
+        exercise_id: str = Query(default="EX-DEMO"),
+        use_ai: bool = Query(default=False),
+        live_ai: bool = Query(default=False),
+    ) -> dict:
+        try:
+            return sync_engine.sync_exercise(exercise_id=exercise_id, use_ai=use_ai, live_ai=live_ai)
+        except Exception as exc:
+            raise HTTPException(status_code=502, detail=f"Sync failed: {exc}") from exc
+
+    @api.get("/api/v1/scope-items")
+    def list_scope_items(exercise_id: str = Query(default="EX-DEMO")) -> list[dict]:
+        return sync_engine.list_scope_items(exercise_id)
+
+    @api.get("/api/v1/scope-items/{request_id}")
+    def get_scope_item(request_id: str, exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        it = sync_engine.get_scope_item(exercise_id, request_id)
+        if it is None:
+            raise HTTPException(status_code=404, detail=f"Scope item {request_id} not found")
+        return it
+
+    @api.get("/api/v1/matching/summary")
+    def matching_summary(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.matching_summary(exercise_id)
+
+    @api.get("/api/v1/matching/review-queue")
+    def matching_review_queue(exercise_id: str = Query(default="EX-DEMO")) -> list[dict]:
+        return sync_engine.review_queue(exercise_id)
+
+    @api.post("/api/v1/matching/review/{request_id}")
+    def matching_review_decide(
+        request_id: str,
+        body: ReviewDecisionPayload,
+        request: Request,
+        exercise_id: str = Query(default="EX-DEMO"),
+    ) -> dict:
+        member = resolve_authenticated_member(
+            request,
+            exercise_id=exercise_id,
+            auth_mode=mode,
+            jwt_secret=j_secret,
+            edge_auth_secret=e_secret,
+            impactweb_client=iw_cli,
+        )
+        if member.role not in {"planner", "ta_manager"}:
+            raise HTTPException(
+                status_code=403,
+                detail="Only planner or TA manager roles may accept or reject equipment matches",
+            )
+        try:
+            return sync_engine.decide_review(
+                exercise_id=exercise_id,
+                request_id=request_id,
+                action=body.action,
+                reviewer=member.full_name,
+                reason=body.reason,
+                tag=body.tag,
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    @api.get("/api/v1/matching/lab/step/{request_id}")
+    def matching_lab_step(request_id: str, exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        try:
+            return sync_engine.matching_lab_step(exercise_id, request_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @api.get("/api/v1/matching/lab/compare")
+    def matching_lab_compare(
+        exercise_id: str = Query(default="EX-DEMO"),
+        live_ai: bool = Query(default=False),
+    ) -> dict:
+        return sync_engine.matching_lab_compare(exercise_id, live_ai=live_ai)
+
+    @api.get("/api/v1/clusters")
+    def get_clusters(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.clusters_and_duplicates(exercise_id)
+
+    @api.post("/api/v1/cut-line/evaluate")
+    def post_cut_line(body: CutLineEvaluatePayload) -> dict:
+        return sync_engine.evaluate_cut_line(
+            exercise_id=body.exercise_id,
+            budget_usd=body.budget_usd,
+            save_name=body.save_name,
+            saved_by=body.saved_by,
+        )
+
+    @api.get("/api/v1/explore/suggestions")
+    def explore_suggestions() -> list[dict]:
+        return STARTER_PROMPTS
+
+    @api.post("/api/v1/explore/query")
+    def post_explore_query(body: ExploreQueryPayload) -> dict:
+        try:
+            return run_explore_query(
+                query=body.query,
+                exercise_id=body.exercise_id,
+                plant_store=store,
+                sync_engine=sync_engine,
+                allow_external_ai=body.allow_external_ai,
+            )
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
     app.include_router(api)
     app.include_router(api, prefix="/twin")

@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from twin.graph_store import export_browser_cypher
+from twin.graph_store import export_browser_cypher, validate_cypher_labels, validate_cypher_rel_type
 from twin.plant_loader import verify_plant_graph
 
 SHACL_TRIGGER_QUERY = (
@@ -199,7 +199,7 @@ class Neo4jPlantStore:
                 )
                 by_label_set: dict[tuple[str, ...], list[dict[str, Any]]] = {}
                 for nd in nodes:
-                    lbls = tuple(["TwinNode", *nd["labels"]])
+                    lbls = validate_cypher_labels(["TwinNode", *nd["labels"]])
                     clean_props = {
                         k: v for k, v in nd["props"].items() if v is not None and not isinstance(v, (dict, list))
                     }
@@ -212,7 +212,7 @@ class Neo4jPlantStore:
                     )
                 by_rtype: dict[str, list[dict[str, str]]] = {}
                 for rel in rels:
-                    by_rtype.setdefault(rel["type"], []).append({"from": rel["from"], "to": rel["to"]})
+                    by_rtype.setdefault(validate_cypher_rel_type(rel["type"]), []).append({"from": rel["from"], "to": rel["to"]})
                 for rtype, batch in by_rtype.items():
                     tx.run(
                         f"UNWIND $rows AS row "
@@ -374,8 +374,78 @@ class Neo4jPlantStore:
         if exercise_id in self._known_exercises:
             return True
         with self._driver.session(database=self.database) as s:
-            cnt = s.run("MATCH (n:ScopeItem {exercise_id: $ex}) RETURN count(n) AS c", ex=exercise_id).single()["c"]
+            cnt = s.run(
+                "MATCH (n) WHERE (n:ScopeItem OR n:SyncState) AND n.exercise_id = $ex RETURN count(n) AS c",
+                ex=exercise_id,
+            ).single()["c"]
             return int(cnt) > 0
+
+    def set_scope_graph(
+        self,
+        exercise_id: str,
+        scope_nodes: list[dict[str, Any]],
+        scope_rels: list[dict[str, Any]],
+        sync_snapshot: dict[str, Any] | None = None,
+    ) -> None:
+        """Persist ScopeItems, RESOLVES_TO links, and SyncState cursor atomically in one guarded Neo4j tx."""
+        with self._lock:
+            if not self.guard_ready():
+                raise RuntimeError("SHACL guard not ready; refusing scope sync write")
+            self._known_exercises.add(exercise_id)
+
+            def _tx_sync(tx):
+                tx.run(
+                    "MATCH (s:ScopeItem {exercise_id: $ex}) DETACH DELETE s",
+                    ex=exercise_id,
+                )
+                by_label_set: dict[tuple[str, ...], list[dict[str, Any]]] = {}
+                for nd in scope_nodes:
+                    lbls = validate_cypher_labels(["TwinNode", *nd["labels"]])
+                    clean_props = {
+                        k: v for k, v in nd["props"].items() if v is not None and not isinstance(v, (dict, list))
+                    }
+                    by_label_set.setdefault(lbls, []).append({"key": nd["key"], "props": clean_props})
+                for lbls, batch in by_label_set.items():
+                    label_expr = ":".join(lbls)
+                    tx.run(
+                        f"UNWIND $rows AS row CREATE (n:{label_expr} {{key: row.key}}) SET n += row.props",
+                        rows=batch,
+                    )
+                by_rtype: dict[str, list[dict[str, Any]]] = {}
+                for rel in scope_rels:
+                    by_rtype.setdefault(validate_cypher_rel_type(rel["type"]), []).append(
+                        {"from": rel["from"], "to": rel["to"], "props": rel.get("props") or {}}
+                    )
+                for rtype, batch in by_rtype.items():
+                    tx.run(
+                        f"UNWIND $rows AS row "
+                        f"MATCH (a:TwinNode {{key: row.from}}), (b:TwinNode {{key: row.to}}) "
+                        f"CREATE (a)-[r:{rtype}]->(b) SET r += row.props",
+                        rows=batch,
+                    )
+                if sync_snapshot is not None:
+                    tx.run(
+                        "MERGE (st:SyncState {key: $key}) "
+                        "SET st.exercise_id = $ex, st.cursor_seq = $cursor, st.epoch = $epoch, st.state_json = $blob",
+                        key=f"sync:{exercise_id}",
+                        ex=exercise_id,
+                        cursor=int(sync_snapshot.get("cursor_seq", 0)),
+                        epoch=int(sync_snapshot.get("epoch", 1)),
+                        blob=json.dumps(sync_snapshot, sort_keys=True),
+                    )
+
+            with self._driver.session(database=self.database) as s:
+                s.execute_write(_tx_sync)
+
+    def load_exercise_state(self, exercise_id: str) -> dict[str, Any] | None:
+        with self._driver.session(database=self.database) as s:
+            row = s.run(
+                "MATCH (st:SyncState {key: $key}) RETURN st.state_json AS blob LIMIT 1",
+                key=f"sync:{exercise_id}",
+            ).single()
+            if row is None or not row["blob"]:
+                return None
+            return json.loads(row["blob"])
 
     def export_cypher(
         self,
