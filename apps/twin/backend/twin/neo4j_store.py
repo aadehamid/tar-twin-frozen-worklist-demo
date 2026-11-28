@@ -16,7 +16,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from twin.graph_store import export_browser_cypher
+from twin.graph_store import export_browser_cypher, validate_cypher_labels, validate_cypher_rel_type
 from twin.plant_loader import verify_plant_graph
 
 SHACL_TRIGGER_QUERY = (
@@ -199,7 +199,7 @@ class Neo4jPlantStore:
                 )
                 by_label_set: dict[tuple[str, ...], list[dict[str, Any]]] = {}
                 for nd in nodes:
-                    lbls = tuple(["TwinNode", *nd["labels"]])
+                    lbls = validate_cypher_labels(["TwinNode", *nd["labels"]])
                     clean_props = {
                         k: v for k, v in nd["props"].items() if v is not None and not isinstance(v, (dict, list))
                     }
@@ -212,7 +212,7 @@ class Neo4jPlantStore:
                     )
                 by_rtype: dict[str, list[dict[str, str]]] = {}
                 for rel in rels:
-                    by_rtype.setdefault(rel["type"], []).append({"from": rel["from"], "to": rel["to"]})
+                    by_rtype.setdefault(validate_cypher_rel_type(rel["type"]), []).append({"from": rel["from"], "to": rel["to"]})
                 for rtype, batch in by_rtype.items():
                     tx.run(
                         f"UNWIND $rows AS row "
@@ -400,7 +400,7 @@ class Neo4jPlantStore:
                 )
                 by_label_set: dict[tuple[str, ...], list[dict[str, Any]]] = {}
                 for nd in scope_nodes:
-                    lbls = tuple(["TwinNode", *nd["labels"]])
+                    lbls = validate_cypher_labels(["TwinNode", *nd["labels"]])
                     clean_props = {
                         k: v for k, v in nd["props"].items() if v is not None and not isinstance(v, (dict, list))
                     }
@@ -413,7 +413,7 @@ class Neo4jPlantStore:
                     )
                 by_rtype: dict[str, list[dict[str, Any]]] = {}
                 for rel in scope_rels:
-                    by_rtype.setdefault(rel["type"], []).append(
+                    by_rtype.setdefault(validate_cypher_rel_type(rel["type"]), []).append(
                         {"from": rel["from"], "to": rel["to"], "props": rel.get("props") or {}}
                     )
                 for rtype, batch in by_rtype.items():

@@ -528,6 +528,32 @@ def test_natural_language_twin_explorer_safe_read_only_intents(tmp_path: Path):
     assert r_eq.json()["highlight"]["sheet_no"] == "200-PID-005"
 
 
+def test_cypher_label_injection_guard_and_fail_closed_work_type_compatibility():
+    _ensure_paths()
+    from twin.graph_store import validate_cypher_labels, validate_cypher_rel_type
+    from twin.matcher import check_compatibility
+
+    # Cypher injection payload in node label or rel type is refused
+    with pytest.raises(ValueError, match="Disallowed Cypher node label"):
+        validate_cypher_labels(["ScopeItem", "GeneralCleanup}) MATCH (n) DETACH DELETE n //"])
+    with pytest.raises(ValueError, match="Disallowed Cypher relationship type"):
+        validate_cypher_rel_type("RESOLVES_TO]->(b) MATCH (n) DETACH DELETE n //")
+
+    # Scenario work types fail closed on incompatible equipment classes
+    exchanger = {"equipment_class": "exchanger", "shacl_class": "Exchanger"}
+    pump = {"equipment_class": "pump", "shacl_class": "RotatingEquipment"}
+    inst = {"equipment_class": "instrument", "shacl_class": "Instrument"}
+    piping = {"equipment_class": "piping", "shacl_class": "PipingSegment"}
+
+    assert check_compatibility("PipingInspection", piping) is True
+    assert check_compatibility("PipingInspection", exchanger) is False
+    assert check_compatibility("InstrumentWork", inst) is True
+    assert check_compatibility("InstrumentWork", pump) is False
+    assert check_compatibility("CapitalTieIn", exchanger) is True
+    assert check_compatibility("CapitalTieIn", inst) is False
+    assert check_compatibility("UnknownCustomWorkType", exchanger) is False
+
+
 @pytest.mark.skipif(not __import__("os").environ.get("NEO4J_TEST_URI"), reason="Live Neo4j 5.26 + n10s + APOC not configured")
 def test_live_neo4j_sync_scope_persistence_and_restart_recovery():
     """Verify production Neo4jPlantStore persists ScopeItems, RESOLVES_TO, and SyncState cursor across restart."""

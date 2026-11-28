@@ -12,7 +12,7 @@ from typing import Any
 
 from twin.clients import CmmsClient, ImpactWebClient
 from twin.clusters import compute_clusters_and_duplicates, evaluate_cut_line
-from twin.matcher import AiClientConfig, MatchingPipeline
+from twin.matcher import ALLOWED_WORK_TYPE_LABELS, AiClientConfig, MatchingPipeline
 
 
 class ExerciseSyncState:
@@ -153,10 +153,12 @@ class SyncEngine:
         ex = state.exercise_id
         for it in state.scope_items.values():
             skey = f"wr:{ex}:{it['request_id']}"
+            raw_wt = str(it.get("work_type_label", "GeneralCleanup"))
+            safe_wt = raw_wt if raw_wt in ALLOWED_WORK_TYPE_LABELS else "GeneralCleanup"
             scope_nodes.append(
                 {
                     "key": skey,
-                    "labels": ["ScopeItem", it.get("work_type_label", "GeneralCleanup")],
+                    "labels": ["ScopeItem", safe_wt],
                     "props": {
                         "exercise_id": ex,
                         "request_id": it["request_id"],

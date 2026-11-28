@@ -61,23 +61,26 @@ ALIAS_TABLE: list[dict[str, Any]] = [
     {"rule_id": "ALIAS-08", "phrase": "HIGH PRESSURE SEPARATOR", "target_tag": "D-202", "score": 0.82},
 ]
 
-# Work-type to compatible equipment shacl_class / equipment_class rules (specs/shapes.ttl)
+# Work-type to compatible equipment shacl_class / equipment_class rules (specs/shapes.ttl + scenario-spec).
+ANY_ASSET_WORK_TYPES: set[str] = {"GeneralCleanup", "LateScopeAdd"}
+
 WORK_TYPE_COMPAT: dict[str, set[str]] = {
+    "AirCoolerClean": {"AirCooler", "air_cooler"},
     "BundlePull": {"Exchanger", "exchanger"},
-    "Retube": {"Exchanger", "exchanger"},
+    "CapitalTieIn": {"Column", "Exchanger", "Reactor", "Vessel", "PipingSegment", "column", "exchanger", "reactor", "vessel", "piping"},
     "CatalystChangeout": {"Reactor", "reactor"},
     "HeaterDecoke": {"FiredHeater", "heater"},
-    "TrayInspection": {"Column", "column"},
+    "InstrumentWork": {"Instrument", "instrument"},
+    "PipingInspection": {"PipingSegment", "piping"},
     "PsvRecertification": {"ReliefValve", "psv"},
+    "Retube": {"Exchanger", "exchanger"},
     "RotatingOverhaul": {"RotatingEquipment", "PumpingOrCompression", "pump", "compressor", "turbine"},
-    "AirCoolerClean": {"AirCooler", "air_cooler"},
-    "VesselInspection": {"Vessel", "Reactor", "Column", "vessel", "reactor", "column", "filter"},
+    "TrayInspection": {"Column", "column"},
     "ValveOverhaul": {"Valve", "BlockValve", "valve"},
-    "InstrumentCalibration": {"Instrument", "instrument"},
-    "PipingRepair": {"PipingSegment", "piping", "Exchanger", "Vessel", "Reactor", "Column", "FiredHeater", "AirCooler", "Valve"},
-    "GeneralCleanup": set(),  # compatible with any active asset
-    "LateScopeAdd": set(),
+    "VesselInspection": {"Vessel", "Filter", "Reactor", "Column", "vessel", "filter", "reactor", "column"},
 }
+
+ALLOWED_WORK_TYPE_LABELS: frozenset[str] = frozenset(WORK_TYPE_COMPAT) | frozenset(ANY_ASSET_WORK_TYPES)
 
 INSTRUCTION_PATTERNS: list[re.Pattern[str]] = [
     re.compile(r"\bignore\b.{0,40}\b(list|previous|instructions?|candidates?|above)\b", re.IGNORECASE),
@@ -222,9 +225,12 @@ def validate_alias_table(cmms_by_tag: dict[str, dict[str, Any]]) -> list[str]:
 
 
 def check_compatibility(work_type_label: str, cmms_row: dict[str, Any]) -> bool:
+    """Fail-closed compatibility check between work type and CMMS equipment class."""
+    if work_type_label in ANY_ASSET_WORK_TYPES:
+        return True
     allowed = WORK_TYPE_COMPAT.get(work_type_label)
     if not allowed:
-        return True
+        return False
     eq_cls = str(cmms_row.get("equipment_class", ""))
     shacl_cls = str(cmms_row.get("shacl_class", ""))
     return eq_cls in allowed or shacl_cls in allowed

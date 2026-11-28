@@ -11,6 +11,90 @@ from typing import Any
 
 from twin.plant_loader import verify_plant_graph
 
+ALLOWED_NODE_LABELS: frozenset[str] = frozenset(
+    {
+        "TwinNode",
+        "Asset",
+        "Equipment",
+        "Exchanger",
+        "Reactor",
+        "FiredHeater",
+        "Column",
+        "Vessel",
+        "Filter",
+        "AirCooler",
+        "RotatingEquipment",
+        "PumpingOrCompression",
+        "Valve",
+        "BlockValve",
+        "ReliefValve",
+        "Instrument",
+        "PipingSegment",
+        "Nozzle",
+        "OffPageConnector",
+        "PipeTee",
+        "PidSheet",
+        "Area",
+        "PlotPosition",
+        "PlotPlanMeta",
+        "IsolationEnvelope",
+        "ScopeItem",
+        "Baseline",
+        "ChangeEvent",
+        "Cluster",
+        "SyncState",
+        "AirCoolerClean",
+        "BundlePull",
+        "CapitalTieIn",
+        "CatalystChangeout",
+        "GeneralCleanup",
+        "HeaterDecoke",
+        "InstrumentWork",
+        "LateScopeAdd",
+        "PipingInspection",
+        "PsvRecertification",
+        "Retube",
+        "RotatingOverhaul",
+        "TrayInspection",
+        "ValveOverhaul",
+        "VesselInspection",
+    }
+)
+
+ALLOWED_REL_TYPES: frozenset[str] = frozenset(
+    {
+        "ON_SHEET",
+        "LOCATED_IN",
+        "POSITIONED_AT",
+        "HAS_NOZZLE",
+        "CONNECTED_TO",
+        "SUCTION_VALVE",
+        "DISCHARGE_VALVE",
+        "PROTECTS",
+        "MEASURES",
+        "CONTAINS",
+        "BOUNDED_BY",
+        "RESOLVES_TO",
+        "INCLUDES",
+        "PART_OF",
+    }
+)
+
+
+def validate_cypher_labels(labels: tuple[str, ...] | list[str]) -> tuple[str, ...]:
+    out: list[str] = []
+    for lbl in labels:
+        if lbl not in ALLOWED_NODE_LABELS:
+            raise ValueError(f"Disallowed Cypher node label: {lbl!r}")
+        out.append(lbl)
+    return tuple(out)
+
+
+def validate_cypher_rel_type(rtype: str) -> str:
+    if rtype not in ALLOWED_REL_TYPES:
+        raise ValueError(f"Disallowed Cypher relationship type: {rtype!r}")
+    return rtype
+
 
 def _cypher_val(v: Any) -> str:
     if isinstance(v, bool):
@@ -35,7 +119,7 @@ def export_browser_cypher(
     all_rels = list(plant_rels) + list(scope_rels or [])
 
     for nd in all_nodes:
-        labels = ":".join(nd["labels"])
+        labels = ":".join(validate_cypher_labels(nd["labels"]))
         props = {"key": nd["key"]}
         for k, v in nd["props"].items():
             if v is not None and not isinstance(v, (dict, list)):
@@ -44,7 +128,7 @@ def export_browser_cypher(
         lines.append(f"CREATE (:{labels} {{{prop_str}}});")
 
     for rel in all_rels:
-        rtype = rel["type"]
+        rtype = validate_cypher_rel_type(rel["type"])
         rprops = rel.get("props") or {}
         if rprops:
             pstr = " {" + ", ".join(f"{k}: {_cypher_val(v)}" for k, v in sorted(rprops.items()) if v is not None) + "}"
