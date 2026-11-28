@@ -548,3 +548,38 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
     assert wrs_other[0]["id"] == new_req_id
     assert wrs_other[0]["estimate_hours"] == 140
     assert wrs_other[0]["status"] == "accepted"
+
+    # Non-member of EX-OTHER (e.g. rotating.lead) cannot list EX-OTHER or read FRZ-EX-OTHER-V1 items
+    rot_hdr = _login(client, "rotating.lead@demo.local")
+    rot_exs = [e["id"] for e in client.get("/api/v1/exercises", headers=rot_hdr).json()]
+    assert "EX-OTHER" not in rot_exs
+    assert client.get("/api/v1/freezes/FRZ-EX-OTHER-V1/items", headers=rot_hdr).status_code == 403
+    assert client.get("/api/v1/freezes/FRZ-NONEXISTENT/items", headers=rot_hdr).status_code == 404
+
+    # Approving a 'change' CR with updated equipment_text applies that field to the live work request
+    r_mod = client.post(
+        "/api/v1/change-requests",
+        json={
+            "exercise_id": "EX-OTHER",
+            "request_id": new_req_id,
+            "change_type": "change",
+            "hours_delta": 20,
+            "cost_delta_usd": 4700,
+            "title": "Clarify nozzle N3 weld seam tag",
+            "equipment_text": "C-201 nozzle N3 lower seam",
+            "reason": "Updated UT weld map",
+        },
+        headers=ta_hdr,
+    )
+    assert r_mod.status_code == 201, r_mod.text
+    r_mod_app = client.post(
+        f"/api/v1/change-requests/{r_mod.json()['id']}/decide",
+        params={"exercise_id": "EX-OTHER"},
+        json={"decision": "approved", "reason": "Confirmed by inspection"},
+        headers=ta_hdr,
+    )
+    assert r_mod_app.status_code == 200, r_mod_app.text
+    updated_wr = client.get(f"/api/v1/work-requests/{new_req_id}?exercise_id=EX-OTHER", headers=sync_hdr).json()
+    assert updated_wr["equipment_text"] == "C-201 nozzle N3 lower seam"
+    assert updated_wr["estimate_hours"] == 160
+    assert updated_wr["version"] == 2

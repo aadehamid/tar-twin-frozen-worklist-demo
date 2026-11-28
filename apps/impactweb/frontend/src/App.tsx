@@ -340,8 +340,8 @@ export default function App() {
           hours_delta: Number(crHoursDelta) || 0,
           cost_delta_usd: Number(crCostDelta) || 0,
           title: crTitle.trim(),
-          equipment_text: crEquipText.trim(),
-          area: crArea,
+          equipment_text: crEquipText.trim() || null,
+          area: crType === "add" ? crArea : null,
           reason: crReason.trim(),
         }),
       });

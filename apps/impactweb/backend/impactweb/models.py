@@ -152,11 +152,11 @@ class ChangeRequest(SQLModel, table=True):
     hours_delta: int
     cost_delta_usd: int
     title: str
-    equipment_text: str = Field(default="")
-    category: str = Field(default="General piping and valves")
-    driver: str = Field(default="inspection")
-    source_group: str = Field(default="fixed_equipment")
-    area: str = Field(default="200-A")
+    equipment_text: str | None = Field(default=None)
+    category: str | None = Field(default=None)
+    driver: str | None = Field(default=None)
+    source_group: str | None = Field(default=None)
+    area: str | None = Field(default=None)
     evidence: str = Field(default="")
     reason: str
     raised_by: str

@@ -115,11 +115,11 @@ class DirectChangeRequestBody(BaseModel):
     hours_delta: int
     cost_delta_usd: int
     title: str = Field(min_length=3, max_length=240)
-    equipment_text: str = ""
-    category: str = "General piping and valves"
-    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] = "inspection"
-    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] = "fixed_equipment"
-    area: str = "200-A"
+    equipment_text: str | None = None
+    category: str | None = None
+    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] | None = None
+    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] | None = None
+    area: str | None = None
     evidence: str = ""
     reason: str = Field(min_length=3, max_length=4000)
 
@@ -138,11 +138,11 @@ class TwinChangeRequestBody(BaseModel):
     hours_delta: int
     cost_delta_usd: int
     title: str = Field(min_length=3, max_length=240)
-    equipment_text: str = ""
-    category: str = "General piping and valves"
-    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] = "inspection"
-    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] = "fixed_equipment"
-    area: str = "200-A"
+    equipment_text: str | None = None
+    category: str | None = None
+    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] | None = None
+    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] | None = None
+    area: str | None = None
     evidence: str = ""
     reason: str = Field(min_length=3, max_length=4000)
     on_behalf_of: str = Field(min_length=1)
@@ -392,17 +392,21 @@ def create_app(
         hours_delta: int,
         cost_delta_usd: int,
         title: str,
-        equipment_text: str,
-        category: str,
-        driver: str,
-        source_group: str,
-        area: str,
+        equipment_text: str | None,
+        category: str | None,
+        driver: str | None,
+        source_group: str | None,
+        area: str | None,
         evidence: str,
         reason: str,
         raised_by_user: UserAccount,
         raised_via: Literal["iw", "twin"],
         delegate_token_id: str | None,
     ) -> dict:
+        if change_type == "add" and request_id is not None:
+            raise HTTPException(status_code=422, detail="change_type='add' must omit request_id")
+        if change_type in {"change", "delete"} and request_id is None:
+            raise HTTPException(status_code=422, detail=f"change_type='{change_type}' requires a target request_id")
         try:
             assert_synthetic_text(title, equipment_text, reason, evidence, risk_if_not_done)
         except ValueError as exc:
@@ -519,8 +523,16 @@ def create_app(
     def list_exercises(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _forbid_delegate_token(caller)
         exs = session.exec(select(Exercise)).all()
+        allowed_ids: set[str] | None = None
+        if caller.kind == "user" and caller.user is not None and not caller.user.is_superuser:
+            mems = session.exec(
+                select(ExerciseMembership.exercise_id).where(ExerciseMembership.user_id == caller.user.id)
+            ).all()
+            allowed_ids = set(mems)
         out = []
         for ex in exs:
+            if allowed_ids is not None and ex.id not in allowed_ids:
+                continue
             freeze = _is_frozen(session, ex.id)
             out.append(
                 {
@@ -1018,7 +1030,15 @@ def create_app(
         session: Session = Depends(get_session),
     ) -> list[dict]:
         _forbid_delegate_token(caller)
-        items = session.exec(select(FreezeItem).where(FreezeItem.freeze_id == freeze_id).order_by(FreezeItem.request_id)).all()
+        frz = session.get(FreezeRecord, freeze_id)
+        if frz is None:
+            raise HTTPException(status_code=404, detail="Freeze record not found")
+        _require_exercise_read(session, caller, frz.exercise_id)
+        items = session.exec(
+            select(FreezeItem)
+            .where(FreezeItem.freeze_id == freeze_id, FreezeItem.exercise_id == frz.exercise_id)
+            .order_by(FreezeItem.request_id)
+        ).all()
         return [
             {
                 "freeze_id": it.freeze_id,
@@ -1169,9 +1189,37 @@ def create_app(
                     wr.estimate_cost_usd = max(0, wr.estimate_cost_usd + cr.cost_delta_usd)
                     if cr.change_type == "delete":
                         wr.status = "deleted"
+                    else:
+                        if cr.equipment_text:
+                            wr.equipment_text = cr.equipment_text
+                        if cr.category:
+                            wr.category = cr.category
+                        if cr.driver:
+                            wr.driver = cr.driver
+                        if cr.source_group:
+                            wr.source_group = cr.source_group
+                        if cr.area:
+                            wr.area = cr.area
+                        if cr.mandatory:
+                            wr.mandatory = True
+                    wr.decision_reason = f"{cr.id}: {cr.title} ({body.reason})"
                     wr.version += 1
                     wr.updated_at = datetime.now(timezone.utc)
                     session.add(wr)
+                    _append_feed(
+                        session,
+                        ex,
+                        "work_request",
+                        wr.id,
+                        "updated",
+                        {
+                            "request_id": wr.id,
+                            "version": wr.version,
+                            "estimate_hours": wr.estimate_hours,
+                            "status": wr.status,
+                            "from_change_request": cr.id,
+                        },
+                    )
                 elif cr.change_type == "add":
                     existing = session.exec(select(WorkRequest.id).where(WorkRequest.exercise_id == exercise_id)).all()
                     max_num = max((int(rid.split("-")[-1]) for rid in existing if rid.startswith("WR-200-")), default=200)
@@ -1186,11 +1234,11 @@ def create_app(
                         title=cr.title,
                         description=cr.reason,
                         equipment_text=cr.equipment_text or cr.title,
-                        category=cr.category,
+                        category=cr.category or "General piping and valves",
                         work_type_label="LateScopeAdd",
-                        driver=cr.driver,
-                        source_group=cr.source_group,
-                        area=cr.area,
+                        driver=cr.driver or "inspection",
+                        source_group=cr.source_group or "fixed_equipment",
+                        area=cr.area or "200-A",
                         ript_score=20 if cr.mandatory else 12,
                         mandatory=cr.mandatory,
                         estimate_hours=hrs,
