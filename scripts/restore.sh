@@ -79,7 +79,7 @@ docker compose exec -T postgres psql -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" <
 EXERCISES=$(python3 -c 'import json,sys; print("\n".join(sorted(json.load(open(sys.argv[1]))["cutoffs"].keys())))' "${PAIR_DIR}/watermarks.json")
 for ex_id in $EXERCISES; do
   curl -fsS -X POST -H "Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${TWIN_URL}/api/v1/backup/reset-scope?exercise_id=${ex_id}" >/dev/null
-  curl -fsS -X POST "${TWIN_URL}/api/v1/sync?exercise_id=${ex_id}&use_ai=true" >/dev/null
+  curl -fsS -X POST -H "Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${TWIN_URL}/api/v1/sync?exercise_id=${ex_id}&use_ai=true" >/dev/null
 done
 
 # 4. Import twin-only state (server re-verifies cutoffs and refuses 409 on mismatch)

@@ -52,16 +52,16 @@ df -h /
 echo "==> Taking paired pre-deploy backup if stack is currently running (docs/hosting.md section 5)"
 if curl -fsS http://127.0.0.1:18001/api/v1/utils/health-check/ >/dev/null 2>&1 \
    && curl -fsS http://127.0.0.1:18002/api/v1/utils/health-check/ >/dev/null 2>&1; then
-  ENV_FILE="${REMOTE_DIR}/.env" bash "${REMOTE_DIR}/repo/scripts/backup.sh" "${REMOTE_DIR}/backups"
+  ENV_FILE="${REMOTE_DIR}/.env" bash "${REMOTE_DIR}/repo/scripts/backup.sh" "${REMOTE_DIR}/backups" </dev/null
 else
   echo "No running stack detected yet (initial deploy); skipping pre-deploy backup."
 fi
 
 echo "==> Pulling prebuilt images (no VM builds per docs/hosting.md section 2)"
-docker compose --env-file "${REMOTE_DIR}/.env" pull
+docker compose --env-file "${REMOTE_DIR}/.env" pull </dev/null
 
 echo "==> Restarting stack with --no-build"
-docker compose --env-file "${REMOTE_DIR}/.env" up -d --no-build --remove-orphans
+docker compose --env-file "${REMOTE_DIR}/.env" up -d --no-build --remove-orphans </dev/null
 
 echo "==> Waiting for health checks on /impactweb/ and /twin/"
 HEALTHY=0

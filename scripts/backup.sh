@@ -70,11 +70,11 @@ printf '%s\n' "$WM_JSON" > "${OUT_DIR}/watermarks.json"
 # 3. Drain twin sync for every exercise up to its cutoff
 EXERCISES=$(python3 -c 'import json,sys; print("\n".join(sorted((json.loads(sys.argv[1]).get("cutoffs") or {}).keys())))' "$WM_JSON")
 for ex_id in $EXERCISES; do
-  curl -fsS -X POST "${TWIN_URL}/api/v1/sync?exercise_id=${ex_id}" >/dev/null
+  curl -fsS -X POST -H "Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${TWIN_URL}/api/v1/sync?exercise_id=${ex_id}" >/dev/null
 done
 
 # 4. Dump Postgres and export twin-only state
-docker compose exec -T postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --clean --if-exists > "${OUT_DIR}/impactweb.sql"
+docker compose exec -T postgres pg_dump -U "${POSTGRES_USER}" -d "${POSTGRES_DB}" --clean --if-exists </dev/null > "${OUT_DIR}/impactweb.sql"
 curl -fsS -H "Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${TWIN_URL}/api/v1/backup/export" > "${OUT_DIR}/twin-only.json"
 
 # 5. Verify both files carry matching per-exercise cutoffs

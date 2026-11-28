@@ -321,6 +321,7 @@ def test_deploy_and_backup_scripts_enforce_hosting_rules():
     assert "--no-build" in deploy_txt
     assert "--build" not in deploy_txt, "deploy.sh must never build images on the 4 GB VM"
     assert "scripts/backup.sh" in deploy_txt, "deploy.sh must run paired pre-deploy backup"
+    assert "</dev/null" in deploy_txt, "deploy.sh must isolate backup/compose stdin inside ssh bash -s heredoc"
     assert "sys.exit(1)" in deploy_txt
     assert "network_mode" in deploy_txt
     assert "18001" in deploy_txt and "18002" in deploy_txt
@@ -330,5 +331,8 @@ def test_deploy_and_backup_scripts_enforce_hosting_rules():
         assert "/api/v1/auth/mode" in txt, f"{script_name} must detect AUTH_MODE"
         assert "/api/v1/auth/login" in txt, f"{script_name} must support AUTH_MODE=local JWT auth"
         assert "X-Edge-Auth" in txt, f"{script_name} must support AUTH_MODE=exe edge auth"
+        assert 'Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${TWIN_URL}/api/v1/sync' in txt, (
+            f"{script_name} must authenticate planning-mode Twin sync calls with TWIN_SYNC_TOKEN"
+        )
 
 
