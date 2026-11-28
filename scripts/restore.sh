@@ -3,12 +3,19 @@
 set -euo pipefail
 
 PAIR_DIR="${1:?Usage: scripts/restore.sh <backup-pair-dir>}"
+ENV_FILE="${ENV_FILE:-.env}"
+if [[ -f "$ENV_FILE" ]]; then
+  set -a
+  # shellcheck disable=SC1090
+  source "$ENV_FILE"
+  set +a
+fi
 IMPACTWEB_URL="${IMPACTWEB_URL:-http://127.0.0.1:18001}"
 TWIN_URL="${TWIN_URL:-http://127.0.0.1:18002}"
-TWIN_SYNC_TOKEN="${TWIN_SYNC_TOKEN:?TWIN_SYNC_TOKEN is required}"
+TWIN_SYNC_TOKEN="${TWIN_SYNC_TOKEN:-local-dev-twin-sync-token}"
 FACILITATOR_TOKEN="${FACILITATOR_TOKEN:-}"
 FACILITATOR_EMAIL="${FACILITATOR_EMAIL:-facilitator@demo.local}"
-FACILITATOR_PASSWORD="${FACILITATOR_PASSWORD:-}"
+FACILITATOR_PASSWORD="${FACILITATOR_PASSWORD:-demo-pass-2028}"
 EDGE_AUTH_SECRET="${EDGE_AUTH_SECRET:-}"
 POSTGRES_USER="${POSTGRES_USER:-impactweb}"
 POSTGRES_DB="${POSTGRES_DB:-impactweb}"

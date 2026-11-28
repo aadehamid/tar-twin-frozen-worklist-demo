@@ -6,6 +6,7 @@ import copy
 import json
 import threading
 from collections import defaultdict
+from contextlib import ExitStack
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -940,23 +941,30 @@ class SyncEngine:
                         f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, IMPACT Web={live_cutoffs[ex_id]}"
                     )
 
-        # Acquire per-exercise locks in deterministic order so cursor check + restore are atomic
+        # Acquire ALL per-exercise locks in deterministic order so validation and restore are all-or-nothing
         ordered_ex_ids = sorted(exercises_data.keys())
         restored_exercises: list[str] = []
-        for ex_id in ordered_ex_ids:
-            exp_int = int(bundle_cutoffs[ex_id])
-            payload = exercises_data[ex_id]
-            with self._locks[ex_id]:
+        with ExitStack() as stack:
+            for ex_id in ordered_ex_ids:
+                stack.enter_context(self._locks[ex_id])
+
+            # Phase 1: validate EVERY exercise's twin cursor BEFORE mutating any exercise
+            states_to_restore: list[tuple[str, ExerciseSyncState, dict[str, Any]]] = []
+            for ex_id in ordered_ex_ids:
+                exp_int = int(bundle_cutoffs[ex_id])
                 st = self._get_state(ex_id)
                 if st.cursor_seq != exp_int:
                     raise RuntimeError(
                         f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, twin cursor={st.cursor_seq}"
                     )
+                states_to_restore.append((ex_id, st, exercises_data[ex_id]))
+
+            # Phase 2: all cutoffs verified; now apply every exercise's restored state
+            for ex_id, st, payload in states_to_restore:
                 st.manual_reviews = copy.deepcopy(payload.get("manual_reviews") or {})
                 st.saved_cut_line_runs = copy.deepcopy(payload.get("saved_cut_line_runs") or [])
                 if payload.get("match_by_version"):
                     st.match_by_version.update(copy.deepcopy(payload["match_by_version"]))
-                # Re-apply manual reviews to current scope items
                 for rid, manual in st.manual_reviews.items():
                     item = st.scope_items.get(rid)
                     if item is not None and item.get("equipment_text") == manual.get("equipment_text"):

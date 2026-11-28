@@ -49,6 +49,14 @@ export NEO4J_IMAGE="ghcr.io/aadehamid/tar-twin-neo4j:${IMAGE_TAG}"
 echo "==> Checking VM disk space"
 df -h /
 
+echo "==> Taking paired pre-deploy backup if stack is currently running (docs/hosting.md section 5)"
+if curl -fsS http://127.0.0.1:18001/api/v1/utils/health-check/ >/dev/null 2>&1 \
+   && curl -fsS http://127.0.0.1:18002/api/v1/utils/health-check/ >/dev/null 2>&1; then
+  ENV_FILE="${REMOTE_DIR}/.env" bash "${REMOTE_DIR}/repo/scripts/backup.sh" "${REMOTE_DIR}/backups"
+else
+  echo "No running stack detected yet (initial deploy); skipping pre-deploy backup."
+fi
+
 echo "==> Pulling prebuilt images (no VM builds per docs/hosting.md section 2)"
 docker compose --env-file "${REMOTE_DIR}/.env" pull
 

@@ -216,6 +216,14 @@ def test_paired_watermark_maintenance_export_import_and_mismatch_rejection(tmp_p
     )
     assert broken_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
 
+    # Multi-exercise partial mismatch MUST NOT mutate earlier exercises (all-or-nothing atomic restore)
+    partial_bad = json.loads(json.dumps(bundle))
+    partial_bad["cutoffs"]["EX-Z-LATER"] = 99
+    partial_bad["exercises"]["EX-Z-LATER"] = {"cursor_seq": 99, "manual_reviews": {}, "saved_cut_line_runs": []}
+    assert fresh_twin.post("/api/v1/backup/import", json=partial_bad, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
+    still_unreviewed = fresh_twin.get(f"/api/v1/scope-items/{target_req}?exercise_id=EX-DEMO").json()
+    assert still_unreviewed["match_status"] != "accepted", "Earlier exercise must not be mutated when a later exercise mismatches"
+
     # 5. Valid paired bundle restores manual reviews and saved cut-line runs cleanly
     r_ok = fresh_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"})
     assert r_ok.status_code == 200
@@ -289,6 +297,7 @@ def test_deploy_and_backup_scripts_enforce_hosting_rules():
     assert "pull" in deploy_txt
     assert "--no-build" in deploy_txt
     assert "--build" not in deploy_txt, "deploy.sh must never build images on the 4 GB VM"
+    assert "scripts/backup.sh" in deploy_txt, "deploy.sh must run paired pre-deploy backup"
     assert "sys.exit(1)" in deploy_txt
     assert "network_mode" in deploy_txt
     assert "18001" in deploy_txt and "18002" in deploy_txt
