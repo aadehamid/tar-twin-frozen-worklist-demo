@@ -23,7 +23,6 @@ from impactweb.planning import (
     BOOTSTRAP_FACILITATOR_ID_PREFIX,
     SSO_DISABLED_PASSWORD_HASH,
     facilitator_email_allowlist,
-    is_bootstrap_sso_user,
 )
 
 DEMO_PASSWORD = "demo-pass-2028"
@@ -227,15 +226,15 @@ def seed_exercise_work_requests(
 
 
 def seed_facilitator_emails(session: Session, *, auth_mode: str = "local") -> None:
-    """Reconcile FACILITATOR_EMAILS against bootstrap-owned UserAccount rows and EX-DEMO memberships.
+    """Ensure every email in FACILITATOR_EMAILS has a UserAccount for SSO login.
 
-    Bootstrapped accounts use a disabled password hash (usable only via SSO, never local login)
-    and keep is_superuser=False so removing an email from FACILITATOR_EMAILS immediately revokes
-    global facilitator, maintenance, and bootstrap-owned EX-DEMO facilitator privileges.
+    Facilitator privileges for FACILITATOR_EMAILS are derived dynamically from the allowlist
+    rather than persisted ExerciseMembership rows, so removing any email (new or pre-existing)
+    from FACILITATOR_EMAILS revokes global and EX-DEMO facilitator access immediately.
+    Bootstrapped accounts use a disabled password hash (never usable for local password login)
+    and keep is_superuser=False.
     """
-    allowlist_set = facilitator_email_allowlist()
-    allowlist = sorted(allowlist_set)
-    demo_exists = session.get(Exercise, "EX-DEMO") is not None
+    allowlist = sorted(facilitator_email_allowlist())
     changed = False
 
     for email in allowlist:
@@ -250,43 +249,21 @@ def seed_facilitator_emails(session: Session, *, auth_mode: str = "local") -> No
                 is_superuser=False,
             )
             session.add(user)
-            session.flush()
             changed = True
-        if demo_exists:
-            mem = session.exec(
-                select(ExerciseMembership).where(
-                    ExerciseMembership.exercise_id == "EX-DEMO",
-                    ExerciseMembership.user_id == user.id,
-                )
-            ).first()
-            if mem is None:
-                session.add(
-                    ExerciseMembership(
-                        exercise_id="EX-DEMO",
-                        user_id=user.id,
-                        role="facilitator",
-                        source_group=None,
-                    )
-                )
-                changed = True
 
-    if demo_exists:
-        demo_fac_mems = session.exec(
+    # In AUTH_MODE=exe, remove any seeded demo superuser EX-DEMO grant so usr-facilitator
+    # cannot bypass FACILITATOR_EMAILS via persisted membership rows.
+    if auth_mode == "exe":
+        demo_fac_mem = session.exec(
             select(ExerciseMembership).where(
                 ExerciseMembership.exercise_id == "EX-DEMO",
+                ExerciseMembership.user_id == "usr-facilitator",
                 ExerciseMembership.role == "facilitator",
             )
-        ).all()
-        for mem in demo_fac_mems:
-            user = session.get(UserAccount, mem.user_id)
-            if user is None:
-                continue
-            email = user.email.strip().lower()
-            revoke_bootstrap = is_bootstrap_sso_user(user) and email not in allowlist_set
-            revoke_demo_in_exe = auth_mode == "exe" and user.id == "usr-facilitator" and email not in allowlist_set
-            if revoke_bootstrap or revoke_demo_in_exe:
-                session.delete(mem)
-                changed = True
+        ).first()
+        if demo_fac_mem is not None:
+            session.delete(demo_fac_mem)
+            changed = True
 
     if changed:
         session.commit()
@@ -313,9 +290,8 @@ def seed_demo_exercise(session: Session, scenario_dir: Path, *, auth_mode: str =
         m.user_id
         for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.exercise_id == "EX-DEMO")).all()
     }
-    allowlist_set = facilitator_email_allowlist()
-    for uid, email, _name, role, sg in DEMO_USERS:
-        if auth_mode == "exe" and uid == "usr-facilitator" and email.strip().lower() not in allowlist_set:
+    for uid, _email, _name, role, sg in DEMO_USERS:
+        if auth_mode == "exe" and uid == "usr-facilitator":
             continue
         if uid not in existing_mems:
             session.add(ExerciseMembership(exercise_id="EX-DEMO", user_id=uid, role=role, source_group=sg))

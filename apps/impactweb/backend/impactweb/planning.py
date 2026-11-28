@@ -148,10 +148,6 @@ def facilitator_email_allowlist() -> set[str]:
     return {e.strip().lower() for e in raw.split(",") if e.strip()}
 
 
-def is_bootstrap_sso_user(user: UserAccount) -> bool:
-    return user.id.startswith(BOOTSTRAP_FACILITATOR_ID_PREFIX) and user.password_hash == SSO_DISABLED_PASSWORD_HASH
-
-
 def is_global_facilitator(user: UserAccount, *, auth_mode: str = "local") -> bool:
     email = user.email.strip().lower()
     if auth_mode == "exe":
@@ -159,14 +155,16 @@ def is_global_facilitator(user: UserAccount, *, auth_mode: str = "local") -> boo
     return bool(user.is_superuser or email in facilitator_email_allowlist())
 
 
-def is_active_bootstrap_membership(user: UserAccount, mem: ExerciseMembership, *, auth_mode: str = "local") -> bool:
-    """Return False for bootstrap-owned EX-DEMO facilitator grants whose email is no longer in FACILITATOR_EMAILS."""
-    if mem.exercise_id == "EX-DEMO" and mem.role == "facilitator":
-        email = user.email.strip().lower()
-        if is_bootstrap_sso_user(user) and email not in facilitator_email_allowlist():
-            return False
-        if auth_mode == "exe" and user.id == "usr-facilitator" and email not in facilitator_email_allowlist():
-            return False
+def is_active_persisted_membership(user: UserAccount, mem: ExerciseMembership, *, auth_mode: str = "local") -> bool:
+    """Return False for the seeded demo superuser's EX-DEMO grant in AUTH_MODE=exe.
+
+    In AUTH_MODE=exe, facilitator privileges for FACILITATOR_EMAILS (including the seeded
+    demo facilitator if listed) are derived dynamically from the allowlist rather than
+    persisted ExerciseMembership rows, so allowlist removal revokes access immediately for
+    both new and pre-existing accounts.
+    """
+    if auth_mode == "exe" and user.id == "usr-facilitator" and mem.exercise_id == "EX-DEMO" and mem.role == "facilitator":
+        return False
     return True
 
 
@@ -187,7 +185,7 @@ def is_facilitator(
                 ExerciseMembership.role == "facilitator",
             )
         ).first()
-        return mem is not None and is_active_bootstrap_membership(user, mem, auth_mode=auth_mode)
+        return mem is not None and is_active_persisted_membership(user, mem, auth_mode=auth_mode)
     # Creating a new exercise or listing users requires global facilitator privilege
     return False
 

@@ -49,7 +49,7 @@ from impactweb.planning import (
     PRE_FREEZE_EDIT_STEPS,
     enforce_expected_epoch,
     enforce_planning_phase,
-    is_active_bootstrap_membership,
+    is_active_persisted_membership,
     is_facilitator,
     is_global_facilitator,
     load_starting_fixture,
@@ -527,7 +527,7 @@ def create_app(
         if is_facilitator(session, caller.user, exercise_id, auth_mode=mode):
             return
         mem = get_membership(session, exercise_id, caller.user.id)
-        if mem is None or not is_active_bootstrap_membership(caller.user, mem, auth_mode=mode):
+        if mem is None or not is_active_persisted_membership(caller.user, mem, auth_mode=mode):
             raise HTTPException(status_code=403, detail="Not a member of this exercise")
 
     def _require_facilitator(session: Session, caller: Caller, exercise_id: str | None = None) -> UserAccount:
@@ -688,18 +688,22 @@ def create_app(
     @api.get("/api/v1/auth/me")
     def auth_me(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> dict:
         user = _require_user(caller)
-        mems = [
-            m
-            for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all()
-            if is_active_bootstrap_membership(user, m, auth_mode=mode)
-        ]
+        mems_by_ex: dict[str, dict] = {}
+        for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all():
+            if is_active_persisted_membership(user, m, auth_mode=mode):
+                mems_by_ex[m.exercise_id] = {
+                    "exercise_id": m.exercise_id,
+                    "role": m.role,
+                    "source_group": m.source_group,
+                }
+        if is_global_facilitator(user, auth_mode=mode):
+            for ex in session.exec(select(Exercise).order_by(Exercise.created_at)).all():
+                mems_by_ex[ex.id] = {"exercise_id": ex.id, "role": "facilitator", "source_group": None}
         return {
             "id": user.id,
             "email": user.email,
             "full_name": user.full_name,
-            "memberships": [
-                {"exercise_id": m.exercise_id, "role": m.role, "source_group": m.source_group} for m in mems
-            ],
+            "memberships": list(mems_by_ex.values()),
         }
 
     @api.get("/api/v1/exercises")
@@ -713,7 +717,7 @@ def create_app(
                 for m in session.exec(
                     select(ExerciseMembership).where(ExerciseMembership.user_id == caller.user.id)
                 ).all()
-                if is_active_bootstrap_membership(caller.user, m, auth_mode=mode)
+                if is_active_persisted_membership(caller.user, m, auth_mode=mode)
             ]
             allowed_ids = set(mems)
         out = []
@@ -849,20 +853,34 @@ def create_app(
     @api.get("/api/v1/exercises/{exercise_id}/memberships")
     def list_memberships(exercise_id: str, caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _require_exercise_read(session, caller, exercise_id)
+        if session.get(Exercise, exercise_id) is None:
+            return []
         mems = session.exec(select(ExerciseMembership).where(ExerciseMembership.exercise_id == exercise_id)).all()
         users = {u.id: u for u in session.exec(select(UserAccount)).all()}
-        return [
-            {
+        rows_by_uid: dict[str, dict] = {}
+        for m in mems:
+            u = users.get(m.user_id)
+            if u is not None and not is_active_persisted_membership(u, m, auth_mode=mode):
+                continue
+            rows_by_uid[m.user_id] = {
                 "exercise_id": m.exercise_id,
                 "user_id": m.user_id,
-                "email": users[m.user_id].email if m.user_id in users else "",
-                "full_name": users[m.user_id].full_name if m.user_id in users else "",
+                "email": u.email if u is not None else "",
+                "full_name": u.full_name if u is not None else "",
                 "role": m.role,
                 "source_group": m.source_group,
             }
-            for m in mems
-            if m.user_id not in users or is_active_bootstrap_membership(users[m.user_id], m, auth_mode=mode)
-        ]
+        for u in users.values():
+            if is_global_facilitator(u, auth_mode=mode):
+                rows_by_uid[u.id] = {
+                    "exercise_id": exercise_id,
+                    "user_id": u.id,
+                    "email": u.email,
+                    "full_name": u.full_name,
+                    "role": "facilitator",
+                    "source_group": None,
+                }
+        return list(rows_by_uid.values())
 
     @api.post("/api/v1/exercises/{exercise_id}/memberships", status_code=201)
     def upsert_membership(
