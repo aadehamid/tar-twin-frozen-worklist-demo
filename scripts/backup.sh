@@ -7,19 +7,34 @@ IMPACTWEB_URL="${IMPACTWEB_URL:-http://127.0.0.1:18001}"
 TWIN_URL="${TWIN_URL:-http://127.0.0.1:18002}"
 TWIN_SYNC_TOKEN="${TWIN_SYNC_TOKEN:?TWIN_SYNC_TOKEN is required}"
 FACILITATOR_TOKEN="${FACILITATOR_TOKEN:-}"
-EDGE_AUTH_SECRET="${EDGE_AUTH_SECRET:-}"
 FACILITATOR_EMAIL="${FACILITATOR_EMAIL:-facilitator@demo.local}"
+FACILITATOR_PASSWORD="${FACILITATOR_PASSWORD:-}"
+EDGE_AUTH_SECRET="${EDGE_AUTH_SECRET:-}"
 POSTGRES_USER="${POSTGRES_USER:-impactweb}"
 POSTGRES_DB="${POSTGRES_DB:-impactweb}"
 
+# Detect server auth mode so local mode uses JWT bearer auth and exe mode uses edge auth headers.
+AUTH_MODE=$(curl -fsS "${IMPACTWEB_URL}/api/v1/auth/mode" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("auth_mode", "local"))')
+
 auth_admin_headers=()
-if [[ -n "$FACILITATOR_TOKEN" ]]; then
-  auth_admin_headers=(-H "Authorization: Bearer ${FACILITATOR_TOKEN}")
-elif [[ -n "$EDGE_AUTH_SECRET" ]]; then
+if [[ "$AUTH_MODE" == "exe" ]]; then
+  if [[ -z "$EDGE_AUTH_SECRET" ]]; then
+    echo "ERROR: AUTH_MODE=exe requires EDGE_AUTH_SECRET (and FACILITATOR_EMAIL) to toggle maintenance mode." >&2
+    exit 1
+  fi
   auth_admin_headers=(-H "X-Edge-Auth: ${EDGE_AUTH_SECRET}" -H "X-ExeDev-Email: ${FACILITATOR_EMAIL}")
 else
-  echo "ERROR: FACILITATOR_TOKEN or EDGE_AUTH_SECRET is required to activate maintenance mode before backup." >&2
-  exit 1
+  if [[ -z "$FACILITATOR_TOKEN" ]]; then
+    if [[ -z "$FACILITATOR_PASSWORD" ]]; then
+      echo "ERROR: AUTH_MODE=local requires FACILITATOR_TOKEN or FACILITATOR_PASSWORD to toggle maintenance mode." >&2
+      exit 1
+    fi
+    FACILITATOR_TOKEN=$(curl -fsS -X POST "${IMPACTWEB_URL}/api/v1/auth/login" \
+      -H "Content-Type: application/json" \
+      -d "$(python3 -c 'import json,sys; print(json.dumps({"email": sys.argv[1], "password": sys.argv[2]}))' "$FACILITATOR_EMAIL" "$FACILITATOR_PASSWORD")" \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin)["access_token"])')
+  fi
+  auth_admin_headers=(-H "Authorization: Bearer ${FACILITATOR_TOKEN}")
 fi
 
 STAMP=$(date -u +"%Y%m%dT%H%M%SZ")

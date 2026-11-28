@@ -22,6 +22,7 @@ services:
     mem_limit: 384m
 
   neo4j:
+    image: ${NEO4J_IMAGE:-ghcr.io/aadehamid/tar-twin-neo4j:latest}
     build:
       context: .
       dockerfile: deploy/neo4j/Dockerfile
@@ -44,6 +45,7 @@ services:
     mem_limit: 1536m
 
   impactweb:
+    image: ${IMPACTWEB_IMAGE:-ghcr.io/aadehamid/tar-twin-impactweb:latest}
     build:
       context: .
       dockerfile: apps/impactweb/Dockerfile
@@ -69,6 +71,7 @@ services:
     mem_limit: 384m
 
   twin:
+    image: ${TWIN_IMAGE:-ghcr.io/aadehamid/tar-twin-twin:latest}
     build:
       context: .
       dockerfile: apps/twin/Dockerfile

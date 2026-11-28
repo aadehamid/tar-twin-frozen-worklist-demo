@@ -173,6 +173,49 @@ def test_paired_watermark_maintenance_export_import_and_mismatch_rejection(tmp_p
     r_bad = fresh_twin.post("/api/v1/backup/import", json=bad_bundle, headers={"Authorization": "Bearer sync-p7"})
     assert r_bad.status_code == 409
 
+    # Missing cutoffs map or exercise omitted from cutoffs MUST also fail closed with 409
+    assert (
+        fresh_twin.post(
+            "/api/v1/backup/import",
+            json={"format_version": 1, "exercises": bundle["exercises"]},
+            headers={"Authorization": "Bearer sync-p7"},
+        ).status_code
+        == 409
+    )
+    assert (
+        fresh_twin.post(
+            "/api/v1/backup/import",
+            json={"format_version": 1, "cutoffs": {}, "exercises": bundle["exercises"]},
+            headers={"Authorization": "Bearer sync-p7"},
+        ).status_code
+        == 409
+    )
+    assert (
+        fresh_twin.post(
+            "/api/v1/backup/import",
+            json={"format_version": 1, "cutoffs": {"EX-OTHER": 0}, "exercises": bundle["exercises"]},
+            headers={"Authorization": "Bearer sync-p7"},
+        ).status_code
+        == 409
+    )
+
+    # Failed watermark read from IMPACT Web MUST fail closed with 409 (never fall through)
+    class _FailingIwClient:
+        def get_watermarks(self):
+            raise RuntimeError("IMPACT Web unreachable")
+
+    broken_twin = TestClient(
+        create_twin_app(
+            scenario_dir=REPO_ROOT / "data" / "scenario",
+            shapes_path=REPO_ROOT / "specs" / "shapes.ttl",
+            impactweb_client=_FailingIwClient(),  # type: ignore[arg-type]
+            cmms_client=cmms_cli,
+            twin_sync_token="sync-p7",
+            auth_mode="local",
+        )
+    )
+    assert broken_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
+
     # 5. Valid paired bundle restores manual reviews and saved cut-line runs cleanly
     r_ok = fresh_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"})
     assert r_ok.status_code == 200
@@ -239,4 +282,21 @@ def test_maintenance_mode_write_barrier_drains_in_flight_writes(tmp_path: Path):
     assert result_box["status"] == 200
     assert result_box["json"]["maintenance_mode"] is True
     assert result_box["json"]["in_flight_writes"] == 0
+
+
+def test_deploy_and_backup_scripts_enforce_hosting_rules():
+    deploy_txt = (REPO_ROOT / "scripts" / "deploy.sh").read_text(encoding="utf-8")
+    assert "pull" in deploy_txt
+    assert "--no-build" in deploy_txt
+    assert "--build" not in deploy_txt, "deploy.sh must never build images on the 4 GB VM"
+    assert "sys.exit(1)" in deploy_txt
+    assert "network_mode" in deploy_txt
+    assert "18001" in deploy_txt and "18002" in deploy_txt
+
+    for script_name in ("backup.sh", "restore.sh"):
+        txt = (REPO_ROOT / "scripts" / script_name).read_text(encoding="utf-8")
+        assert "/api/v1/auth/mode" in txt, f"{script_name} must detect AUTH_MODE"
+        assert "/api/v1/auth/login" in txt, f"{script_name} must support AUTH_MODE=local JWT auth"
+        assert "X-Edge-Auth" in txt, f"{script_name} must support AUTH_MODE=exe edge auth"
+
 

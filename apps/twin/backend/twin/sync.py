@@ -904,36 +904,54 @@ class SyncEngine:
         }
 
     def import_twin_only_backup(self, bundle: dict[str, Any]) -> dict[str, Any]:
-        """Restore twin-only state after verifying cutoffs match live IMPACT Web / twin cursors."""
-        bundle_cutoffs = bundle.get("cutoffs") or {}
-        exercises_data = bundle.get("exercises") or {}
+        """Restore twin-only state after fail-closed watermark verification held under per-exercise locks."""
+        if not isinstance(bundle, dict):
+            raise RuntimeError("Backup bundle must be a JSON object")
+        bundle_cutoffs = bundle.get("cutoffs")
+        exercises_data = bundle.get("exercises")
+        if not isinstance(bundle_cutoffs, dict) or not bundle_cutoffs:
+            raise RuntimeError("Backup bundle is missing required non-empty 'cutoffs' map")
+        if not isinstance(exercises_data, dict) or not exercises_data:
+            raise RuntimeError("Backup bundle is missing required non-empty 'exercises' map")
+
+        missing_cutoffs = sorted(set(exercises_data.keys()) - set(bundle_cutoffs.keys()))
+        if missing_cutoffs:
+            raise RuntimeError(f"Backup exercises omitted from cutoffs map: {', '.join(missing_cutoffs)}")
 
         live_cutoffs: dict[str, int] | None = None
         if self.impactweb_client is not None:
             try:
-                live_cutoffs = {
-                    k: int(v) for k, v in (self.impactweb_client.get_watermarks().get("cutoffs") or {}).items()
-                }
-            except Exception:
-                live_cutoffs = None
+                wm_resp = self.impactweb_client.get_watermarks()
+                raw_cutoffs = wm_resp.get("cutoffs")
+                if not isinstance(raw_cutoffs, dict):
+                    raise RuntimeError("IMPACT Web watermarks payload missing cutoffs map")
+                live_cutoffs = {str(k): int(v) for k, v in raw_cutoffs.items()}
+            except Exception as exc:
+                raise RuntimeError(f"Failed to verify IMPACT Web watermarks before restore: {exc}") from exc
 
-        # Refuse mismatched cutoffs (docs/hosting.md section 5 & 6)
-        for ex_id, expected_seq in bundle_cutoffs.items():
-            st = self._get_state(ex_id)
-            exp_int = int(expected_seq)
-            if live_cutoffs is not None and ex_id in live_cutoffs and live_cutoffs[ex_id] != exp_int:
-                raise RuntimeError(
-                    f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, IMPACT Web={live_cutoffs[ex_id]}"
-                )
-            if st.cursor_seq != exp_int:
-                raise RuntimeError(
-                    f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, twin cursor={st.cursor_seq}"
-                )
+        # Pre-validate IMPACT Web cutoffs for every exercise before mutating any exercise state
+        for ex_id in sorted(exercises_data.keys()):
+            exp_int = int(bundle_cutoffs[ex_id])
+            if live_cutoffs is not None:
+                if ex_id not in live_cutoffs:
+                    raise RuntimeError(f"Exercise {ex_id} not present in IMPACT Web watermarks")
+                if live_cutoffs[ex_id] != exp_int:
+                    raise RuntimeError(
+                        f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, IMPACT Web={live_cutoffs[ex_id]}"
+                    )
 
+        # Acquire per-exercise locks in deterministic order so cursor check + restore are atomic
+        ordered_ex_ids = sorted(exercises_data.keys())
         restored_exercises: list[str] = []
-        for ex_id, payload in exercises_data.items():
+        for ex_id in ordered_ex_ids:
+            exp_int = int(bundle_cutoffs[ex_id])
+            payload = exercises_data[ex_id]
             with self._locks[ex_id]:
                 st = self._get_state(ex_id)
+                if st.cursor_seq != exp_int:
+                    raise RuntimeError(
+                        f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, twin cursor={st.cursor_seq}"
+                    )
                 st.manual_reviews = copy.deepcopy(payload.get("manual_reviews") or {})
                 st.saved_cut_line_runs = copy.deepcopy(payload.get("saved_cut_line_runs") or [])
                 if payload.get("match_by_version"):
@@ -947,4 +965,4 @@ class SyncEngine:
                 self._push_scope_to_graph_store(st)
                 restored_exercises.append(ex_id)
 
-        return {"restored_exercises": sorted(restored_exercises), "cutoffs": bundle_cutoffs}
+        return {"restored_exercises": restored_exercises, "cutoffs": bundle_cutoffs}

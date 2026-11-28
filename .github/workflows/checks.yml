@@ -50,3 +50,58 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           npm run build
+
+  publish-images:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [checks, frontend-build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and push IMPACT Web image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/impactweb/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tar-twin-impactweb:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/tar-twin-impactweb:main
+            ghcr.io/${{ github.repository_owner }}/tar-twin-impactweb:latest
+
+      - name: Build and push Twin image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: apps/twin/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tar-twin-twin:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/tar-twin-twin:main
+            ghcr.io/${{ github.repository_owner }}/tar-twin-twin:latest
+
+      - name: Build and push Neo4j image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: deploy/neo4j/Dockerfile
+          push: true
+          tags: |
+            ghcr.io/${{ github.repository_owner }}/tar-twin-neo4j:${{ github.sha }}
+            ghcr.io/${{ github.repository_owner }}/tar-twin-neo4j:main
+            ghcr.io/${{ github.repository_owner }}/tar-twin-neo4j:latest
