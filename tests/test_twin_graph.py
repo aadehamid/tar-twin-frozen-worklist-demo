@@ -216,16 +216,24 @@ def _seed_synthetic_data_scenario(repo: Path) -> Path:
 
 
 def test_check_passes_on_current_repo_in_docs_mode_and_matches_repo_facts():
+    res_docs = _run_tg(REPO_ROOT, "--mode", "docs", "check", "--json")
+    assert res_docs.returncode == 0, res_docs.stderr + res_docs.stdout
+    docs_payload = json.loads(res_docs.stdout)
+    assert docs_payload["mode"] == "docs"
+    assert docs_payload["errors"] == []
+
     res = _run_tg(REPO_ROOT, "check", "--json")
     assert res.returncode == 0, res.stderr + res.stdout
     payload = json.loads(res.stdout)
-    assert payload["mode"] == "docs"
+    assert payload["mode"] == "full"
     assert payload["errors"] == []
     assert payload["counts"]["equipment"] == 32
     assert payload["counts"]["sheets"] == 5
     assert payload["counts"]["envelopes"] == 6
     assert payload["counts"]["boundary_valves_target"] == 112
+    assert payload["counts"]["boundary_valves"] == 112
     assert payload["counts"]["work_requests_target"] == 200
+    assert payload["counts"]["work_requests"] == 200
     assert payload["counts"]["work_request_categories"] == 12
     assert payload["counts"]["decisions"] == 17
     assert payload["counts"]["rules"] >= 20

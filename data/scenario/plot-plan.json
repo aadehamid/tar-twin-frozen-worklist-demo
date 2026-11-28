@@ -1,0 +1,363 @@
+{
+  "unit": "Unit 200 Diesel Hydrotreater",
+  "width_m": 120.0,
+  "height_m": 80.0,
+  "pipe_rack_y_range_m": [
+    36.0,
+    44.0
+  ],
+  "reactor_structure_elevations_m": [
+    0.0,
+    12.0,
+    24.0
+  ],
+  "provenance": "SYNTHETIC",
+  "areas": [
+    {
+      "code": "200-A",
+      "name": "Feed",
+      "x_min_m": 2.0,
+      "x_max_m": 34.0,
+      "y_min_m": 4.0,
+      "y_max_m": 34.0
+    },
+    {
+      "code": "200-B",
+      "name": "Reactor structure",
+      "x_min_m": 36.0,
+      "x_max_m": 62.0,
+      "y_min_m": 4.0,
+      "y_max_m": 34.0
+    },
+    {
+      "code": "200-C",
+      "name": "Exchanger bay",
+      "x_min_m": 26.0,
+      "x_max_m": 62.0,
+      "y_min_m": 46.0,
+      "y_max_m": 76.0
+    },
+    {
+      "code": "200-D",
+      "name": "Heater",
+      "x_min_m": 2.0,
+      "x_max_m": 22.0,
+      "y_min_m": 46.0,
+      "y_max_m": 76.0
+    },
+    {
+      "code": "200-E",
+      "name": "Separation",
+      "x_min_m": 64.0,
+      "x_max_m": 92.0,
+      "y_min_m": 46.0,
+      "y_max_m": 76.0
+    },
+    {
+      "code": "200-F",
+      "name": "Gas compression",
+      "x_min_m": 94.0,
+      "x_max_m": 118.0,
+      "y_min_m": 4.0,
+      "y_max_m": 76.0
+    },
+    {
+      "code": "200-G",
+      "name": "Stripping",
+      "x_min_m": 64.0,
+      "x_max_m": 92.0,
+      "y_min_m": 4.0,
+      "y_max_m": 34.0
+    }
+  ],
+  "equipment": [
+    {
+      "tag": "FL-201A",
+      "area": "200-A",
+      "x_m": 8.0,
+      "y_m": 12.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "FL-201B",
+      "area": "200-A",
+      "x_m": 8.0,
+      "y_m": 24.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "D-201",
+      "area": "200-A",
+      "x_m": 18.0,
+      "y_m": 18.0,
+      "elevation_m": 3.0,
+      "width_m": 5.0,
+      "depth_m": 10.0
+    },
+    {
+      "tag": "P-201A",
+      "area": "200-A",
+      "x_m": 28.0,
+      "y_m": 12.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "P-201B",
+      "area": "200-A",
+      "x_m": 28.0,
+      "y_m": 24.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "R-201",
+      "area": "200-B",
+      "x_m": 44.0,
+      "y_m": 18.0,
+      "elevation_m": 0.0,
+      "width_m": 5.0,
+      "depth_m": 5.0
+    },
+    {
+      "tag": "R-202",
+      "area": "200-B",
+      "x_m": 55.0,
+      "y_m": 18.0,
+      "elevation_m": 0.0,
+      "width_m": 6.0,
+      "depth_m": 6.0
+    },
+    {
+      "tag": "E-201A",
+      "area": "200-C",
+      "x_m": 32.0,
+      "y_m": 54.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "E-201B",
+      "area": "200-C",
+      "x_m": 44.0,
+      "y_m": 54.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "E-201C",
+      "area": "200-C",
+      "x_m": 56.0,
+      "y_m": 54.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "E-202",
+      "area": "200-C",
+      "x_m": 36.0,
+      "y_m": 68.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "E-204",
+      "area": "200-C",
+      "x_m": 52.0,
+      "y_m": 68.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "H-201",
+      "area": "200-D",
+      "x_m": 12.0,
+      "y_m": 60.0,
+      "elevation_m": 0.0,
+      "width_m": 10.0,
+      "depth_m": 12.0
+    },
+    {
+      "tag": "A-201",
+      "area": "200-E",
+      "x_m": 78.0,
+      "y_m": 69.0,
+      "elevation_m": 6.0,
+      "width_m": 14.0,
+      "depth_m": 8.0
+    },
+    {
+      "tag": "D-202",
+      "area": "200-E",
+      "x_m": 71.0,
+      "y_m": 54.0,
+      "elevation_m": 2.0,
+      "width_m": 5.0,
+      "depth_m": 6.0
+    },
+    {
+      "tag": "D-203",
+      "area": "200-E",
+      "x_m": 85.0,
+      "y_m": 54.0,
+      "elevation_m": 2.0,
+      "width_m": 5.0,
+      "depth_m": 6.0
+    },
+    {
+      "tag": "P-204A",
+      "area": "200-E",
+      "x_m": 68.0,
+      "y_m": 68.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "P-204B",
+      "area": "200-E",
+      "x_m": 88.0,
+      "y_m": 68.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "D-204",
+      "area": "200-F",
+      "x_m": 100.0,
+      "y_m": 14.0,
+      "elevation_m": 1.0,
+      "width_m": 4.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "C-202",
+      "area": "200-F",
+      "x_m": 111.0,
+      "y_m": 14.0,
+      "elevation_m": 0.0,
+      "width_m": 4.5,
+      "depth_m": 4.5
+    },
+    {
+      "tag": "K-201",
+      "area": "200-F",
+      "x_m": 101.0,
+      "y_m": 28.0,
+      "elevation_m": 1.5,
+      "width_m": 5.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "KT-201",
+      "area": "200-F",
+      "x_m": 111.0,
+      "y_m": 28.0,
+      "elevation_m": 1.5,
+      "width_m": 5.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "D-206",
+      "area": "200-F",
+      "x_m": 100.0,
+      "y_m": 54.0,
+      "elevation_m": 1.0,
+      "width_m": 4.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "K-202A",
+      "area": "200-F",
+      "x_m": 111.0,
+      "y_m": 54.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "K-202B",
+      "area": "200-F",
+      "x_m": 111.0,
+      "y_m": 67.0,
+      "elevation_m": 1.5,
+      "width_m": 6.0,
+      "depth_m": 4.0
+    },
+    {
+      "tag": "C-201",
+      "area": "200-G",
+      "x_m": 70.0,
+      "y_m": 12.0,
+      "elevation_m": 0.0,
+      "width_m": 5.0,
+      "depth_m": 5.0
+    },
+    {
+      "tag": "E-203",
+      "area": "200-G",
+      "x_m": 79.0,
+      "y_m": 12.0,
+      "elevation_m": 3.0,
+      "width_m": 5.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "D-205",
+      "area": "200-G",
+      "x_m": 87.0,
+      "y_m": 12.0,
+      "elevation_m": 3.0,
+      "width_m": 4.0,
+      "depth_m": 6.0
+    },
+    {
+      "tag": "P-202A",
+      "area": "200-G",
+      "x_m": 68.0,
+      "y_m": 26.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "P-202B",
+      "area": "200-G",
+      "x_m": 75.0,
+      "y_m": 26.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "P-203A",
+      "area": "200-G",
+      "x_m": 82.0,
+      "y_m": 26.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    },
+    {
+      "tag": "P-203B",
+      "area": "200-G",
+      "x_m": 88.0,
+      "y_m": 26.0,
+      "elevation_m": 0.0,
+      "width_m": 3.0,
+      "depth_m": 3.0
+    }
+  ]
+}
