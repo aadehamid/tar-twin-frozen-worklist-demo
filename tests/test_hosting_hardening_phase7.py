@@ -321,7 +321,14 @@ def test_deploy_and_backup_scripts_enforce_hosting_rules():
     assert "--no-build" in deploy_txt
     assert "--build" not in deploy_txt, "deploy.sh must never build images on the 4 GB VM"
     assert "scripts/backup.sh" in deploy_txt, "deploy.sh must run paired pre-deploy backup"
-    assert "</dev/null" in deploy_txt, "deploy.sh must isolate backup/compose stdin inside ssh bash -s heredoc"
+    for line in deploy_txt.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("#"):
+            continue
+        if "scripts/backup.sh" in stripped or "docker compose" in stripped or "docker stats" in stripped or "docker image prune" in stripped:
+            assert "</dev/null" in stripped, (
+                f"Remote heredoc command in deploy.sh must redirect </dev/null to avoid consuming ssh bash -s stdin: {stripped}"
+            )
     assert "sys.exit(1)" in deploy_txt
     assert "network_mode" in deploy_txt
     assert "18001" in deploy_txt and "18002" in deploy_txt

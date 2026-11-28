@@ -82,14 +82,14 @@ curl -fsS http://127.0.0.1:8000/ >/dev/null
 
 echo "==> Enforcing docs/hosting.md section 6 isolation & port checks (fail closed)"
 # 1. Verify twin holds zero Postgres credentials
-if docker compose --env-file "${REMOTE_DIR}/.env" exec -T twin env | grep -qE '^(POSTGRES_|DATABASE_URL)='; then
+if docker compose --env-file "${REMOTE_DIR}/.env" exec -T twin env </dev/null | grep -qE '^(POSTGRES_|DATABASE_URL)='; then
   echo "ERROR: twin container contains Postgres credentials!" >&2
   exit 1
 fi
 
 # 2. Verify docker compose config network_mode and port mappings strictly
-CFG_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" config --format json)
-PS_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" ps --format json)
+CFG_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" config --format json </dev/null)
+PS_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" ps --format json </dev/null)
 
 python3 - "$CFG_JSON" "$PS_JSON" <<'PY'
 import json, sys
@@ -133,10 +133,10 @@ for rec in records:
 print("Hosting section 6 port and network isolation checks PASSED.")
 PY
 
-docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
+docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}" </dev/null
 
 echo "==> Pruning dangling images to protect VM disk budget"
-docker image prune -f >/dev/null
+docker image prune -f </dev/null >/dev/null
 
 echo "Deploy verified on $(hostname) at commit $(git rev-parse --short HEAD)."
 REMOTE
