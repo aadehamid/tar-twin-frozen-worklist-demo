@@ -62,12 +62,13 @@ docker compose --env-file "${REMOTE_DIR}/.env" pull </dev/null
 
 echo "==> Restarting stack with --no-build"
 docker compose --env-file "${REMOTE_DIR}/.env" up -d --no-build --remove-orphans </dev/null
+docker compose --env-file "${REMOTE_DIR}/.env" restart edge </dev/null
 
 echo "==> Waiting for health checks on /impactweb/ and /twin/"
 HEALTHY=0
 for i in $(seq 1 30); do
-  if curl -fsS http://127.0.0.1:8000/impactweb/api/v1/utils/health-check/ >/dev/null 2>&1 \
-     && curl -fsS http://127.0.0.1:8000/twin/api/v1/utils/health-check/ >/dev/null 2>&1; then
+  if curl -fsS -H "Host: tar-frozen-work-list.exe.xyz" http://127.0.0.1:8000/impactweb/api/v1/utils/health-check/ >/dev/null 2>&1 \
+     && curl -fsS -H "Host: tar-frozen-work-list.exe.xyz" http://127.0.0.1:8000/twin/api/v1/utils/health-check/ >/dev/null 2>&1; then
     HEALTHY=1
     break
   fi
@@ -78,7 +79,7 @@ if [[ "${HEALTHY}" -ne 1 ]]; then
   exit 1
 fi
 
-curl -fsS http://127.0.0.1:8000/ >/dev/null
+curl -fsS -H "Host: tar-frozen-work-list.exe.xyz" http://127.0.0.1:8000/ >/dev/null
 
 echo "==> Enforcing docs/hosting.md section 6 isolation & port checks (fail closed)"
 # 1. Verify twin holds zero Postgres credentials

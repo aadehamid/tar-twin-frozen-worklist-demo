@@ -69,15 +69,21 @@ def test_caddyfile_strips_forged_headers_and_routes_only_on_loopback_8000():
     assert caddy_path.is_file(), "deploy/caddy/Caddyfile missing"
     text = caddy_path.read_text(encoding="utf-8")
 
-    assert "127.0.0.1:8000" in text
+    # Bind strictly to 127.0.0.1 on :8000 without restricting Host header to 127.0.0.1
+    assert ":8000 {" in text
+    assert "bind 127.0.0.1" in text
+    assert "http://127.0.0.1:8000" not in text, "Site label http://127.0.0.1:8000 rejects proxied Host headers"
     assert "127.0.0.1:18001" in text
     assert "127.0.0.1:18002" in text
     assert "/impactweb" in text
     assert "/twin" in text
-    # Must strip incoming X-Edge-Auth and guard X-ExeDev-* for non-loopback peers
-    assert "-X-Edge-Auth" in text
-    assert "X-Edge-Auth" in text
-    assert "127.0.0.1" in text
+    # Must preserve order with route so -X-Edge-Auth runs BEFORE @loopback injects X-Edge-Auth
+    assert "route {" in text
+    strip_idx = text.index("request_header -X-Edge-Auth")
+    inject_idx = text.index("request_header @loopback X-Edge-Auth {$EDGE_AUTH_SECRET}")
+    assert strip_idx < inject_idx, "Strip X-Edge-Auth must precede loopback injection inside route"
+    assert "-X-ExeDev-Email" in text
+    assert "-X-ExeDev-UserID" in text
 
 
 def test_paired_watermark_maintenance_export_import_and_mismatch_rejection(tmp_path: Path):
