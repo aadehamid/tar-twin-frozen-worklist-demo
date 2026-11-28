@@ -193,6 +193,34 @@ def test_memory_store_shacl_guard_rejects_invalid_graph():
     assert store.get_equipment("E-201A")["tag"] == "E-201A"
 
 
+def test_neo4j_pinned_shape_readiness_checks_datatype_and_nodekind():
+    _ensure_twin_path()
+    from twin.neo4j_store import _expected_shapes_from_ttl, shapes_match_expected
+
+    keys, values = _expected_shapes_from_ttl(SHAPES_PATH)
+    assert keys == set(values.keys()), "Every supported constraint key must pin its exact value"
+
+    clean_rows = [
+        {"target": t, "propertyOrRelationshipPath": p, "param": param, "value": values[(t, p, param)]}
+        for (t, p, param) in sorted(keys)
+    ]
+    assert shapes_match_expected(clean_rows, keys, values) is True
+
+    # Weakening datatype without removing the key fails readiness
+    bad_dt = copy.deepcopy(clean_rows)
+    for row in bad_dt:
+        if row["target"] == "Equipment" and row["propertyOrRelationshipPath"] == "tag" and row["param"] == "datatype":
+            row["value"] = "integer"
+    assert shapes_match_expected(bad_dt, keys, values) is False
+
+    # Weakening NodeKind without removing the key fails readiness
+    bad_nk = copy.deepcopy(clean_rows)
+    for row in bad_nk:
+        if row["target"] == "Equipment" and row["propertyOrRelationshipPath"] == "ON_SHEET" and row["param"] == "NodeKind":
+            row["value"] = "Literal"
+    assert shapes_match_expected(bad_nk, keys, values) is False
+
+
 def test_load_dexpi_cli_job_exports_valid_snapshot(tmp_path: Path):
     snap_out = tmp_path / "cli-snapshot.json"
     res = subprocess.run(

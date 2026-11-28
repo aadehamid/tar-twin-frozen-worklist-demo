@@ -63,11 +63,34 @@ def _expected_shapes_from_ttl(shapes_path: Path) -> tuple[set[tuple[str, str, st
             keys.add((target, path, n10s_name))
             if name in _SCALAR_PARAMS:
                 values[(target, path, n10s_name)] = o.toPython()
-            elif name == "class":
+            elif name in ("class", "datatype", "nodeKind"):
                 values[(target, path, n10s_name)] = _local(o)
             elif name == "in":
                 values[(target, path, n10s_name)] = sorted(str(item.toPython()) for item in Collection(g, o))
     return keys, values
+
+
+def shapes_match_expected(
+    raw_listed: list[dict[str, Any]],
+    expected_keys: set[tuple[str, str, str]],
+    expected_values: dict[tuple[str, str, str], Any],
+) -> bool:
+    """Return True only if n10s listShapes() matches every expected key and value (including datatype & NodeKind)."""
+    if not raw_listed:
+        return False
+    got_keys = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])) for r in raw_listed}
+    if got_keys != expected_keys:
+        return False
+    got_vals = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])): r["value"] for r in raw_listed}
+    for k, want in expected_values.items():
+        got = got_vals.get(k)
+        if isinstance(want, list):
+            got_list = sorted(str(x) for x in got) if isinstance(got, list) else []
+            if got_list != want:
+                return False
+        elif got != want:
+            return False
+    return True
 
 
 def _shape_rows_set(listed: list[dict[str, Any]]) -> set[tuple[str, str, str, str]]:
@@ -142,18 +165,8 @@ class Neo4jPlantStore:
         shacl = [t for t in triggers if t.get("name") == "shacl"]
         if cfg_count != 1 or not raw_listed or len(shacl) != 1:
             return False
-        got_keys = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])) for r in raw_listed}
-        if got_keys != self._expected_shape_keys:
+        if not shapes_match_expected(raw_listed, self._expected_shape_keys, self._expected_shape_values):
             return False
-        got_vals = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])): r["value"] for r in raw_listed}
-        for k, want in self._expected_shape_values.items():
-            got = got_vals.get(k)
-            if isinstance(want, list):
-                got_list = sorted(str(x) for x in got) if isinstance(got, list) else []
-                if got_list != want:
-                    return False
-            elif got != want:
-                return False
         if self._pinned_shapes is not None and _shape_rows_set(raw_listed) != self._pinned_shapes:
             return False
         t = shacl[0]
