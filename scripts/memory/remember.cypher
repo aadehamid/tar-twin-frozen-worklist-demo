@@ -47,7 +47,10 @@ UNWIND $m.facts AS f
 MATCH (new:Fact {id: f.id}) WHERE new.closedAt IS NULL
 MATCH (old:Fact {slot: new.slot})
 WHERE old <> new AND old.closedAt IS NULL
-SET old.validTo = new.validFrom, old.closedAt = new.recordedAt
+// A correction can say it became true before the old fact did. Then the old
+// fact held for no time at all, so its range ends where it starts.
+SET old.validTo = CASE WHEN new.validFrom < old.validFrom THEN old.validFrom ELSE new.validFrom END,
+    old.closedAt = new.recordedAt
 REMOVE old:CurrentFact
 MERGE (new)-[:SUPERSEDES]->(old)
 RETURN new.slot AS slot, new.text AS current, old.text AS replaced;

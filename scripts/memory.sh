@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # Shared project memory for every agent, stored in a Relate graph.
-# Model and rules: .agents/skills/project-memory/SKILL.md and docs/decisions.md D17.
+# Model and rules: .agents/skills/project-memory/SKILL.md.
+# Installed by the relate-project-memory skill, which replaces this file on
+# every update. Change the skill's template, not this copy.
 #
 # Usage:
 #   scripts/memory.sh remember FILE|-   write one episode (JSON) and its facts
-#   scripts/memory.sh recall WORDS...   full-text search over current facts
-#   scripts/memory.sh about KEY         current facts about one entity
-#   scripts/memory.sh history SLOT      every fact a slot has held, newest first
-#   scripts/memory.sh slots             slots that hold a current fact
+#   scripts/memory.sh recall WORDS...   the 10 current facts that best match the words
+#   scripts/memory.sh about KEY         current facts about one entity (first 100)
+#   scripts/memory.sh history SLOT      facts a slot has held, newest first (first 100)
+#   scripts/memory.sh slots             slots that hold a current fact (first 500)
+#   scripts/memory.sh asof WHEN         what agents believed at WHEN (first 100); WHEN is a
+#                                       date (the end of that UTC day) or a datetime with a zone
 #   scripts/memory.sh brief [N]         the N most recent current facts (default 20)
 #   scripts/memory.sh check             fail unless every slot holds exactly one current fact
 #   scripts/memory.sh init              create the store and its schema
@@ -26,9 +30,17 @@ here="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cypher_dir="$here/memory"
 tmp=""
 build_dir=""
-# Bash runs this EXIT trap on a normal exit and when SIGINT or SIGTERM ends
-# the script. Only SIGKILL skips it; create_store sweeps what that leaves.
-trap '[ -z "$tmp" ] || rm -f "$tmp"; [ -z "$build_dir" ] || rm -rf "$build_dir"' EXIT
+cleanup() {
+  [ -z "$tmp" ] || rm -f "$tmp"
+  [ -z "$build_dir" ] || rm -rf "$build_dir"
+}
+# Clean up on a normal exit and on the signals that usually stop a script.
+# SIGKILL and a power loss skip the cleanup, and other ways a script ends may
+# skip it too. init removes a build left that way once it is an hour old.
+trap cleanup EXIT
+trap 'cleanup; trap - EXIT; exit 130' INT
+trap 'cleanup; trap - EXIT; exit 143' TERM
+trap 'cleanup; trap - EXIT; exit 129' HUP
 
 store() {
   if [ -n "${PROJECT_MEMORY_DB:-}" ]; then
@@ -113,7 +125,24 @@ read_query() {
   if [ -n "$(dropbox_conflicts)" ]; then
     echo "memory: warning: Dropbox conflicted copies in the store; results may be stale. Run: scripts/memory.sh check" >&2
   fi
-  relate query --database "$db" --read-only --mode jsonl "$@"
+  # --max-rows 0: relate caps rows at 100 under an agent harness and adds a
+  # rowCap line; this script sets its own caps and says when it reaches one.
+  relate query --database "$db" --read-only --mode jsonl --max-rows 0 "$@"
+}
+
+# Run a read with a row cap. Fetch one row more than the cap, so a result that
+# was cut can say so instead of passing for the whole set.
+capped() {
+  local cap="$1" out count
+  shift
+  out="$(read_query --param "cap=$((cap + 1))" "$@")"
+  count="$(grep -c '^{' <<< "$out" || true)"
+  if [ "$count" -gt "$cap" ]; then
+    sed -n "1,${cap}p" <<< "$out"
+    echo "memory: showing the first $cap rows; more exist" >&2
+  elif [ -n "$out" ]; then
+    printf '%s\n' "$out"
+  fi
 }
 
 # The schema is idempotent, so every write runs it first. Its notes are noise
@@ -122,8 +151,8 @@ read_query() {
 # first writer builds a private store and renames it into place. A rename onto
 # a folder that already holds a store fails atomically, and the loser drops
 # its copy and uses the winner's. No lock is held, so none can go stale.
-# A SIGKILL skips the EXIT trap and leaves a private build beside the store.
-# It is never used. Remove builds older than an hour on every init.
+# A SIGKILL, an untrapped signal or a crash can leave a private build beside
+# the store. It is never used. Remove builds older than an hour on every init.
 sweep_builds() {
   local db="$1" parent pattern
   parent="$(dirname "$db")"
@@ -195,8 +224,14 @@ try:
 except (OSError, ValueError) as exc:
     sys.exit(f"memory: {path} is not readable JSON: {exc}")
 KINDS = {"decision", "preference", "correction", "finding", "handoff", "tool_call"}
-TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,6})?)?(Z|[+-]\d{2}:\d{2})", re.ASCII)
+TIME = re.compile(r"\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2}(\.\d{1,9})?)?(Z|[+-]\d{2}:\d{2})", re.ASCII)
 errors = []
+SLOT = re.compile(r"[a-z0-9][a-z0-9._:-]*(/[a-z0-9][a-z0-9._:-]*)+", re.ASCII)
+KEY = re.compile(r"[a-z0-9][a-z0-9._:/-]*", re.ASCII)
+
+def entity_key(value, where):
+    if not isinstance(value, str) or not KEY.fullmatch(value):
+        errors.append(f"{where}: lowercase entity key such as owner or file:scripts/check.sh")
 
 def text(obj, key, where):
     value = obj.get(key) if isinstance(obj, dict) else None
@@ -240,7 +275,7 @@ for i, e in enumerate(mentions):
     if not isinstance(e, dict):
         errors.append(f"mentions[{i}]: not an object")
         continue
-    text(e, "key", f"mentions[{i}]")
+    entity_key(e.get("key"), f"mentions[{i}].key")
     text(e, "name", f"mentions[{i}]")
 facts = m.get("facts")
 if not isinstance(facts, list) or not facts:
@@ -255,10 +290,15 @@ for i, f in enumerate(facts):
     fid = text(f, "id", where)
     text(f, "text", where)
     slot = text(f, "slot", where)
+    if slot is not None and not SLOT.fullmatch(slot):
+        errors.append(f"{where}.slot: lowercase <entity>/<aspect>, such as memory/setup")
     time(f, "validFrom", where, required=False)
     about = f.get("about")
-    if not (isinstance(about, list) and about and all(isinstance(k, str) and k.strip() for k in about)):
+    if not (isinstance(about, list) and about):
         errors.append(f"{where}.about: needs a non-empty list of entity keys")
+    else:
+        for j, k in enumerate(about):
+            entity_key(k, f"{where}.about[{j}]")
     if fid in ids:
         errors.append(f"{where}.id: repeats an earlier fact id")
     if slot in slots:
@@ -313,12 +353,18 @@ remember() {
   python3 -c 'import json, sys; m = json.load(open(sys.argv[1])); print("memory: saved episode %s with %d fact(s)" % (m["episode"]["id"], len(m["facts"])))' "$tmp"
 }
 
+no_args() {
+  [ "$#" -eq 0 ] || { echo "usage: scripts/memory.sh $cmd takes no arguments" >&2; exit 2; }
+}
+
 cmd="${1:-}"
 [ $# -gt 0 ] && shift
 case "$cmd" in
-  init) init ;;
-  path) store ;;
-  remember) remember "$@" ;;
+  init) no_args "$@"; init ;;
+  path) no_args "$@"; store ;;
+  remember)
+    [ "$#" -le 1 ] || { echo "usage: scripts/memory.sh remember FILE|-" >&2; exit 2; }
+    remember "$@" ;;
   recall)
     need_relate
     [[ "${*:-}" =~ [^[:space:]] ]] || { echo "usage: scripts/memory.sh recall WORDS..." >&2; exit 2; }
@@ -331,28 +377,67 @@ case "$cmd" in
        ORDER BY score DESC' ;;
   about)
     need_relate
-    [ -n "${1:-}" ] || { echo "usage: scripts/memory.sh about KEY" >&2; exit 2; }
+    [ "$#" -eq 1 ] && [ -n "$1" ] || { echo "usage: scripts/memory.sh about KEY" >&2; exit 2; }
     key="$(json_string "$1")"
-    read_query --param "key=$key" \
+    capped 100 --param "key=$key" \
       'MATCH (e:Entity {key: $key})<-[:ABOUT]-(f:CurrentFact)-[:FROM]->(ep:Episode)
        RETURN f.slot AS slot, f.text AS memory, ep.agent AS agent, ep.id AS episode,
               toString(ep.at) AS learned, ep.text AS evidence
-       ORDER BY slot LIMIT 100' ;;
+       ORDER BY slot LIMIT $cap' ;;
   history)
     need_relate
-    [ -n "${1:-}" ] || { echo "usage: scripts/memory.sh history SLOT" >&2; exit 2; }
+    [ "$#" -eq 1 ] && [ -n "$1" ] || { echo "usage: scripts/memory.sh history SLOT" >&2; exit 2; }
     slot="$(json_string "$1")"
-    read_query --param "slot=$slot" \
+    capped 100 --param "slot=$slot" \
       'MATCH (f:Fact {slot: $slot})-[:FROM]->(ep:Episode)
        RETURN f.text AS memory, toString(f.validFrom) AS validFrom, toString(f.validTo) AS validTo,
               toString(f.recordedAt) AS recorded, toString(f.closedAt) AS closed,
               ep.agent AS agent, ep.id AS episode, ep.text AS evidence
-       ORDER BY f.recordedAt DESC LIMIT 100' ;;
-  slots)
+       ORDER BY f.recordedAt DESC LIMIT $cap' ;;
+  asof)
     need_relate
-    read_query 'MATCH (f:CurrentFact) RETURN DISTINCT f.slot AS slot ORDER BY slot LIMIT 500' ;;
+    usage="usage: scripts/memory.sh asof WHEN, a date such as 2026-11-27 (the end of that UTC day) or a datetime such as 2026-11-27T10:00:00Z"
+    [ "$#" -eq 1 ] || { echo "$usage" >&2; exit 2; }
+    when="$1"
+    if [[ "$when" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}$ ]]; then
+      kind=date
+    elif [[ "$when" =~ ^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]{1,9})?)?(Z|[+-][0-9]{2}:[0-9]{2})$ ]]; then
+      kind=datetime
+    else
+      echo "$usage" >&2; exit 2
+    fi
+    # The shape check above allows only digits, T, Z, +, -, colons and a dot,
+    # so plain quotes make a valid JSON string without the Python helper.
+    w="\"$when\""
+    # Relate parses it, so its own rules decide: real calendar dates, offsets
+    # within 18 hours.
+    relate query --database :memory: --mode jsonl --param "w=$w" "RETURN $kind(\$w) AS w" > /dev/null 2>&1 \
+      || { echo "$usage" >&2; exit 2; }
+    # "Believed on t", as the relate cookbook's bitemporal-decisions recipe
+    # defines it: recorded by t, valid on t, and an end of validity counts
+    # only once it was known (closedAt), so a fact closed after t still looked
+    # open on t, and a change recorded ahead of its validFrom is not yet in
+    # force. A date compares whole UTC days; a datetime compares the moment.
+    if [ "$kind" = date ]; then
+      believed='date(f.recordedAt) <= date($w) AND date(f.validFrom) <= date($w)
+                AND (f.validTo IS NULL OR date(f.validTo) > date($w) OR date(f.closedAt) > date($w))'
+    else
+      believed='f.recordedAt <= datetime($w) AND f.validFrom <= datetime($w)
+                AND (f.validTo IS NULL OR f.validTo > datetime($w) OR f.closedAt > datetime($w))'
+    fi
+    capped 100 --param "w=$w" \
+      "MATCH (f:Fact)-[:FROM]->(ep:Episode)
+       WHERE $believed
+       RETURN f.slot AS slot, f.text AS memory, ep.agent AS agent, ep.id AS episode,
+              toString(f.recordedAt) AS recorded, ep.text AS evidence
+       ORDER BY slot LIMIT \$cap" ;;
+  slots)
+    no_args "$@"
+    need_relate
+    capped 500 'MATCH (f:CurrentFact) RETURN DISTINCT f.slot AS slot ORDER BY slot LIMIT $cap' ;;
   brief)
     need_relate
+    [ "$#" -le 1 ] || { echo "usage: scripts/memory.sh brief [N], N from 1 to 9999" >&2; exit 2; }
     n="${1-20}"
     [[ "$n" =~ ^[1-9][0-9]{0,3}$ ]] || { echo "usage: scripts/memory.sh brief [N], N from 1 to 9999" >&2; exit 2; }
     read_query --param "n=$n" \
@@ -361,6 +446,7 @@ case "$cmd" in
               toString(ep.at) AS learned, ep.text AS evidence
        ORDER BY f.recordedAt DESC LIMIT $n' ;;
   check)
+    no_args "$@"
     need_relate
     refuse_on_conflicts
     db="$(store)"
