@@ -146,6 +146,73 @@ def parse_dexpi_sheets(dexpi_dir: Path) -> dict[str, Any]:
     }
 
 
+def _walk_envelope_closure(
+    *,
+    env_id: str,
+    by_key: dict[str, dict[str, Any]],
+    adj: dict[str, set[str]],
+    contained: set[str],
+    stop_valves: set[str],
+    sides: dict[str, str],
+    shared_eq: set[str],
+    suct_of: dict[str, set[str]],
+    disch_of: dict[str, set[str]],
+) -> tuple[set[str], set[str]]:
+    """Walk every piping path leaving contained equipment (including split-boundary shared equipment).
+
+    For split-boundary shared equipment (for example P-201A/B spanning ENV-200-01 suction and
+    ENV-200-02 discharge), start from the equipment's side-appropriate nozzle(s) (N1 for suction,
+    N2 for discharge) without crossing internally through the shared body to the opposite envelope.
+    """
+    leaked: set[str] = set()
+    reached_stop_valves: set[str] = set()
+
+    for eq_tag, side in sides.items():
+        eq_key = f"eq:{eq_tag}"
+        if side == "suction" and not (suct_of.get(eq_key, set()) & stop_valves):
+            leaked.add(f"{eq_tag}:suction")
+        elif side == "discharge" and not (disch_of.get(eq_key, set()) & stop_valves):
+            leaked.add(f"{eq_tag}:discharge")
+
+    starts: list[str] = [ek for ek in contained if ek not in shared_eq]
+    blocked_shared_bodies: set[str] = set()
+    for ek in contained:
+        if ek not in shared_eq:
+            continue
+        eq_tag = by_key[ek]["props"]["tag"] if ek in by_key else ek.split(":", 1)[-1]
+        side = sides.get(eq_tag, "full")
+        if side == "suction":
+            blocked_shared_bodies.add(ek)
+            for nb in adj.get(ek, ()):
+                if nb in by_key and "Nozzle" in by_key[nb]["labels"] and by_key[nb]["props"].get("sub_tag") == "N1":
+                    starts.append(nb)
+        elif side == "discharge":
+            blocked_shared_bodies.add(ek)
+            for nb in adj.get(ek, ()):
+                if nb in by_key and "Nozzle" in by_key[nb]["labels"] and by_key[nb]["props"].get("sub_tag") == "N2":
+                    starts.append(nb)
+        else:
+            starts.append(ek)
+
+    seen = set(starts) | blocked_shared_bodies
+    stack = list(starts)
+    while stack:
+        curr = stack.pop()
+        for nxt in adj.get(curr, ()):
+            if nxt in seen:
+                continue
+            if nxt in stop_valves:
+                seen.add(nxt)
+                if nxt in by_key:
+                    reached_stop_valves.add(by_key[nxt]["props"]["tag"])
+                continue
+            seen.add(nxt)
+            if nxt in by_key and "Equipment" in by_key[nxt]["labels"] and nxt not in contained:
+                leaked.add(by_key[nxt]["props"]["tag"])
+            stack.append(nxt)
+    return leaked, reached_stop_valves
+
+
 def compute_isolation_envelopes(
     *,
     nodes: list[dict[str, Any]],
@@ -182,32 +249,17 @@ def compute_isolation_envelopes(
             if f"valve:{vtag}" in by_key and by_key[f"valve:{vtag}"]["props"].get("role") == "block"
         }
         sides = env.get("boundary_sides", {})
-        leaked: set[str] = set()
-        reached_stop_valves: set[str] = set()
-
-        for eq_tag, side in sides.items():
-            eq_key = f"eq:{eq_tag}"
-            if side == "suction" and not (suct_of.get(eq_key, set()) & stop_valves):
-                leaked.add(f"{eq_tag}:suction")
-            elif side == "discharge" and not (disch_of.get(eq_key, set()) & stop_valves):
-                leaked.add(f"{eq_tag}:discharge")
-
-        starts = [ek for ek in contained if ek not in shared_eq]
-        seen = set(starts)
-        stack = list(starts)
-        while stack:
-            curr = stack.pop()
-            for nxt in adj.get(curr, ()):
-                if nxt in seen:
-                    continue
-                if nxt in stop_valves:
-                    seen.add(nxt)
-                    reached_stop_valves.add(by_key[nxt]["props"]["tag"])
-                    continue
-                seen.add(nxt)
-                if nxt in by_key and "Equipment" in by_key[nxt]["labels"] and nxt not in contained:
-                    leaked.add(by_key[nxt]["props"]["tag"])
-                stack.append(nxt)
+        leaked, reached_stop_valves = _walk_envelope_closure(
+            env_id=env_id,
+            by_key=by_key,
+            adj=adj,
+            contained=contained,
+            stop_valves=stop_valves,
+            sides=sides,
+            shared_eq=shared_eq,
+            suct_of=suct_of,
+            disch_of=disch_of,
+        )
 
         computed.append(
             {
@@ -582,29 +634,17 @@ def verify_plant_graph(graph: dict[str, Any], shapes_path: Path) -> list[str]:
             vk for vk in env_bv[ekey] if vk in by_key and by_key[vk]["props"].get("role") == "block"
         }
         sides = json.loads(by_key[ekey]["props"].get("boundary_sides_json", "{}"))
-        for eq_tag, side in sides.items():
-            eq_key = f"eq:{eq_tag}"
-            if side == "suction" and not (suct_of.get(eq_key, set()) & stop_valves):
-                errors.append(f"isolation envelope {env_id} is not closed: missing suction boundary valve for {eq_tag}")
-            elif side == "discharge" and not (disch_of.get(eq_key, set()) & stop_valves):
-                errors.append(f"isolation envelope {env_id} is not closed: missing discharge boundary valve for {eq_tag}")
-
-        starts = [ek for ek in contained if ek not in shared_eq]
-        seen = set(starts)
-        stack = list(starts)
-        leaked: set[str] = set()
-        while stack:
-            curr = stack.pop()
-            for nxt in adj.get(curr, ()):
-                if nxt in seen:
-                    continue
-                if nxt in stop_valves:
-                    seen.add(nxt)
-                    continue
-                seen.add(nxt)
-                if nxt in by_key and "Equipment" in by_key[nxt]["labels"] and nxt not in contained:
-                    leaked.add(by_key[nxt]["props"]["tag"])
-                stack.append(nxt)
+        leaked, _ = _walk_envelope_closure(
+            env_id=env_id,
+            by_key=by_key,
+            adj=adj,
+            contained=contained,
+            stop_valves=stop_valves,
+            sides=sides,
+            shared_eq=shared_eq,
+            suct_of=suct_of,
+            disch_of=disch_of,
+        )
         if leaked:
             errors.append(f"isolation envelope {env_id} is not closed: piping leaks to {sorted(leaked)}")
 

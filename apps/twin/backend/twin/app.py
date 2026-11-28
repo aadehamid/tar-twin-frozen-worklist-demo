@@ -109,9 +109,15 @@ def create_app(
         return store.export_snapshot()
 
     @api.get("/api/v1/graph/export.cypher", response_class=PlainTextResponse)
-    def export_cypher(exercise_id: str = Query(default="EX-DEMO")) -> str:
-        _ = exercise_id
-        return store.export_cypher()
+    def export_cypher(
+        exercise_id: str = Query(default="EX-DEMO"),
+        event_id: str | None = Query(default=None),
+    ) -> str:
+        if event_id is not None and event_id != "TAR-200-2028":
+            raise HTTPException(status_code=404, detail=f"Unknown event_id {event_id}")
+        if not store.has_exercise(exercise_id):
+            raise HTTPException(status_code=404, detail=f"Unknown exercise_id {exercise_id}")
+        return store.export_cypher(exercise_id=exercise_id)
 
     app.include_router(api)
     app.include_router(api, prefix="/twin")

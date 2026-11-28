@@ -70,6 +70,21 @@ class MemoryPlantStore:
             "plot_plan": {"areas": [], "equipment": []},
             "sheets": [],
         }
+        self._scope_by_exercise: dict[str, tuple[list[dict[str, Any]], list[dict[str, Any]]]] = {
+            "EX-DEMO": ([], [])
+        }
+
+    def has_exercise(self, exercise_id: str) -> bool:
+        return exercise_id in self._scope_by_exercise
+
+    def set_scope_graph(
+        self,
+        exercise_id: str,
+        scope_nodes: list[dict[str, Any]],
+        scope_rels: list[dict[str, Any]],
+    ) -> None:
+        with self._lock:
+            self._scope_by_exercise[exercise_id] = (copy.deepcopy(scope_nodes), copy.deepcopy(scope_rels))
 
     def guard_ready(self) -> bool:
         return self.shapes_path.is_file()
@@ -163,12 +178,14 @@ class MemoryPlantStore:
 
     def export_cypher(
         self,
+        exercise_id: str = "EX-DEMO",
         scope_nodes: list[dict[str, Any]] | None = None,
         scope_rels: list[dict[str, Any]] | None = None,
     ) -> str:
+        stored_nodes, stored_rels = self._scope_by_exercise.get(exercise_id, ([], []))
         return export_browser_cypher(
             plant_nodes=self._plant["nodes"],
             plant_rels=self._plant["rels"],
-            scope_nodes=scope_nodes,
-            scope_rels=scope_rels,
+            scope_nodes=scope_nodes if scope_nodes is not None else stored_nodes,
+            scope_rels=scope_rels if scope_rels is not None else stored_rels,
         )

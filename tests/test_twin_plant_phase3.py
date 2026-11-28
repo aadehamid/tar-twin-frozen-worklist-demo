@@ -62,6 +62,13 @@ def test_dexpi_plant_load_and_envelope_walk():
     broken_errs = verify_plant_graph(broken, SHAPES_PATH)
     assert any("not closed" in e for e in broken_errs), f"Expected closure error, got {broken_errs}"
 
+    # Adversarial shared-equipment leak: an unblocked pipe from split-boundary P-201A suction nozzle
+    # (nz:P-201A:N1) directly to outside equipment C-201 must fail ENV-200-01 closure.
+    shared_leak = copy.deepcopy(plant)
+    shared_leak["rels"].append({"type": "CONNECTED_TO", "from": "nz:P-201A:N1", "to": "eq:C-201"})
+    leak_errs = verify_plant_graph(shared_leak, SHAPES_PATH)
+    assert any("ENV-200-01 is not closed" in e and "C-201" in e for e in leak_errs), f"Expected shared leak error, got {leak_errs}"
+
 
 def test_twin_api_plant_endpoints_and_snapshot_matches_twin_graph(tmp_path: Path):
     _ensure_twin_path()
@@ -112,10 +119,26 @@ def test_twin_api_plant_endpoints_and_snapshot_matches_twin_graph(tmp_path: Path
     )
     assert res.returncode == 0, f"twin_graph snapshot check failed:\n{res.stdout}\n{res.stderr}"
 
-    # Browser Relate Cypher export is non-empty and loads cleanly into Relate
-    cypher_resp = client.get("/api/v1/graph/export.cypher?exercise_id=EX-DEMO")
+    # Browser Relate Cypher export rejects unknown exercise_id and includes exercise scope when present
+    assert client.get("/api/v1/graph/export.cypher?exercise_id=EX-UNKNOWN").status_code == 404
+    app.state.store.set_scope_graph(
+        "EX-DEMO",
+        scope_nodes=[
+            {
+                "key": "wr:EX-DEMO:WR-200-0147",
+                "labels": ["ScopeItem", "BundlePull"],
+                "props": {"exercise_id": "EX-DEMO", "request_id": "WR-200-0147", "ript": 21},
+            }
+        ],
+        scope_rels=[
+            {"from": "wr:EX-DEMO:WR-200-0147", "to": "eq:E-201B", "type": "RESOLVES_TO", "props": {"status": "accepted"}}
+        ],
+    )
+    cypher_resp = client.get("/api/v1/graph/export.cypher?exercise_id=EX-DEMO&event_id=TAR-200-2028")
     assert cypher_resp.status_code == 200
     assert "CREATE (:Equipment" in cypher_resp.text
+    assert "WR-200-0147" in cypher_resp.text
+    assert "RESOLVES_TO" in cypher_resp.text
     assert "ENV-200-02" in cypher_resp.text
 
     import shutil
@@ -218,5 +241,20 @@ def test_live_neo4j_guarded_load_and_mutant_rejection():
         with pytest.raises(Exception):
             store.run_write("CREATE (:Equipment:Asset:Exchanger {tag: 'E201X'})")
         assert len(store.export_snapshot()["equipment_tags"]) == 32
+        # Fresh store instance derives pinned shapes from specs/shapes.ttl and passes readiness
+        fresh = Neo4jPlantStore(uri=uri, user=user, password=password, shapes_path=SHAPES_PATH)
+        try:
+            assert fresh.guard_ready() is True
+            # Weakening loaded shapes causes fresh instance readiness check to fail closed
+            with fresh._driver.session(database="neo4j") as s:
+                s.run(
+                    "CALL n10s.validation.shacl.import.inline($ttl, 'Turtle')",
+                    ttl="@prefix neo4j: <neo4j://graph.schema#> . @prefix sh: <http://www.w3.org/ns/shacl#> . "
+                    "neo4j:WeakShape a sh:NodeShape ; sh:targetClass neo4j:Equipment ; "
+                    "sh:property [ sh:path neo4j:tag ; sh:minCount 1 ] .",
+                ).consume()
+            assert fresh.guard_ready() is False
+        finally:
+            fresh.close()
     finally:
         store.close()

@@ -10,6 +10,7 @@ Implements all findings from docs/spikes/shacl-n10s.md section 6:
 from __future__ import annotations
 
 import json
+import re
 import threading
 import time
 from pathlib import Path
@@ -23,6 +24,50 @@ SHACL_TRIGGER_QUERY = (
     "$createdNodes,$createdRelationships,$assignedLabels,$removedLabels,"
     "$assignedNodeProperties,$removedNodeProperties,$deletedRelationships,$deletedNodes)"
 )
+
+_N10S_PARAM = {
+    "minCount": "minCount",
+    "maxCount": "maxCount",
+    "datatype": "datatype",
+    "pattern": "pattern",
+    "in": "in",
+    "class": "class",
+    "nodeKind": "NodeKind",
+    "minInclusive": "minInclusive",
+    "maxInclusive": "maxInclusive",
+}
+_SCALAR_PARAMS = ("minCount", "maxCount", "minInclusive", "maxInclusive", "pattern")
+
+
+def _local(v: Any) -> str:
+    return re.split(r"[#/]", str(v))[-1]
+
+
+def _expected_shapes_from_ttl(shapes_path: Path) -> tuple[set[tuple[str, str, str]], dict[tuple[str, str, str], Any]]:
+    """Parse specs/shapes.ttl via rdflib to derive the exact pinned constraints & values for N7 readiness."""
+    import rdflib
+    from rdflib.collection import Collection
+
+    g = rdflib.Graph().parse(data=shapes_path.read_text(encoding="utf-8"), format="turtle")
+    sh = rdflib.Namespace("http://www.w3.org/ns/shacl#")
+    keys: set[tuple[str, str, str]] = set()
+    values: dict[tuple[str, str, str], Any] = {}
+    for ns, ps in g.subject_objects(sh.property):
+        target = _local(g.value(ns, sh.targetClass))
+        path = _local(g.value(ps, sh.path))
+        for p, o in g.predicate_objects(ps):
+            name = _local(p)
+            if name not in _N10S_PARAM:
+                continue
+            n10s_name = _N10S_PARAM[name]
+            keys.add((target, path, n10s_name))
+            if name in _SCALAR_PARAMS:
+                values[(target, path, n10s_name)] = o.toPython()
+            elif name == "class":
+                values[(target, path, n10s_name)] = _local(o)
+            elif name == "in":
+                values[(target, path, n10s_name)] = sorted(str(item.toPython()) for item in Collection(g, o))
+    return keys, values
 
 
 def _shape_rows_set(listed: list[dict[str, Any]]) -> set[tuple[str, str, str, str]]:
@@ -47,7 +92,9 @@ class Neo4jPlantStore:
         self.database = database
         self._driver = GraphDatabase.driver(uri, auth=(user, password))
         self._lock = threading.Lock()
+        self._expected_shape_keys, self._expected_shape_values = _expected_shapes_from_ttl(shapes_path)
         self._pinned_shapes: set[tuple[str, str, str, str]] | None = None
+        self._known_exercises: set[str] = {"EX-DEMO"}
         self._cached_plot_plan: dict[str, Any] = {"areas": [], "equipment": []}
         self._cached_envelopes: list[dict[str, Any]] = []
         self._cached_sheets: list[dict[str, Any]] = []
@@ -90,12 +137,24 @@ class Neo4jPlantStore:
     def guard_ready(self) -> bool:
         with self._driver.session(database=self.database) as s:
             cfg_count = s.run("MATCH (n:_n10sValidatorConfig) RETURN count(n) AS c").single()["c"]
-            listed = _shape_rows_set([dict(r) for r in s.run("CALL n10s.validation.shacl.listShapes()")])
+            raw_listed = [dict(r) for r in s.run("CALL n10s.validation.shacl.listShapes()")]
             triggers = [dict(r) for r in s.run("CALL apoc.trigger.list()")]
         shacl = [t for t in triggers if t.get("name") == "shacl"]
-        if cfg_count != 1 or not listed or len(shacl) != 1:
+        if cfg_count != 1 or not raw_listed or len(shacl) != 1:
             return False
-        if self._pinned_shapes is not None and listed != self._pinned_shapes:
+        got_keys = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])) for r in raw_listed}
+        if got_keys != self._expected_shape_keys:
+            return False
+        got_vals = {(str(r["target"]), str(r["propertyOrRelationshipPath"]), str(r["param"])): r["value"] for r in raw_listed}
+        for k, want in self._expected_shape_values.items():
+            got = got_vals.get(k)
+            if isinstance(want, list):
+                got_list = sorted(str(x) for x in got) if isinstance(got, list) else []
+                if got_list != want:
+                    return False
+            elif got != want:
+                return False
+        if self._pinned_shapes is not None and _shape_rows_set(raw_listed) != self._pinned_shapes:
             return False
         t = shacl[0]
         return (
@@ -260,8 +319,16 @@ class Neo4jPlantStore:
             "envelopes": envs,
         }
 
+    def has_exercise(self, exercise_id: str) -> bool:
+        if exercise_id in self._known_exercises:
+            return True
+        with self._driver.session(database=self.database) as s:
+            cnt = s.run("MATCH (n:ScopeItem {exercise_id: $ex}) RETURN count(n) AS c", ex=exercise_id).single()["c"]
+            return int(cnt) > 0
+
     def export_cypher(
         self,
+        exercise_id: str = "EX-DEMO",
         scope_nodes: list[dict[str, Any]] | None = None,
         scope_rels: list[dict[str, Any]] | None = None,
     ) -> str:
@@ -273,19 +340,46 @@ class Neo4jPlantStore:
                     "props": dict(r["props"]),
                 }
                 for r in s.run(
-                    "MATCH (n:TwinNode) WHERE NOT n:ScopeItem RETURN n.key AS key, labels(n) AS labels, properties(n) AS props"
+                    "MATCH (n:TwinNode) WHERE NOT n:ScopeItem AND NOT n:Baseline AND NOT n:ChangeEvent "
+                    "RETURN n.key AS key, labels(n) AS labels, properties(n) AS props"
                 )
             ]
             plant_rels = [
                 {"from": r["from"], "to": r["to"], "type": r["type"]}
                 for r in s.run(
-                    "MATCH (a:TwinNode)-[r]->(b:TwinNode) WHERE NOT a:ScopeItem AND NOT b:ScopeItem "
+                    "MATCH (a:TwinNode)-[r]->(b:TwinNode) "
+                    "WHERE NOT a:ScopeItem AND NOT b:ScopeItem AND NOT a:Baseline AND NOT b:Baseline "
+                    "AND NOT a:ChangeEvent AND NOT b:ChangeEvent "
                     "RETURN a.key AS from, b.key AS to, type(r) AS type"
                 )
             ]
+            ex_scope_nodes = list(scope_nodes or [])
+            ex_scope_rels = list(scope_rels or [])
+            if not ex_scope_nodes:
+                ex_scope_nodes = [
+                    {
+                        "key": r["key"],
+                        "labels": [lbl for lbl in r["labels"] if lbl != "TwinNode"],
+                        "props": dict(r["props"]),
+                    }
+                    for r in s.run(
+                        "MATCH (n:TwinNode) WHERE n.exercise_id = $ex "
+                        "RETURN n.key AS key, labels(n) AS labels, properties(n) AS props",
+                        ex=exercise_id,
+                    )
+                ]
+            if not ex_scope_rels:
+                ex_scope_rels = [
+                    {"from": r["from"], "to": r["to"], "type": r["type"], "props": dict(r["props"])}
+                    for r in s.run(
+                        "MATCH (a:TwinNode)-[r]->(b:TwinNode) WHERE a.exercise_id = $ex OR b.exercise_id = $ex "
+                        "RETURN a.key AS from, b.key AS to, type(r) AS type, properties(r) AS props",
+                        ex=exercise_id,
+                    )
+                ]
         return export_browser_cypher(
             plant_nodes=plant_nodes,
             plant_rels=plant_rels,
-            scope_nodes=scope_nodes,
-            scope_rels=scope_rels,
+            scope_nodes=ex_scope_nodes,
+            scope_rels=ex_scope_rels,
         )
