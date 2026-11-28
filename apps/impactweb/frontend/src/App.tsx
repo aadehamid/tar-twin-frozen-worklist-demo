@@ -1,17 +1,19 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ApiError,
   CRAFT_RATES,
   ChangeRequestItem,
   DEMO_PERSONAS,
   ExerciseDetail,
+  ExerciseListItem,
   UserProfile,
   WorkRequestItem,
   apiFetch,
   loginDemoPersona,
 } from "./api";
+import { FacilitatorConsole } from "./FacilitatorConsole";
 
-type TabId = "dashboard" | "work-requests" | "review-queue" | "change-requests";
+type TabId = "dashboard" | "work-requests" | "review-queue" | "change-requests" | "facilitator";
 type ReviewStage = "fit_to_frame" | "challenge" | "drb";
 
 const AREAS = ["200-A", "200-B", "200-C", "200-D", "200-E", "200-F"];
@@ -100,23 +102,43 @@ export default function App() {
   const [crSourceGroup, setCrSourceGroup] = useState("fixed_equipment");
   const [crReason, setCrReason] = useState("");
 
-  const exerciseId = "EX-DEMO";
+  const [exercises, setExercises] = useState<ExerciseListItem[]>([]);
+  const [exerciseId, setExerciseId] = useState<string>("EX-DEMO");
+  const exerciseIdRef = useRef<string>("EX-DEMO");
+  const loadSeqRef = useRef<number>(0);
+
+  const selectExerciseId = useCallback((nextId: string) => {
+    exerciseIdRef.current = nextId;
+    setExerciseId(nextId);
+  }, []);
 
   const loadWorkspace = useCallback(
-    async (activeToken: string | null) => {
-      const [me, ex, wrs, crs] = await Promise.all([
+    async (activeToken: string | null, overrideExerciseId?: string) => {
+      const seq = ++loadSeqRef.current;
+      const targetExId = overrideExerciseId ?? exerciseIdRef.current;
+      const [me, exList] = await Promise.all([
         apiFetch<UserProfile>("/api/v1/auth/me", activeToken),
-        apiFetch<ExerciseDetail>(`/api/v1/exercises/${exerciseId}`, activeToken),
-        apiFetch<WorkRequestItem[]>(`/api/v1/work-requests?exercise_id=${exerciseId}`, activeToken),
-        apiFetch<ChangeRequestItem[]>(`/api/v1/change-requests?exercise_id=${exerciseId}`, activeToken),
+        apiFetch<ExerciseListItem[]>("/api/v1/exercises", activeToken),
       ]);
+      const resolvedId = exList.some((e) => e.id === targetExId)
+        ? targetExId
+        : (exList[0]?.id ?? "EX-DEMO");
+      const [ex, wrs, crs] = await Promise.all([
+        apiFetch<ExerciseDetail>(`/api/v1/exercises/${resolvedId}`, activeToken),
+        apiFetch<WorkRequestItem[]>(`/api/v1/work-requests?exercise_id=${resolvedId}`, activeToken),
+        apiFetch<ChangeRequestItem[]>(`/api/v1/change-requests?exercise_id=${resolvedId}`, activeToken),
+      ]);
+      if (seq !== loadSeqRef.current) return;
       setUser(me);
+      setExercises(exList);
+      exerciseIdRef.current = resolvedId;
+      setExerciseId(resolvedId);
       setExercise(ex);
       setWorkRequests(wrs);
       setChangeRequests(crs);
       setSelectedWr((prev) => (prev ? wrs.find((w) => w.id === prev.id) ?? null : null));
     },
-    [exerciseId],
+    [],
   );
 
   useEffect(() => {
@@ -128,12 +150,13 @@ export default function App() {
         if (cancelled) return;
         if (modeInfo.auth_mode === "exe") {
           setExeMode(true);
-          await loadWorkspace(null);
+          await loadWorkspace(null, "EX-DEMO");
           return;
         }
-        if (token) {
+        const savedToken = localStorage.getItem("impactweb_token");
+        if (savedToken) {
           try {
-            await loadWorkspace(token);
+            await loadWorkspace(savedToken, "EX-DEMO");
             return;
           } catch {
             localStorage.removeItem("impactweb_token");
@@ -143,7 +166,7 @@ export default function App() {
         if (cancelled) return;
         localStorage.setItem("impactweb_token", res.access_token);
         setToken(res.access_token);
-        await loadWorkspace(res.access_token);
+        await loadWorkspace(res.access_token, "EX-DEMO");
       } catch (err) {
         if (!cancelled) {
           setFeedback({
@@ -159,7 +182,8 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [loadWorkspace, token]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const membership = useMemo(() => {
     if (!user) return null;
@@ -224,12 +248,21 @@ export default function App() {
     }
   }
 
+  const epochHeaders = useMemo<Record<string, string>>(() => {
+    const hdrs: Record<string, string> = {};
+    if (exercise) {
+      hdrs["X-Exercise-Epoch"] = String(exercise.epoch);
+    }
+    return hdrs;
+  }, [exercise]);
+
   async function handleFreeze() {
     if (!exercise) return;
     setFeedback(null);
     try {
       const res = await apiFetch<{ id: string; item_count: number }>("/api/v1/freezes", token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({ exercise_id: exercise.id, event_id: exercise.event?.id ?? "TAR-200-2028" }),
       });
       await loadWorkspace(token);
@@ -254,6 +287,7 @@ export default function App() {
     try {
       const res = await apiFetch<{ applied_count: number }>("/api/v1/work-requests/bulk-decisions", token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({
           exercise_id: exerciseId,
           request_ids: candidateIds,
@@ -285,6 +319,7 @@ export default function App() {
     try {
       await apiFetch(`/api/v1/work-requests/${wr.id}/decisions?exercise_id=${exerciseId}`, token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({
           stage,
           kind,
@@ -311,6 +346,7 @@ export default function App() {
     try {
       const res = await apiFetch<{ applied_count: number }>("/api/v1/work-requests/bulk-decisions", token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({
           exercise_id: exerciseId,
           request_ids: selectedReviewIds,
@@ -339,6 +375,7 @@ export default function App() {
     try {
       const created = await apiFetch<ChangeRequestItem>("/api/v1/change-requests", token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({
           exercise_id: exerciseId,
           request_id: crType === "add" ? null : crTargetId || null,
@@ -375,6 +412,7 @@ export default function App() {
     try {
       await apiFetch(`/api/v1/change-requests/${cr.id}/decide?exercise_id=${exerciseId}`, token, {
         method: "POST",
+        headers: epochHeaders,
         body: JSON.stringify({
           decision,
           reason: decision === "approved" ? "Approved by TA Manager" : "Rejected by TA Manager",
@@ -493,32 +531,56 @@ export default function App() {
               >
                 Change requests ({changeRequests.length})
               </button>
+              {role === "facilitator" && (
+                <button
+                  type="button"
+                  className={`nav-tab ${activeTab === "facilitator" ? "active" : ""}`}
+                  onClick={() => setActiveTab("facilitator")}
+                >
+                  Facilitator
+                </button>
+              )}
             </nav>
           </div>
           <div className="user-controls">
+            {exercises.length > 0 && (
+              <select
+                aria-label="Active exercise"
+                className="persona-select"
+                value={exerciseId}
+                onChange={(e) => {
+                  const nextId = e.target.value;
+                  selectExerciseId(nextId);
+                  void loadWorkspace(token, nextId);
+                }}
+              >
+                {exercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.id}
+                  </option>
+                ))}
+              </select>
+            )}
             {!exeMode && user && (
-              <label style={{ display: "inline-flex", alignItems: "center", gap: 6 }}>
-                <span className="field-hint">Signed in:</span>
-                <select
-                  aria-label="Active persona"
-                  className="persona-select"
-                  value={user.email}
-                  onChange={(e) => handleSwitchPersona(e.target.value)}
-                >
-                  {DEMO_PERSONAS.map((p) => (
-                    <option key={p.email} value={p.email}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
+              <select
+                aria-label="Active persona"
+                className="persona-select"
+                value={user.email}
+                onChange={(e) => handleSwitchPersona(e.target.value)}
+              >
+                {DEMO_PERSONAS.map((p) => (
+                  <option key={p.email} value={p.email}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
             )}
             {exeMode && user && (
               <span className="field-hint">
                 {user.full_name} ({labelize(role)})
               </span>
             )}
-            <a className="twin-link" href="/twin/">
+            <a className="twin-link" href={`/twin/?exercise=${encodeURIComponent(exerciseId)}`}>
               Open digital twin
             </a>
           </div>
@@ -528,8 +590,8 @@ export default function App() {
       <div className="gov-strip">
         <div className="gov-inner">
           <span>
-            System of record for TAR-200-2028. The digital twin reads this register and raises pending
-            change requests only when write-through is on.
+            System of record for TAR-200-2028 ({exercise?.mode ?? "demo"} mode, clock:{" "}
+            {exercise ? labelize(exercise.clock_step) : "Candidate list"}, epoch {exercise?.epoch ?? 1}).
           </span>
           <div className="gov-meta">
             <span>
@@ -1327,11 +1389,26 @@ export default function App() {
             </div>
           </section>
         )}
+
+        {activeTab === "facilitator" && exercise && role === "facilitator" && (
+          <FacilitatorConsole
+            token={token}
+            exercise={exercise}
+            exercises={exercises}
+            onSelectExercise={(nextId) => {
+              selectExerciseId(nextId);
+              void loadWorkspace(token, nextId);
+            }}
+            onRefreshWorkspace={() => loadWorkspace(token)}
+            onFeedback={(msg) => setFeedback(msg)}
+          />
+        )}
       </main>
 
       {selectedWr && (
         <WorkRequestDrawer
           wr={selectedWr}
+          epoch={exercise?.epoch ?? 1}
           editable={canEditWr(selectedWr)}
           frozen={Boolean(exercise?.frozen)}
           token={token}
@@ -1346,6 +1423,8 @@ export default function App() {
 
       {showNewWrModal && (
         <NewWorkRequestDrawer
+          exerciseId={exerciseId}
+          epoch={exercise?.epoch ?? 1}
           token={token}
           defaultSourceGroup={userSourceGroup ?? "fixed_equipment"}
           lockSourceGroup={role === "source_group" && Boolean(userSourceGroup)}
@@ -1365,6 +1444,7 @@ export default function App() {
 
 function WorkRequestDrawer({
   wr,
+  epoch,
   editable,
   frozen,
   token,
@@ -1373,6 +1453,7 @@ function WorkRequestDrawer({
   onError,
 }: {
   wr: WorkRequestItem;
+  epoch: number;
   editable: boolean;
   frozen: boolean;
   token: string | null;
@@ -1428,6 +1509,7 @@ function WorkRequestDrawer({
         token,
         {
           method: "PATCH",
+          headers: { "X-Exercise-Epoch": String(epoch) },
           body: JSON.stringify({
             version: wr.version,
             title: title.trim(),
@@ -1615,6 +1697,8 @@ function WorkRequestDrawer({
 }
 
 function NewWorkRequestDrawer({
+  exerciseId,
+  epoch,
   token,
   defaultSourceGroup,
   lockSourceGroup,
@@ -1622,6 +1706,8 @@ function NewWorkRequestDrawer({
   onCreated,
   onError,
 }: {
+  exerciseId: string;
+  epoch: number;
   token: string | null;
   defaultSourceGroup: string;
   lockSourceGroup: boolean;
@@ -1650,8 +1736,9 @@ function NewWorkRequestDrawer({
       if (Number(pipefitterHrs) > 0) crafts.pipefitter = Number(pipefitterHrs);
       const created = await apiFetch<WorkRequestItem>("/api/v1/work-requests", token, {
         method: "POST",
+        headers: { "X-Exercise-Epoch": String(epoch) },
         body: JSON.stringify({
-          exercise_id: "EX-DEMO",
+          exercise_id: exerciseId,
           event_id: "TAR-200-2028",
           title: title.trim(),
           description: description.trim(),

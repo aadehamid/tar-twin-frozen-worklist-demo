@@ -19,14 +19,16 @@ from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import func
 from sqlmodel import Session, SQLModel, create_engine, select
 
-from impactweb.auth import Caller, get_membership, issue_jwt, resolve_caller, verify_password
+from impactweb.auth import Caller, get_membership, hash_password, issue_jwt, resolve_caller, verify_password
 from impactweb.filter import assert_synthetic_text
 from impactweb.models import (
+    ArchivedEventLog,
     ChangeFeedEntry,
     ChangeRequest,
     CmmsEquipment,
     CmmsFunctionalLocation,
     Exercise,
+    ExerciseInject,
     ExerciseMembership,
     FreezeItem,
     FreezeRecord,
@@ -34,8 +36,24 @@ from impactweb.models import (
     TurnaroundEvent,
     UserAccount,
     WorkRequest,
+    WorkRequestComment,
 )
-from impactweb.seed import seed_demo_exercise
+from impactweb.planning import (
+    CLOCK_INDEX,
+    CLOCK_STEPS,
+    COMMENT_STEPS,
+    FREEZE_STEP_INDEX,
+    LIBRARY_INJECTS,
+    LIBRARY_INJECTS_BY_ID,
+    POST_FREEZE_CHANGE_STEPS,
+    PRE_FREEZE_EDIT_STEPS,
+    enforce_expected_epoch,
+    enforce_planning_phase,
+    is_facilitator,
+    load_starting_fixture,
+    seed_exercise_from_fixture,
+)
+from impactweb.seed import DEMO_PASSWORD, seed_demo_exercise
 
 DEFAULT_CRAFT_RATES: dict[str, int] = {
     "boilermaker": 235,
@@ -172,6 +190,76 @@ class WriteThroughToggleBody(BaseModel):
     twin_write_through: bool
 
 
+class ExerciseSettingsBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    twin_write_through: bool | None = None
+    allow_external_ai: bool | None = None
+
+
+class CreateExerciseBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str | None = Field(default=None, min_length=3, max_length=64)
+    name: str = Field(min_length=3, max_length=200)
+    mode: Literal["demo", "planning"] = "planning"
+    starting_fixture: Literal["seeded", "partial", "blank"] = "seeded"
+    twin_write_through: bool = True
+    allow_external_ai: bool | None = None
+
+
+class UpsertMembershipBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=200)
+    full_name: str | None = Field(default=None, max_length=200)
+    role: Literal["facilitator", "ta_manager", "planner", "source_group", "drb_member", "viewer"]
+    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] | None = None
+
+
+class AdvanceClockBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    target_step: Literal[
+        "candidate_list",
+        "fit_to_frame",
+        "challenge",
+        "drb",
+        "freeze",
+        "t_minus_9",
+        "t_minus_6",
+        "t_minus_3",
+        "t_minus_1",
+        "closed",
+    ]
+    reason: str = Field(default="", max_length=1000)
+
+
+class CreateCommentBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    body: str = Field(min_length=2, max_length=4000)
+
+
+class ApplyInjectBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    inject_id: str = Field(min_length=2, max_length=80)
+    custom: bool = False
+    title: str | None = Field(default=None, max_length=240)
+    description: str | None = Field(default=None, max_length=4000)
+    allowed_phases: list[str] | None = None
+    action_kind: Literal["note", "work_request", "change_request", "budget_cut"] = "note"
+    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] | None = None
+    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] | None = None
+    area: str | None = None
+    equipment_text: str | None = None
+    mandatory: bool = False
+    hours_delta: int = 80
+    cost_delta_usd: int = 18800
+    budget_cut_pct: int = 10
+
+
 class MaintenanceToggleBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -220,6 +308,14 @@ def _serialize_wr(session: Session, wr: WorkRequest) -> dict:
             ReviewDecision.request_id == wr.id,
         )
     ).all()
+    comments = session.exec(
+        select(WorkRequestComment)
+        .where(
+            WorkRequestComment.exercise_id == wr.exercise_id,
+            WorkRequestComment.request_id == wr.id,
+        )
+        .order_by(WorkRequestComment.created_at)
+    ).all()
     has_prior_decision = len(decisions) > 0
     has_current_drb_final = any(
         d.stage == "drb" and d.kind == "final" and d.request_version == wr.version for d in decisions
@@ -267,6 +363,17 @@ def _serialize_wr(session: Session, wr: WorkRequest) -> dict:
                 "decided_at": d.decided_at.isoformat(),
             }
             for d in decisions
+        ],
+        "comments": [
+            {
+                "id": c.id,
+                "request_version": c.request_version,
+                "clock_step": c.clock_step,
+                "body": c.body,
+                "author_id": c.author_id,
+                "created_at": c.created_at.isoformat(),
+            }
+            for c in comments
         ],
         "submitted_at": wr.submitted_at.isoformat(),
         "updated_at": wr.updated_at.isoformat(),
@@ -413,10 +520,16 @@ def create_app(
             return
         if caller.user is None:
             raise HTTPException(status_code=401, detail="Authentication required")
-        if caller.user.is_superuser:
+        if is_facilitator(session, caller.user, exercise_id):
             return
         if get_membership(session, exercise_id, caller.user.id) is None:
             raise HTTPException(status_code=403, detail="Not a member of this exercise")
+
+    def _require_facilitator(session: Session, caller: Caller, exercise_id: str | None = None) -> UserAccount:
+        user = _require_user(caller)
+        if not is_facilitator(session, user, exercise_id):
+            raise HTTPException(status_code=403, detail="Facilitator role required for this action")
+        return user
 
     def _is_frozen(session: Session, exercise_id: str) -> FreezeRecord | None:
         return session.exec(
@@ -438,6 +551,7 @@ def create_app(
     def _raise_change_request_shared(
         session: Session,
         *,
+        request: Request | None = None,
         exercise_id: str,
         request_id: str | None,
         change_type: str,
@@ -471,6 +585,8 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail=f"Exercise {exercise_id} not found")
+            if request is not None:
+                enforce_expected_epoch(request, ex)
             if raised_via == "twin":
                 if not ex.twin_write_through:
                     raise HTTPException(status_code=403, detail="Exercise twin_write_through switch is off")
@@ -482,6 +598,7 @@ def create_app(
                     )
             if _is_frozen(session, exercise_id) is None:
                 raise HTTPException(status_code=403, detail="Change requests are only allowed after freeze")
+            enforce_planning_phase(ex, POST_FREEZE_CHANGE_STEPS, "Raising a post-freeze change request")
 
             base_version = 0
             current_hours = 0
@@ -579,9 +696,9 @@ def create_app(
     @api.get("/api/v1/exercises")
     def list_exercises(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
         _forbid_delegate_token(caller)
-        exs = session.exec(select(Exercise)).all()
+        exs = session.exec(select(Exercise).order_by(Exercise.created_at)).all()
         allowed_ids: set[str] | None = None
-        if caller.kind == "user" and caller.user is not None and not caller.user.is_superuser:
+        if caller.kind == "user" and caller.user is not None and not is_facilitator(session, caller.user):
             mems = session.exec(
                 select(ExerciseMembership.exercise_id).where(ExerciseMembership.user_id == caller.user.id)
             ).all()
@@ -599,12 +716,74 @@ def create_app(
                     "starting_fixture": ex.starting_fixture,
                     "clock_step": ex.clock_step,
                     "twin_write_through": ex.twin_write_through,
+                    "allow_external_ai": ex.allow_external_ai,
                     "epoch": ex.epoch,
                     "frozen": freeze is not None,
                     "freeze_id": freeze.id if freeze else None,
                 }
             )
         return out
+
+    @api.post("/api/v1/exercises", status_code=201)
+    def create_exercise(
+        body: CreateExerciseBody,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        user = _require_facilitator(session, caller)
+        try:
+            assert_synthetic_text(body.name, body.id)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        ex_id = (body.id or f"EX-PLAN-{uuid.uuid4().hex[:6].upper()}").strip()
+        if session.get(Exercise, ex_id) is not None:
+            raise HTTPException(status_code=409, detail=f"Exercise {ex_id} already exists")
+
+        allow_ai = body.allow_external_ai if body.allow_external_ai is not None else (body.mode == "demo")
+        with locks[ex_id]:
+            ex = Exercise(
+                id=ex_id,
+                name=body.name.strip(),
+                mode=body.mode,
+                starting_fixture=body.starting_fixture,
+                clock_step="candidate_list",
+                twin_write_through=body.twin_write_through,
+                allow_external_ai=allow_ai,
+                epoch=1,
+            )
+            session.add(ex)
+            session.add(ExerciseMembership(exercise_id=ex_id, user_id=user.id, role="facilitator", source_group=None))
+            seeded_count = seed_exercise_from_fixture(session, scen_dir, ex_id, body.starting_fixture)
+            _append_feed(
+                session,
+                ex,
+                "exercise",
+                ex_id,
+                "created",
+                {
+                    "exercise_id": ex_id,
+                    "mode": ex.mode,
+                    "starting_fixture": ex.starting_fixture,
+                    "seeded_count": seeded_count,
+                    "created_by": user.id,
+                },
+            )
+            session.commit()
+            session.refresh(ex)
+            return {
+                "id": ex.id,
+                "name": ex.name,
+                "mode": ex.mode,
+                "starting_fixture": ex.starting_fixture,
+                "clock_step": ex.clock_step,
+                "twin_write_through": ex.twin_write_through,
+                "allow_external_ai": ex.allow_external_ai,
+                "epoch": ex.epoch,
+                "frozen": False,
+                "freeze_id": None,
+                "seeded_count": seeded_count,
+            }
 
     @api.get("/api/v1/exercises/{exercise_id}")
     def get_exercise(exercise_id: str, caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> dict:
@@ -620,12 +799,39 @@ def create_app(
             "mode": ex.mode,
             "starting_fixture": ex.starting_fixture,
             "clock_step": ex.clock_step,
+            "clock_steps": list(CLOCK_STEPS),
             "twin_write_through": ex.twin_write_through,
+            "allow_external_ai": ex.allow_external_ai,
             "epoch": ex.epoch,
             "frozen": freeze is not None,
             "freeze_id": freeze.id if freeze else None,
             "event": ev.model_dump() if ev else None,
         }
+
+    @api.get("/api/v1/exercises/{exercise_id}/briefing-packs")
+    def get_briefing_packs(
+        exercise_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        _require_exercise_read(session, caller, exercise_id)
+        ex = session.get(Exercise, exercise_id)
+        if ex is None:
+            raise HTTPException(status_code=404, detail="Exercise not found")
+        fixture = load_starting_fixture(scen_dir, ex.starting_fixture)
+        return {
+            "exercise_id": ex.id,
+            "starting_fixture": ex.starting_fixture,
+            "fixture_version": fixture.get("fixture_version", 1),
+            "expected_request_count": fixture.get("expected_request_count", 0),
+            "briefing_packs": fixture.get("briefing_packs", {}),
+        }
+
+    @api.get("/api/v1/users")
+    def list_users(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
+        _require_facilitator(session, caller)
+        users = session.exec(select(UserAccount).order_by(UserAccount.email)).all()
+        return [{"id": u.id, "email": u.email, "full_name": u.full_name, "is_superuser": u.is_superuser} for u in users]
 
     @api.get("/api/v1/exercises/{exercise_id}/memberships")
     def list_memberships(exercise_id: str, caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> list[dict]:
@@ -643,6 +849,641 @@ def create_app(
             }
             for m in mems
         ]
+
+    @api.post("/api/v1/exercises/{exercise_id}/memberships", status_code=201)
+    def upsert_membership(
+        exercise_id: str,
+        body: UpsertMembershipBody,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        actor = _require_facilitator(session, caller, exercise_id)
+        if body.role == "source_group" and not body.source_group:
+            raise HTTPException(status_code=422, detail="source_group role requires a source_group code")
+        norm_email = body.email.strip().lower()
+        try:
+            assert_synthetic_text(body.full_name)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            target_user = session.exec(select(UserAccount).where(UserAccount.email == norm_email)).first()
+            if target_user is None:
+                new_uid = f"usr-{uuid.uuid4().hex[:8]}"
+                target_user = UserAccount(
+                    id=new_uid,
+                    email=norm_email,
+                    full_name=(body.full_name or norm_email.split("@")[0]).strip(),
+                    password_hash=hash_password(DEMO_PASSWORD),
+                    is_superuser=False,
+                )
+                session.add(target_user)
+                session.flush()
+            existing = get_membership(session, exercise_id, target_user.id)
+            sg = body.source_group if body.role == "source_group" else None
+            if existing is not None:
+                existing.role = body.role
+                existing.source_group = sg
+                session.add(existing)
+                action = "updated"
+            else:
+                session.add(ExerciseMembership(exercise_id=exercise_id, user_id=target_user.id, role=body.role, source_group=sg))
+                action = "added"
+            _append_feed(
+                session,
+                ex,
+                "membership",
+                target_user.id,
+                action,
+                {"user_id": target_user.id, "email": target_user.email, "role": body.role, "source_group": sg, "by": actor.id},
+            )
+            session.commit()
+            return {
+                "exercise_id": exercise_id,
+                "user_id": target_user.id,
+                "email": target_user.email,
+                "full_name": target_user.full_name,
+                "role": body.role,
+                "source_group": sg,
+            }
+
+    @api.delete("/api/v1/exercises/{exercise_id}/memberships/{user_id}")
+    def delete_membership(
+        exercise_id: str,
+        user_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        actor = _require_facilitator(session, caller, exercise_id)
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            mem = get_membership(session, exercise_id, user_id)
+            if mem is None:
+                raise HTTPException(status_code=404, detail="Membership not found")
+            if mem.role == "facilitator":
+                fac_count = len(
+                    session.exec(
+                        select(ExerciseMembership).where(
+                            ExerciseMembership.exercise_id == exercise_id,
+                            ExerciseMembership.role == "facilitator",
+                        )
+                    ).all()
+                )
+                if fac_count <= 1:
+                    raise HTTPException(status_code=409, detail="Cannot remove the sole facilitator of an exercise")
+            session.delete(mem)
+            _append_feed(
+                session,
+                ex,
+                "membership",
+                user_id,
+                "removed",
+                {"user_id": user_id, "by": actor.id},
+            )
+            session.commit()
+            return {"exercise_id": exercise_id, "user_id": user_id, "removed": True}
+
+    @api.patch("/api/v1/exercises/{exercise_id}/settings")
+    def update_exercise_settings(
+        exercise_id: str,
+        body: ExerciseSettingsBody,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        actor = _require_facilitator(session, caller, exercise_id)
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            if body.twin_write_through is not None:
+                ex.twin_write_through = body.twin_write_through
+            if body.allow_external_ai is not None:
+                ex.allow_external_ai = body.allow_external_ai
+            session.add(ex)
+            _append_feed(
+                session,
+                ex,
+                "exercise",
+                ex.id,
+                "settings_updated",
+                {
+                    "twin_write_through": ex.twin_write_through,
+                    "allow_external_ai": ex.allow_external_ai,
+                    "by": actor.id,
+                },
+            )
+            session.commit()
+            return {
+                "exercise_id": ex.id,
+                "twin_write_through": ex.twin_write_through,
+                "allow_external_ai": ex.allow_external_ai,
+            }
+
+    @api.post("/api/v1/exercises/{exercise_id}/clock")
+    def advance_clock(
+        exercise_id: str,
+        body: AdvanceClockBody,
+        request: Request,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        actor = _require_facilitator(session, caller, exercise_id)
+        try:
+            assert_synthetic_text(body.reason)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            cur_idx = CLOCK_INDEX.get(ex.clock_step, 0)
+            tgt_idx = CLOCK_INDEX[body.target_step]
+            if tgt_idx <= cur_idx:
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Clock moves forward only (current '{ex.clock_step}', target '{body.target_step}'). Use reset to go back.",
+                )
+            if tgt_idx > FREEZE_STEP_INDEX and _is_frozen(session, exercise_id) is None:
+                raise HTTPException(
+                    status_code=409,
+                    detail="Cannot advance clock past 'freeze' until the TA manager freezes the work list",
+                )
+            prev_step = ex.clock_step
+            skipped = list(CLOCK_STEPS[cur_idx + 1 : tgt_idx])
+            ex.clock_step = body.target_step
+            session.add(ex)
+            _append_feed(
+                session,
+                ex,
+                "clock",
+                ex.id,
+                "advanced",
+                {
+                    "from_step": prev_step,
+                    "to_step": ex.clock_step,
+                    "skipped_steps": skipped,
+                    "reason": body.reason,
+                    "by": actor.id,
+                },
+            )
+            session.commit()
+            return {
+                "exercise_id": ex.id,
+                "from_step": prev_step,
+                "clock_step": ex.clock_step,
+                "skipped_steps": skipped,
+                "frozen": _is_frozen(session, exercise_id) is not None,
+            }
+
+    @api.get("/api/v1/injects/library")
+    def list_inject_library(caller: Caller = Depends(get_caller)) -> list[dict]:
+        _forbid_delegate_token(caller)
+        return LIBRARY_INJECTS
+
+    @api.get("/api/v1/exercises/{exercise_id}/injects")
+    def list_exercise_injects(
+        exercise_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> list[dict]:
+        _require_exercise_read(session, caller, exercise_id)
+        rows = session.exec(
+            select(ExerciseInject)
+            .where(ExerciseInject.exercise_id == exercise_id)
+            .order_by(ExerciseInject.applied_at)
+        ).all()
+        return [
+            {
+                "id": r.id,
+                "exercise_id": r.exercise_id,
+                "inject_id": r.inject_id,
+                "phase": r.phase,
+                "actor": r.actor,
+                "payload": json.loads(r.payload_json),
+                "applied_at": r.applied_at.isoformat(),
+            }
+            for r in rows
+        ]
+
+    @api.post("/api/v1/exercises/{exercise_id}/injects", status_code=201)
+    def apply_inject(
+        exercise_id: str,
+        body: ApplyInjectBody,
+        request: Request,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        from fastapi.responses import JSONResponse
+
+        actor = _require_facilitator(session, caller, exercise_id)
+        if body.custom:
+            try:
+                assert_synthetic_text(body.inject_id, body.title, body.description, body.equipment_text, body.area)
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail=str(exc)) from exc
+            if not body.title or not body.description:
+                raise HTTPException(status_code=422, detail="Custom inject requires title and description")
+            spec = {
+                "inject_id": body.inject_id.strip(),
+                "title": body.title.strip(),
+                "description": body.description.strip(),
+                "allowed_phases": body.allowed_phases or list(CLOCK_STEPS[:-1]),
+                "requires_frozen": body.action_kind == "change_request",
+                "action_kind": body.action_kind,
+                "source_group": body.source_group or "operations",
+                "driver": body.driver or "operations",
+                "area": body.area or "200-A",
+                "equipment_text": body.equipment_text or "Unit 200 general area",
+                "category": "General piping and valves",
+                "work_type_label": "GeneralCleanup",
+                "mandatory": body.mandatory,
+                "hours_delta": body.hours_delta,
+                "cost_delta_usd": body.cost_delta_usd,
+                "budget_cut_pct": body.budget_cut_pct,
+                "estimate_hours_by_craft": {"boilermaker": max(10, body.hours_delta)},
+                "ript_score": 15,
+            }
+        else:
+            spec = LIBRARY_INJECTS_BY_ID.get(body.inject_id)
+            if spec is None:
+                raise HTTPException(status_code=404, detail=f"Unknown library inject {body.inject_id}")
+
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            existing = session.exec(
+                select(ExerciseInject).where(
+                    ExerciseInject.exercise_id == exercise_id,
+                    ExerciseInject.inject_id == spec["inject_id"],
+                )
+            ).first()
+            if existing is not None:
+                return JSONResponse(
+                    status_code=200,
+                    content={
+                        "exercise_id": exercise_id,
+                        "inject_id": spec["inject_id"],
+                        "applied": False,
+                        "already_applied": True,
+                        "phase": existing.phase,
+                    },
+                )
+            if ex.clock_step not in set(spec["allowed_phases"]):
+                raise HTTPException(
+                    status_code=409,
+                    detail=f"Inject {spec['inject_id']} is not allowed in phase '{ex.clock_step}' (allowed: {', '.join(spec['allowed_phases'])})",
+                )
+            if spec.get("requires_frozen") and _is_frozen(session, exercise_id) is None:
+                raise HTTPException(status_code=409, detail=f"Inject {spec['inject_id']} requires a frozen work list")
+
+            effect: dict = {"action_kind": spec["action_kind"], "title": spec["title"], "description": spec["description"]}
+            kind = spec["action_kind"]
+            if kind == "budget_cut":
+                ev = session.exec(select(TurnaroundEvent).where(TurnaroundEvent.exercise_id == exercise_id)).first()
+                if ev is not None:
+                    old_b = ev.budget_target_usd
+                    pct = int(spec.get("budget_cut_pct", 10))
+                    ev.budget_target_usd = round(old_b * (100 - pct) / 100)
+                    session.add(ev)
+                    effect["old_budget_usd"] = old_b
+                    effect["new_budget_usd"] = ev.budget_target_usd
+            elif kind == "work_request":
+                if _is_frozen(session, exercise_id) is not None:
+                    raise HTTPException(status_code=409, detail="Cannot inject a candidate work request after freeze")
+                existing_ids = session.exec(select(WorkRequest.id).where(WorkRequest.exercise_id == exercise_id)).all()
+                max_num = max((int(rid.split("-")[-1]) for rid in existing_ids if rid.startswith("WR-200-")), default=0)
+                new_id = f"WR-200-{max_num + 1:04d}"
+                by_craft = spec.get("estimate_hours_by_craft", {"boilermaker": 80})
+                hrs, cost = _compute_hours_and_cost(by_craft)
+                wr = WorkRequest(
+                    id=new_id,
+                    exercise_id=exercise_id,
+                    event_id="TAR-200-2028",
+                    title=spec["title"],
+                    description=spec["description"],
+                    equipment_text=spec["equipment_text"],
+                    category=spec.get("category", "General piping and valves"),
+                    work_type_label=spec.get("work_type_label", "GeneralCleanup"),
+                    driver=spec.get("driver", "operations"),
+                    source_group=spec.get("source_group", "operations"),
+                    area=spec.get("area", "200-A"),
+                    ript_score=int(spec.get("ript_score", 14)),
+                    mandatory=bool(spec.get("mandatory", False)),
+                    estimate_hours=hrs,
+                    estimate_hours_by_craft_json=json.dumps(by_craft),
+                    estimate_cost_usd=cost,
+                    status="candidate",
+                    version=1,
+                )
+                session.add(wr)
+                _append_feed(session, ex, "work_request", new_id, "created", {"request_id": new_id, "version": 1, "inject_id": spec["inject_id"]})
+                effect["request_id"] = new_id
+            elif kind == "change_request":
+                cr_id = f"CR-200-{uuid.uuid4().hex[:8].upper()}"
+                cr = ChangeRequest(
+                    id=cr_id,
+                    exercise_id=exercise_id,
+                    request_id=None,
+                    base_version=0,
+                    change_type="add",
+                    mandatory=bool(spec.get("mandatory", True)),
+                    schedule_impact_days=float(spec.get("schedule_impact_days", 0.5)),
+                    risk_if_not_done=str(spec.get("risk_if_not_done", "")),
+                    hours_delta=int(spec.get("hours_delta", 200)),
+                    cost_delta_usd=int(spec.get("cost_delta_usd", 47000)),
+                    title=spec["title"],
+                    equipment_text=spec.get("equipment_text"),
+                    category=spec.get("category"),
+                    driver=spec.get("driver", "inspection"),
+                    source_group=spec.get("source_group", "inspection"),
+                    area=spec.get("area", "200-A"),
+                    evidence=f"Inject {spec['inject_id']} ({spec.get('source_group', 'inspection')})",
+                    reason=spec["description"],
+                    raised_by=f"sys-inject-{spec.get('source_group', 'inspection')}",
+                    raised_via="iw",
+                    delegate_token_id=None,
+                    status="pending",
+                )
+                session.add(cr)
+                _append_feed(
+                    session,
+                    ex,
+                    "change_request",
+                    cr_id,
+                    "raised",
+                    {
+                        "change_request_id": cr_id,
+                        "inject_id": spec["inject_id"],
+                        "hours_delta": cr.hours_delta,
+                        "cost_delta_usd": cr.cost_delta_usd,
+                        "mandatory": cr.mandatory,
+                        "status": "pending",
+                    },
+                )
+                effect["change_request_id"] = cr_id
+            elif kind == "comment":
+                hint = str(spec.get("target_tag_hint", "")).lower()
+                wrs = session.exec(select(WorkRequest).where(WorkRequest.exercise_id == exercise_id).order_by(WorkRequest.id)).all()
+                target_wr = next((w for w in wrs if hint and hint in f"{w.equipment_text} {w.title}".lower()), wrs[0] if wrs else None)
+                if target_wr is not None:
+                    session.add(
+                        WorkRequestComment(
+                            exercise_id=exercise_id,
+                            request_id=target_wr.id,
+                            request_version=target_wr.version,
+                            clock_step=ex.clock_step,
+                            body=str(spec.get("comment_body", spec["description"])),
+                            author_id=f"sys-inject-{spec.get('source_group', 'operations')}",
+                        )
+                    )
+                    effect["request_id"] = target_wr.id
+
+            inj = ExerciseInject(
+                exercise_id=exercise_id,
+                inject_id=spec["inject_id"],
+                phase=ex.clock_step,
+                actor=actor.id,
+                payload_json=json.dumps(effect, sort_keys=True),
+            )
+            session.add(inj)
+            _append_feed(
+                session,
+                ex,
+                "inject",
+                spec["inject_id"],
+                "applied",
+                {"inject_id": spec["inject_id"], "phase": ex.clock_step, "by": actor.id, **effect},
+            )
+            session.commit()
+            return {
+                "exercise_id": exercise_id,
+                "inject_id": spec["inject_id"],
+                "applied": True,
+                "already_applied": False,
+                "phase": ex.clock_step,
+                "effect": effect,
+            }
+
+    @api.post("/api/v1/exercises/{exercise_id}/reset")
+    def reset_exercise(
+        exercise_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        actor = _require_facilitator(session, caller, exercise_id)
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+
+            # Archive full pre-reset log before bumping epoch and clearing exercise-scoped tables
+            prior_epoch = ex.epoch
+            wrs = session.exec(select(WorkRequest).where(WorkRequest.exercise_id == exercise_id)).all()
+            decs = session.exec(select(ReviewDecision).where(ReviewDecision.exercise_id == exercise_id)).all()
+            coms = session.exec(select(WorkRequestComment).where(WorkRequestComment.exercise_id == exercise_id)).all()
+            frzs = session.exec(select(FreezeRecord).where(FreezeRecord.exercise_id == exercise_id)).all()
+            frz_items = session.exec(select(FreezeItem).where(FreezeItem.exercise_id == exercise_id)).all()
+            crs = session.exec(select(ChangeRequest).where(ChangeRequest.exercise_id == exercise_id)).all()
+            injs = session.exec(select(ExerciseInject).where(ExerciseInject.exercise_id == exercise_id)).all()
+            feeds = session.exec(
+                select(ChangeFeedEntry).where(ChangeFeedEntry.exercise_id == exercise_id).order_by(ChangeFeedEntry.seq)
+            ).all()
+
+            archive_summary = {
+                "exercise_id": ex.id,
+                "epoch": prior_epoch,
+                "clock_step_at_reset": ex.clock_step,
+                "reset_by": actor.id,
+                "work_request_count": len(wrs),
+                "decision_count": len(decs),
+                "comment_count": len(coms),
+                "freeze_count": len(frzs),
+                "change_request_count": len(crs),
+                "inject_count": len(injs),
+                "feed_events": [
+                    {
+                        "seq": f.seq,
+                        "entity_type": f.entity_type,
+                        "entity_id": f.entity_id,
+                        "action": f.action,
+                        "payload": json.loads(f.payload_json),
+                        "created_at": f.created_at.isoformat(),
+                    }
+                    for f in feeds
+                ],
+            }
+            session.add(
+                ArchivedEventLog(
+                    exercise_id=exercise_id,
+                    epoch=prior_epoch,
+                    summary_json=json.dumps(archive_summary),
+                )
+            )
+
+            # Raise epoch first and restore clock to candidate_list
+            ex.epoch = prior_epoch + 1
+            ex.clock_step = "candidate_list"
+            session.add(ex)
+
+            for row_group in (frz_items, frzs, crs, coms, decs, injs, feeds, wrs):
+                for row in row_group:
+                    session.delete(row)
+            session.flush()
+
+            seeded_count = seed_exercise_from_fixture(session, scen_dir, exercise_id, ex.starting_fixture)
+            _append_feed(
+                session,
+                ex,
+                "exercise",
+                ex.id,
+                "reset",
+                {
+                    "previous_epoch": prior_epoch,
+                    "epoch": ex.epoch,
+                    "starting_fixture": ex.starting_fixture,
+                    "seeded_count": seeded_count,
+                    "by": actor.id,
+                },
+            )
+            session.commit()
+            return {
+                "exercise_id": ex.id,
+                "previous_epoch": prior_epoch,
+                "epoch": ex.epoch,
+                "clock_step": ex.clock_step,
+                "seeded_count": seeded_count,
+                "archived": True,
+            }
+
+    @api.get("/api/v1/exercises/{exercise_id}/archives")
+    def list_exercise_archives(
+        exercise_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> list[dict]:
+        _require_exercise_read(session, caller, exercise_id)
+        rows = session.exec(
+            select(ArchivedEventLog)
+            .where(ArchivedEventLog.exercise_id == exercise_id)
+            .order_by(ArchivedEventLog.epoch.desc())
+        ).all()
+        return [
+            {
+                "id": r.id,
+                "exercise_id": r.exercise_id,
+                "epoch": r.epoch,
+                "archived_at": r.archived_at.isoformat(),
+                "summary": json.loads(r.summary_json),
+            }
+            for r in rows
+        ]
+
+    @api.get("/api/v1/exercises/{exercise_id}/history")
+    def get_exercise_history(
+        exercise_id: str,
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        _require_exercise_read(session, caller, exercise_id)
+        ex = session.get(Exercise, exercise_id)
+        if ex is None:
+            raise HTTPException(status_code=404, detail="Exercise not found")
+        users = {u.id: u.full_name for u in session.exec(select(UserAccount)).all()}
+        decs = session.exec(
+            select(ReviewDecision)
+            .where(ReviewDecision.exercise_id == exercise_id)
+            .order_by(ReviewDecision.decided_at)
+        ).all()
+        coms = session.exec(
+            select(WorkRequestComment)
+            .where(WorkRequestComment.exercise_id == exercise_id)
+            .order_by(WorkRequestComment.created_at)
+        ).all()
+        injs = session.exec(
+            select(ExerciseInject)
+            .where(ExerciseInject.exercise_id == exercise_id)
+            .order_by(ExerciseInject.applied_at)
+        ).all()
+        feeds = session.exec(
+            select(ChangeFeedEntry)
+            .where(ChangeFeedEntry.exercise_id == exercise_id)
+            .order_by(ChangeFeedEntry.seq)
+        ).all()
+        frz = _is_frozen(session, exercise_id)
+        return {
+            "exercise_id": ex.id,
+            "epoch": ex.epoch,
+            "mode": ex.mode,
+            "starting_fixture": ex.starting_fixture,
+            "clock_step": ex.clock_step,
+            "frozen": frz is not None,
+            "freeze": (
+                {
+                    "id": frz.id,
+                    "list_version": frz.list_version,
+                    "frozen_by": users.get(frz.frozen_by, frz.frozen_by),
+                    "frozen_at": frz.frozen_at.isoformat(),
+                }
+                if frz
+                else None
+            ),
+            "decisions": [
+                {
+                    "id": d.id,
+                    "request_id": d.request_id,
+                    "request_version": d.request_version,
+                    "stage": d.stage,
+                    "kind": d.kind,
+                    "decision": d.decision,
+                    "reason": d.reason,
+                    "decided_by": users.get(d.decided_by, d.decided_by),
+                    "decided_at": d.decided_at.isoformat(),
+                }
+                for d in decs
+            ],
+            "comments": [
+                {
+                    "id": c.id,
+                    "request_id": c.request_id,
+                    "clock_step": c.clock_step,
+                    "body": c.body,
+                    "author": users.get(c.author_id, c.author_id),
+                    "created_at": c.created_at.isoformat(),
+                }
+                for c in coms
+            ],
+            "injects": [
+                {
+                    "inject_id": i.inject_id,
+                    "phase": i.phase,
+                    "actor": users.get(i.actor, i.actor),
+                    "payload": json.loads(i.payload_json),
+                    "applied_at": i.applied_at.isoformat(),
+                }
+                for i in injs
+            ],
+            "feed": [
+                {
+                    "seq": f.seq,
+                    "entity_type": f.entity_type,
+                    "entity_id": f.entity_id,
+                    "action": f.action,
+                    "payload": json.loads(f.payload_json),
+                    "created_at": f.created_at.isoformat(),
+                }
+                for f in feeds
+            ],
+            "user_names": users,
+        }
 
     @api.patch("/api/v1/exercises/{exercise_id}/write-through")
     def toggle_write_through(
@@ -718,6 +1559,7 @@ def create_app(
     @api.post("/api/v1/work-requests", status_code=201)
     def create_work_request(
         body: CreateWorkRequestBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -746,6 +1588,8 @@ def create_app(
             ex = session.get(Exercise, body.exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, {"candidate_list"}, "Raising a candidate work request")
             if _is_frozen(session, body.exercise_id) is not None:
                 raise HTTPException(status_code=409, detail="Work list is frozen; submit a change request instead")
 
@@ -782,6 +1626,7 @@ def create_app(
     def patch_work_request(
         request_id: str,
         body: PatchWorkRequestBody,
+        request: Request,
         exercise_id: str = Query(default="EX-DEMO"),
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
@@ -800,6 +1645,8 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, PRE_FREEZE_EDIT_STEPS, "Editing a work request")
             if _is_frozen(session, exercise_id) is not None:
                 raise HTTPException(
                     status_code=409,
@@ -851,10 +1698,70 @@ def create_app(
             session.refresh(wr)
             return _serialize_wr(session, wr)
 
+    @api.post("/api/v1/work-requests/{request_id}/comments", status_code=201)
+    def add_work_request_comment(
+        request_id: str,
+        body: CreateCommentBody,
+        request: Request,
+        exercise_id: str = Query(default="EX-DEMO"),
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        user = _require_user(caller)
+        mem = get_membership(session, exercise_id, user.id)
+        if mem is None or mem.role not in {"ta_manager", "planner", "source_group", "drb_member"}:
+            raise HTTPException(status_code=403, detail="Role not permitted to comment or defend requests")
+        try:
+            assert_synthetic_text(body.body)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+        with locks[exercise_id]:
+            ex = session.get(Exercise, exercise_id)
+            if ex is None:
+                raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, COMMENT_STEPS, "Commenting or defending a request")
+            wr = session.get(WorkRequest, (request_id, exercise_id))
+            if wr is None:
+                raise HTTPException(status_code=404, detail="Work request not found")
+            if mem.role == "source_group" and mem.source_group != wr.source_group:
+                raise HTTPException(status_code=403, detail="Source group lead can only comment on own group's requests")
+            com = WorkRequestComment(
+                exercise_id=exercise_id,
+                request_id=request_id,
+                request_version=wr.version,
+                clock_step=ex.clock_step,
+                body=body.body.strip(),
+                author_id=user.id,
+            )
+            session.add(com)
+            _append_feed(
+                session,
+                ex,
+                "comment",
+                request_id,
+                "added",
+                {"request_id": request_id, "author_id": user.id, "clock_step": ex.clock_step},
+            )
+            session.commit()
+            session.refresh(com)
+            return {
+                "id": com.id,
+                "exercise_id": com.exercise_id,
+                "request_id": com.request_id,
+                "request_version": com.request_version,
+                "clock_step": com.clock_step,
+                "body": com.body,
+                "author_id": com.author_id,
+                "created_at": com.created_at.isoformat(),
+            }
+
     @api.post("/api/v1/work-requests/{request_id}/decisions", status_code=201)
     def record_review_decision(
         request_id: str,
         body: ReviewDecisionBody,
+        request: Request,
         exercise_id: str = Query(default="EX-DEMO"),
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
@@ -885,6 +1792,8 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, {body.stage}, f"Recording a {body.stage} decision")
             if _is_frozen(session, exercise_id) is not None:
                 raise HTTPException(status_code=409, detail="Work list is already frozen")
             wr = session.get(WorkRequest, (request_id, exercise_id))
@@ -946,6 +1855,7 @@ def create_app(
     @api.post("/api/v1/work-requests/bulk-decisions", status_code=201)
     def bulk_review_decisions(
         body: BulkDecisionBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -968,6 +1878,8 @@ def create_app(
             ex = session.get(Exercise, body.exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, {body.stage}, f"Recording bulk {body.stage} decisions")
             if _is_frozen(session, body.exercise_id) is not None:
                 raise HTTPException(status_code=409, detail="Work list is already frozen")
             applied = 0
@@ -1012,6 +1924,7 @@ def create_app(
     @api.post("/api/v1/freezes", status_code=201)
     def freeze_work_list(
         body: FreezeBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -1024,6 +1937,8 @@ def create_app(
             ex = session.get(Exercise, body.exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, {"freeze"}, "Freezing the work list")
             if _is_frozen(session, body.exercise_id) is not None:
                 raise HTTPException(status_code=409, detail="Work list is already frozen")
 
@@ -1143,6 +2058,7 @@ def create_app(
     @api.post("/api/v1/change-requests", status_code=201)
     def raise_change_request_direct(
         body: DirectChangeRequestBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -1165,6 +2081,7 @@ def create_app(
                 raise HTTPException(status_code=403, detail="Source group lead may not reassign request to another group")
         return _raise_change_request_shared(
             session,
+            request=request,
             exercise_id=body.exercise_id,
             request_id=body.request_id,
             change_type=body.change_type,
@@ -1189,6 +2106,7 @@ def create_app(
     @api.post("/api/v1/twin/change-requests", status_code=201)
     def raise_change_request_from_twin(
         body: TwinChangeRequestBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -1202,6 +2120,7 @@ def create_app(
 
         return _raise_change_request_shared(
             session,
+            request=request,
             exercise_id=body.exercise_id,
             request_id=body.request_id,
             change_type=body.change_type,
@@ -1227,6 +2146,7 @@ def create_app(
     def decide_change_request(
         change_id: str,
         body: DecideChangeRequestBody,
+        request: Request,
         exercise_id: str = Query(default="EX-DEMO"),
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
@@ -1244,6 +2164,8 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
+            enforce_planning_phase(ex, POST_FREEZE_CHANGE_STEPS, "Deciding a change request")
             cr = session.get(ChangeRequest, (change_id, exercise_id))
             if cr is None:
                 raise HTTPException(status_code=404, detail="Change request not found")

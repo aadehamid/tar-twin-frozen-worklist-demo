@@ -1,12 +1,14 @@
 import React, { useMemo, useState } from "react";
-import type { ClustersPayload, CutLineResult, ScopeItem } from "../types";
+import type { ClustersPayload, CutLineResult, CutLineRunRecord, ScopeItem } from "../types";
 
 interface ClustersCutLineViewProps {
   clusters: ClustersPayload | null;
   cutLine: CutLineResult | null;
+  savedRuns: CutLineRunRecord[];
   scopeItems: ScopeItem[];
   budgetUsd: number;
   onBudgetChange: (budgetUsd: number) => void;
+  onSaveCutLineOption: (name: string) => Promise<void>;
   onColorCutLineOnPlot: () => void;
   onHighlightTagsOnPlot: (tags: string[]) => void;
   onOpenTrace: (requestId: string) => void;
@@ -25,14 +27,19 @@ const PRESETS = [
 export const ClustersCutLineView: React.FC<ClustersCutLineViewProps> = ({
   clusters,
   cutLine,
+  savedRuns,
   scopeItems,
   budgetUsd,
   onBudgetChange,
+  onSaveCutLineOption,
   onColorCutLineOnPlot,
   onHighlightTagsOnPlot,
   onOpenTrace,
 }) => {
   const [tab, setTab] = useState<ClusterTab>("isolation");
+  const [optionName, setOptionName] = useState<string>("DRB Option A");
+  const [saveMessage, setSaveMessage] = useState<string | null>(null);
+  const [saving, setSaving] = useState<boolean>(false);
 
   const itemById = useMemo(() => {
     const m = new Map<string, ScopeItem>();
@@ -145,6 +152,89 @@ export const ClustersCutLineView: React.FC<ClustersCutLineViewProps> = ({
                 Unclustered ${cutLine.above_unclustered_cost_usd.toLocaleString()}
               </div>
             </div>
+          </div>
+        )}
+
+        <div
+          style={{
+            marginTop: "0.95rem",
+            paddingTop: "0.85rem",
+            borderTop: "1px solid var(--border-subtle)",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "0.75rem",
+          }}
+        >
+          <form
+            onSubmit={async (e) => {
+              e.preventDefault();
+              if (!optionName.trim()) return;
+              setSaving(true);
+              setSaveMessage(null);
+              try {
+                await onSaveCutLineOption(optionName.trim());
+                setSaveMessage(`Saved option "${optionName.trim()}" locally in the twin (IMPACT Web unchanged).`);
+              } catch (err) {
+                setSaveMessage(err instanceof Error ? err.message : String(err));
+              } finally {
+                setSaving(false);
+              }
+            }}
+            style={{ display: "flex", alignItems: "center", gap: "0.5rem", flexWrap: "wrap" }}
+          >
+            <input
+              type="text"
+              aria-label="Cut-line option name"
+              value={optionName}
+              onChange={(e) => setOptionName(e.target.value)}
+              placeholder="Option name (e.g. DRB Option A)"
+              style={{
+                background: "var(--bg-inset)",
+                border: "1px solid var(--border-strong)",
+                borderRadius: "var(--radius-sm)",
+                padding: "0.42rem 0.65rem",
+                minWidth: "210px",
+              }}
+            />
+            <button type="submit" className="btn-subtle" disabled={saving}>
+              {saving ? "Saving..." : "Save cut-line option"}
+            </button>
+          </form>
+          {saveMessage && (
+            <span style={{ fontSize: "var(--text-sm)", color: "var(--ink-secondary)" }}>{saveMessage}</span>
+          )}
+        </div>
+
+        {savedRuns.length > 0 && (
+          <div style={{ marginTop: "0.75rem", overflowX: "auto" }}>
+            <table className="data-table">
+              <thead>
+                <tr>
+                  <th>Saved option (twin-local)</th>
+                  <th>Budget</th>
+                  <th>Status</th>
+                  <th>Above / below</th>
+                  <th>Saved by</th>
+                </tr>
+              </thead>
+              <tbody>
+                {savedRuns.map((run) => (
+                  <tr key={run.id}>
+                    <td>{run.name}</td>
+                    <td className="mono">${run.budget_usd.toLocaleString()}</td>
+                    <td className={run.feasible ? "tone-ok" : "tone-danger"}>
+                      {run.feasible ? "Feasible" : `Shortfall $${run.shortfall_usd.toLocaleString()}`}
+                    </td>
+                    <td className="mono">
+                      {run.above_count} / {run.below_count}
+                    </td>
+                    <td>{run.saved_by}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </section>

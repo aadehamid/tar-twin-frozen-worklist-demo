@@ -6,7 +6,10 @@ import type {
   ChangeRequestRecord,
   ClustersPayload,
   CutLineResult,
+  CutLineRunRecord,
+  DebriefReport,
   EquipmentDetail,
+  ExerciseSummary,
   ExploreResponse,
   ExploreSuggestion,
   IsolationEnvelope,
@@ -31,9 +34,9 @@ function apiUrl(path: string): string {
 
 export async function apiFetch<T>(
   path: string,
-  options: { method?: string; body?: unknown; token?: string | null } = {}
+  options: { method?: string; body?: unknown; token?: string | null; extraHeaders?: Record<string, string> } = {}
 ): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...(options.extraHeaders ?? {}) };
   if (options.body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
@@ -80,11 +83,14 @@ export const twinApi = {
   sheets: () => apiFetch<PidSheet[]>("/api/v1/plant/sheets"),
   envelopes: () => apiFetch<IsolationEnvelope[]>("/api/v1/plant/envelopes"),
 
-  sync: (exerciseId = "EX-DEMO", useAi = true) =>
-    apiFetch<Record<string, unknown>>(
-      `/api/v1/sync?exercise_id=${encodeURIComponent(exerciseId)}&use_ai=${useAi ? "true" : "false"}`,
-      { method: "POST" }
-    ),
+  exercises: () => apiFetch<ExerciseSummary[]>("/api/v1/exercises"),
+  sync: (exerciseId = "EX-DEMO", useAi = true, token?: string | null, expectedEpoch?: number) => {
+    const epochParam = expectedEpoch !== undefined ? `&expected_epoch=${encodeURIComponent(String(expectedEpoch))}` : "";
+    return apiFetch<Record<string, unknown>>(
+      `/api/v1/sync?exercise_id=${encodeURIComponent(exerciseId)}&use_ai=${useAi ? "true" : "false"}${epochParam}`,
+      { method: "POST", token }
+    );
+  },
   scopeItems: (exerciseId = "EX-DEMO") =>
     apiFetch<ScopeItem[]>(`/api/v1/scope-items?exercise_id=${encodeURIComponent(exerciseId)}`),
   matchingSummary: (exerciseId = "EX-DEMO") =>
@@ -95,11 +101,17 @@ export const twinApi = {
     requestId: string,
     payload: { action: "accept" | "reject" | "pick_another"; tag?: string; reason?: string },
     token: string | null,
-    exerciseId = "EX-DEMO"
+    exerciseId = "EX-DEMO",
+    epoch?: number
   ) =>
     apiFetch<ScopeItem>(
       `/api/v1/matching/review/${encodeURIComponent(requestId)}?exercise_id=${encodeURIComponent(exerciseId)}`,
-      { method: "POST", body: payload, token }
+      {
+        method: "POST",
+        body: payload,
+        token,
+        extraHeaders: epoch !== undefined ? { "X-Exercise-Epoch": String(epoch) } : undefined,
+      }
     ),
 
   labStep: (requestId: string, exerciseId = "EX-DEMO") =>
@@ -111,11 +123,25 @@ export const twinApi = {
 
   clusters: (exerciseId = "EX-DEMO") =>
     apiFetch<ClustersPayload>(`/api/v1/clusters?exercise_id=${encodeURIComponent(exerciseId)}`),
-  evaluateCutLine: (budgetUsd: number, exerciseId = "EX-DEMO") =>
+  cutLineRuns: (exerciseId = "EX-DEMO") =>
+    apiFetch<CutLineRunRecord[]>(`/api/v1/cut-line/runs?exercise_id=${encodeURIComponent(exerciseId)}`),
+  evaluateCutLine: (
+    budgetUsd: number,
+    exerciseId = "EX-DEMO",
+    saveName?: string,
+    token?: string | null
+  ) =>
     apiFetch<CutLineResult>("/api/v1/cut-line/evaluate", {
       method: "POST",
-      body: { exercise_id: exerciseId, budget_usd: budgetUsd },
+      body: {
+        exercise_id: exerciseId,
+        budget_usd: budgetUsd,
+        ...(saveName ? { save_name: saveName } : {}),
+      },
+      token,
     }),
+  debrief: (exerciseId = "EX-DEMO") =>
+    apiFetch<DebriefReport>(`/api/v1/debrief?exercise_id=${encodeURIComponent(exerciseId)}`),
 
   exploreSuggestions: () => apiFetch<ExploreSuggestion[]>("/api/v1/explore/suggestions"),
   exploreQuery: (query: string, exerciseId = "EX-DEMO") =>

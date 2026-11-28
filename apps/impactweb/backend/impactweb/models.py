@@ -103,6 +103,19 @@ class ReviewDecision(SQLModel, table=True):
     decided_at: datetime = Field(default_factory=utcnow)
 
 
+class WorkRequestComment(SQLModel, table=True):
+    __tablename__ = "work_request_comment"
+
+    id: int | None = Field(default=None, primary_key=True)
+    exercise_id: str = Field(index=True)
+    request_id: str = Field(index=True)
+    request_version: int
+    clock_step: str
+    body: str
+    author_id: str
+    created_at: datetime = Field(default_factory=utcnow)
+
+
 class FreezeRecord(SQLModel, table=True):
     __tablename__ = "freeze_record"
 

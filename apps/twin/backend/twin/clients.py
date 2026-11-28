@@ -35,6 +35,16 @@ class ImpactWebClient:
         r.raise_for_status()
         return r.json()
 
+    def list_exercises(self) -> list[dict[str, Any]]:
+        r = self._client.get("/api/v1/exercises", headers=self._sync_headers())
+        r.raise_for_status()
+        return r.json()
+
+    def get_exercise_history(self, exercise_id: str) -> dict[str, Any]:
+        r = self._client.get(f"/api/v1/exercises/{exercise_id}/history", headers=self._sync_headers())
+        r.raise_for_status()
+        return r.json()
+
     def list_work_requests(self, exercise_id: str) -> list[dict[str, Any]]:
         r = self._client.get(
             "/api/v1/work-requests",
@@ -92,11 +102,14 @@ class ImpactWebClient:
             return None
         return r.json()
 
-    def raise_twin_change_request(self, payload: dict[str, Any]) -> dict[str, Any]:
+    def raise_twin_change_request(self, payload: dict[str, Any], *, epoch: int | None = None) -> dict[str, Any]:
         """Delegated write-through call (design.md section 5.8). Uses ONLY TWIN_RAISE_TOKEN."""
         if not self._raise_token:
             raise RuntimeError("TWIN_RAISE_TOKEN is not configured")
-        r = self._client.post("/api/v1/twin/change-requests", json=payload, headers=self._raise_headers())
+        headers = self._raise_headers()
+        if epoch is not None:
+            headers["X-Exercise-Epoch"] = str(epoch)
+        r = self._client.post("/api/v1/twin/change-requests", json=payload, headers=headers)
         r.raise_for_status()
         return r.json()
 
