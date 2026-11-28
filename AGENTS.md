@@ -36,5 +36,6 @@ Load only the document matching the current task:
 - **exe.dev VM hosting, auth headers, 4 GB memory budget:** [docs/hosting.md](docs/hosting.md)
 - **Recorded architecture choices (D1 to D17):** [docs/decisions.md](docs/decisions.md)
 - **Shared facts and cross-line repo search (`summary`, `check`, `find`):** [scripts/repo_facts.py](scripts/repo_facts.py)
+- **Twin specification graph in Relate (`check`, `impact`, `query`):** [scripts/twin_graph.py](scripts/twin_graph.py)
 - **Phase 0 spike results and rerun commands:** [docs/spikes/](docs/spikes/)
 - **PR body checklist:** [.github/pull_request_template.md](.github/pull_request_template.md)
