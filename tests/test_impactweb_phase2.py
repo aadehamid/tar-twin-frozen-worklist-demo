@@ -473,7 +473,7 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
 
     # Create a second frozen exercise EX-OTHER where j.planner is only a viewer (not planner!)
     with Session(client.app.state.engine) as s:
-        s.add(Exercise(id="EX-OTHER", name="Second Exercise", mode="planning", twin_write_through=True))
+        s.add(Exercise(id="EX-OTHER", name="Second Exercise", mode="planning", clock_step="t_minus_9", twin_write_through=True))
         s.add(
             TurnaroundEvent(
                 id="TAR-200-2028",
@@ -492,8 +492,8 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
         s.add(FreezeRecord(id="FRZ-EX-OTHER-V1", exercise_id="EX-OTHER", event_id="TAR-200-2028", list_version=1, frozen_by="usr-ta-manager"))
         s.commit()
 
-    raise_hdr = {"Authorization": "Bearer raise-token-secret"}
-    ta_hdr = _login(client, "ta.manager@demo.local")
+    raise_hdr = {"Authorization": "Bearer raise-token-secret", "X-Exercise-Epoch": "1"}
+    ta_hdr = {**_login(client, "ta.manager@demo.local"), "X-Exercise-Epoch": "1"}
     sync_hdr = {"Authorization": "Bearer sync-token-secret"}
 
     # Delegated raise targeting EX-OTHER must check planner role in EX-OTHER (NOT EX-DEMO) -> 403!
@@ -550,7 +550,7 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
     assert wrs_other[0]["status"] == "accepted"
 
     # Non-member of EX-OTHER (e.g. rotating.lead) cannot list EX-OTHER or read FRZ-EX-OTHER-V1 items
-    rot_hdr = _login(client, "rotating.lead@demo.local")
+    rot_hdr = {**_login(client, "rotating.lead@demo.local"), "X-Exercise-Epoch": "1"}
     rot_exs = [e["id"] for e in client.get("/api/v1/exercises", headers=rot_hdr).json()]
     assert "EX-OTHER" not in rot_exs
     assert client.get("/api/v1/freezes/FRZ-EX-OTHER-V1/items", headers=rot_hdr).status_code == 403
