@@ -29,6 +29,13 @@ class ExploreQueryPayload(BaseModel):
     allow_external_ai: bool = False
 
 
+class LocalLoginPayload(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    email: str = Field(min_length=3, max_length=200)
+    password: str = Field(min_length=1, max_length=200)
+
+
 class ReviewDecisionPayload(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -124,7 +131,60 @@ def create_app(
     def health_check() -> bool:
         return True
 
+    @api.get("/api/v1/auth/mode")
+    def auth_mode_info() -> dict:
+        return {
+            "auth_mode": mode,
+            "impactweb_connected": iw_cli is not None,
+        }
+
+    @api.get("/api/v1/auth/me")
+    def auth_me(request: Request, exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        member = resolve_authenticated_member(
+            request,
+            exercise_id=exercise_id,
+            auth_mode=mode,
+            jwt_secret=j_secret,
+            edge_auth_secret=e_secret,
+            impactweb_client=iw_cli,
+        )
+        return {
+            "user_id": member.user_id,
+            "email": member.email,
+            "full_name": member.full_name,
+            "role": member.role,
+            "exercise_id": member.exercise_id,
+        }
+
+    @api.post("/api/v1/auth/login")
+    def auth_login(body: LocalLoginPayload) -> dict:
+        if mode != "local":
+            raise HTTPException(status_code=403, detail="Password login is disabled in exe auth mode")
+        if iw_cli is None:
+            raise HTTPException(status_code=503, detail="IMPACT Web identity authority is not connected")
+        result = iw_cli.login_user(body.email, body.password)
+        if result is None:
+            raise HTTPException(status_code=401, detail="Invalid email or password")
+        return result
+
     # --- Plant Graph Endpoints (Phase 3) ---
+
+    @api.get("/api/v1/plant/active-tags")
+    def list_active_tags() -> list[dict]:
+        pipeline = sync_engine._ensure_pipeline()
+        out = []
+        for tag in sorted(pipeline.active_u200_tags):
+            row = pipeline.cmms_by_tag.get(tag, {})
+            out.append(
+                {
+                    "tag": tag,
+                    "description": row.get("description", ""),
+                    "equipment_class": row.get("equipment_class", ""),
+                    "area": row.get("area", ""),
+                    "sheet": row.get("sheet", ""),
+                }
+            )
+        return out
 
     @api.get("/api/v1/plant/summary")
     def plant_summary() -> dict:
