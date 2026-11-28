@@ -52,16 +52,16 @@ df -h /
 echo "==> Taking paired pre-deploy backup if stack is currently running (docs/hosting.md section 5)"
 if curl -fsS http://127.0.0.1:18001/api/v1/utils/health-check/ >/dev/null 2>&1 \
    && curl -fsS http://127.0.0.1:18002/api/v1/utils/health-check/ >/dev/null 2>&1; then
-  ENV_FILE="${REMOTE_DIR}/.env" bash "${REMOTE_DIR}/repo/scripts/backup.sh" "${REMOTE_DIR}/backups"
+  ENV_FILE="${REMOTE_DIR}/.env" bash "${REMOTE_DIR}/repo/scripts/backup.sh" "${REMOTE_DIR}/backups" </dev/null
 else
   echo "No running stack detected yet (initial deploy); skipping pre-deploy backup."
 fi
 
 echo "==> Pulling prebuilt images (no VM builds per docs/hosting.md section 2)"
-docker compose --env-file "${REMOTE_DIR}/.env" pull
+docker compose --env-file "${REMOTE_DIR}/.env" pull </dev/null
 
 echo "==> Restarting stack with --no-build"
-docker compose --env-file "${REMOTE_DIR}/.env" up -d --no-build --remove-orphans
+docker compose --env-file "${REMOTE_DIR}/.env" up -d --no-build --remove-orphans </dev/null
 
 echo "==> Waiting for health checks on /impactweb/ and /twin/"
 HEALTHY=0
@@ -82,14 +82,14 @@ curl -fsS http://127.0.0.1:8000/ >/dev/null
 
 echo "==> Enforcing docs/hosting.md section 6 isolation & port checks (fail closed)"
 # 1. Verify twin holds zero Postgres credentials
-if docker compose --env-file "${REMOTE_DIR}/.env" exec -T twin env | grep -qE '^(POSTGRES_|DATABASE_URL)='; then
+if docker compose --env-file "${REMOTE_DIR}/.env" exec -T twin env </dev/null | grep -qE '^(POSTGRES_|DATABASE_URL)='; then
   echo "ERROR: twin container contains Postgres credentials!" >&2
   exit 1
 fi
 
 # 2. Verify docker compose config network_mode and port mappings strictly
-CFG_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" config --format json)
-PS_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" ps --format json)
+CFG_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" config --format json </dev/null)
+PS_JSON=$(docker compose --env-file "${REMOTE_DIR}/.env" ps --format json </dev/null)
 
 python3 - "$CFG_JSON" "$PS_JSON" <<'PY'
 import json, sys
@@ -133,10 +133,10 @@ for rec in records:
 print("Hosting section 6 port and network isolation checks PASSED.")
 PY
 
-docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}"
+docker stats --no-stream --format "table {{.Name}}\t{{.MemUsage}}\t{{.MemPerc}}" </dev/null
 
 echo "==> Pruning dangling images to protect VM disk budget"
-docker image prune -f >/dev/null
+docker image prune -f </dev/null >/dev/null
 
 echo "Deploy verified on $(hostname) at commit $(git rev-parse --short HEAD)."
 REMOTE
