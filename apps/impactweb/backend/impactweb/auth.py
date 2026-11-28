@@ -21,6 +21,8 @@ def hash_password(password: str, salt: str = "tar-twin-demo-salt") -> str:
 
 
 def verify_password(password: str, stored_hash: str) -> bool:
+    if not stored_hash or stored_hash.startswith("!"):
+        return False
     return hmac.compare_digest(hash_password(password), stored_hash)
 
 

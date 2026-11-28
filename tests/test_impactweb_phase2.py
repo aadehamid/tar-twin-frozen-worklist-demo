@@ -655,3 +655,199 @@ def test_cross_exercise_planner_check_and_late_add_approval(tmp_path: Path):
     assert r_own_app.status_code == 200
     added_wr = client.get(f"/api/v1/work-requests/{r_own_app.json()['request_id']}?exercise_id=EX-OTHER", headers=sync_hdr).json()
     assert added_wr["source_group"] == "rotating"
+
+
+def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path, monkeypatch):
+    """FACILITATOR_EMAILS entries bootstrap into user_account + EX-DEMO membership for AUTH_MODE=exe without weak local passwords or stale superuser flags."""
+    for p in (REPO_ROOT / "apps" / "impactweb" / "backend", REPO_ROOT / "apps" / "twin" / "backend"):
+        if str(p) not in sys.path:
+            sys.path.insert(0, str(p))
+    from fastapi.testclient import TestClient
+    from impactweb.app import create_app
+    from twin.app import create_app as create_twin_app
+    from twin.clients import CmmsClient, ImpactWebClient
+
+    monkeypatch.setenv("FACILITATOR_EMAILS", "facilitator@demo.local,sso.facilitator@demo.local")
+    db_path = tmp_path / "iw-fac-bootstrap.db"
+    iw_app = create_app(
+        database_url=f"sqlite:///{db_path}",
+        scenario_dir=REPO_ROOT / "data" / "scenario",
+        auth_mode="exe",
+        edge_auth_secret="edge-secret-boot",
+        twin_sync_token="sync-boot",
+    )
+    iw = TestClient(iw_app)
+    iw_cli = ImpactWebClient(base_url="http://testserver", sync_token="sync-boot", http_client=iw)
+    cmms_cli = CmmsClient(base_url="http://testserver", sync_token="sync-boot", http_client=iw)
+    twin_app = create_twin_app(
+        scenario_dir=REPO_ROOT / "data" / "scenario",
+        shapes_path=REPO_ROOT / "specs" / "shapes.ttl",
+        impactweb_client=iw_cli,
+        cmms_client=cmms_cli,
+        twin_sync_token="sync-boot",
+        auth_mode="exe",
+        edge_auth_secret="edge-secret-boot",
+    )
+    twin = TestClient(twin_app)
+
+    sso_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "sso.facilitator@demo.local"}
+    unknown_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "unlisted@demo.local"}
+
+    # Bootstrapped facilitator authenticates cleanly in both IMPACT Web and Twin
+    r_me = iw.get("/api/v1/auth/me", headers=sso_hdr)
+    assert r_me.status_code == 200, r_me.text
+    assert any(m["exercise_id"] == "EX-DEMO" and m["role"] == "facilitator" for m in r_me.json()["memberships"])
+
+    r_twin_me = twin.get("/api/v1/auth/me?exercise_id=EX-DEMO", headers=sso_hdr)
+    assert r_twin_me.status_code == 200, r_twin_me.text
+    assert r_twin_me.json()["role"] == "facilitator"
+
+    # Can create an exercise and toggle maintenance mode
+    assert (
+        iw.post(
+            "/api/v1/exercises",
+            json={"name": "SSO Bootstrapped Ex", "mode": "planning", "starting_fixture": "blank"},
+            headers=sso_hdr,
+        ).status_code
+        == 201
+    )
+    assert iw.post("/api/v1/admin/maintenance", json={"enabled": False}, headers=sso_hdr).status_code == 200
+    assert iw.get("/api/v1/admin/watermarks", headers=sso_hdr).status_code == 200
+
+    # Unlisted email is still refused with 403
+    assert iw.get("/api/v1/auth/me", headers=unknown_hdr).status_code == 403
+
+    # Adding a second email on a subsequent startup against the existing DB bootstraps cleanly
+    monkeypatch.setenv(
+        "FACILITATOR_EMAILS",
+        "facilitator@demo.local,sso.facilitator@demo.local,  Second.Facilitator@Demo.Local ",
+    )
+    iw_restarted = TestClient(
+        create_app(
+            database_url=f"sqlite:///{db_path}",
+            scenario_dir=REPO_ROOT / "data" / "scenario",
+            auth_mode="exe",
+            edge_auth_secret="edge-secret-boot",
+            twin_sync_token="sync-boot",
+        )
+    )
+    second_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "second.facilitator@demo.local"}
+    r_second = iw_restarted.get("/api/v1/auth/me", headers=second_hdr)
+    assert r_second.status_code == 200, r_second.text
+    assert any(m["exercise_id"] == "EX-DEMO" and m["role"] == "facilitator" for m in r_second.json()["memberships"])
+
+    # Removing sso.facilitator@demo.local from FACILITATOR_EMAILS immediately revokes global, maintenance,
+    # exercise-level EX-DEMO facilitator, and Twin privileges (both live and persisted on restart).
+    monkeypatch.setenv("FACILITATOR_EMAILS", "second.facilitator@demo.local")
+    assert (
+        iw.post(
+            "/api/v1/exercises",
+            json={"name": "Should Fail After Removal", "mode": "planning", "starting_fixture": "blank"},
+            headers=sso_hdr,
+        ).status_code
+        == 403
+    )
+    assert iw.post("/api/v1/admin/maintenance", json={"enabled": True}, headers=sso_hdr).status_code == 403
+    assert iw.get("/api/v1/admin/watermarks", headers=sso_hdr).status_code == 403
+    assert (
+        iw.patch("/api/v1/exercises/EX-DEMO/write-through", json={"twin_write_through": False}, headers=sso_hdr).status_code
+        == 403
+    )
+    assert (
+        iw.patch("/api/v1/exercises/EX-DEMO/settings", json={"allow_external_ai": False}, headers=sso_hdr).status_code
+        == 403
+    )
+    assert (
+        iw.post(
+            "/api/v1/exercises/EX-DEMO/memberships",
+            json={"email": "new.guest@demo.local", "full_name": "G. Guest", "role": "viewer"},
+            headers=sso_hdr,
+        ).status_code
+        == 403
+    )
+    assert iw.get("/api/v1/work-requests?exercise_id=EX-DEMO", headers=sso_hdr).status_code == 403
+    assert twin.get("/api/v1/auth/me?exercise_id=EX-DEMO", headers=sso_hdr).status_code == 403
+
+    # Seeded demo superuser (facilitator@demo.local) also cannot bypass FACILITATOR_EMAILS in AUTH_MODE=exe
+    demo_fac_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "facilitator@demo.local"}
+    assert (
+        iw.post(
+            "/api/v1/exercises",
+            json={"name": "Demo Superuser Should Fail In Exe", "mode": "planning", "starting_fixture": "blank"},
+            headers=demo_fac_hdr,
+        ).status_code
+        == 403
+    )
+    assert iw.post("/api/v1/admin/maintenance", json={"enabled": True}, headers=demo_fac_hdr).status_code == 403
+    assert (
+        iw.patch("/api/v1/exercises/EX-DEMO/write-through", json={"twin_write_through": False}, headers=demo_fac_hdr).status_code
+        == 403
+    )
+    assert (
+        iw.post(
+            "/api/v1/exercises/EX-DEMO/memberships",
+            json={"email": "new.guest2@demo.local", "full_name": "G. Guest2", "role": "viewer"},
+            headers=demo_fac_hdr,
+        ).status_code
+        == 403
+    )
+    assert twin.get("/api/v1/auth/me?exercise_id=EX-DEMO", headers=demo_fac_hdr).status_code == 403
+
+    # Restarting in AUTH_MODE=exe physically removes revoked EX-DEMO facilitator rows from the DB
+    iw_revoked = TestClient(
+        create_app(
+            database_url=f"sqlite:///{db_path}",
+            scenario_dir=REPO_ROOT / "data" / "scenario",
+            auth_mode="exe",
+            edge_auth_secret="edge-secret-boot",
+            twin_sync_token="sync-boot",
+        )
+    )
+    from sqlmodel import Session, select
+
+    from impactweb.models import ExerciseMembership, UserAccount
+
+    with Session(iw_revoked.app.state.engine) as s:
+        sso_user = s.exec(select(UserAccount).where(UserAccount.email == "sso.facilitator@demo.local")).first()
+        assert sso_user is not None
+        assert (
+            s.exec(
+                select(ExerciseMembership).where(
+                    ExerciseMembership.exercise_id == "EX-DEMO",
+                    ExerciseMembership.user_id == sso_user.id,
+                )
+            ).first()
+            is None
+        )
+        assert (
+            s.exec(
+                select(ExerciseMembership).where(
+                    ExerciseMembership.exercise_id == "EX-DEMO",
+                    ExerciseMembership.user_id == "usr-facilitator",
+                )
+            ).first()
+            is None
+        )
+
+    # In AUTH_MODE=local against the same DB, demo-pass-2028 must NOT work for the bootstrapped SSO user
+    iw_local = TestClient(
+        create_app(
+            database_url=f"sqlite:///{db_path}",
+            scenario_dir=REPO_ROOT / "data" / "scenario",
+            auth_mode="local",
+        )
+    )
+    assert (
+        iw_local.post(
+            "/api/v1/auth/login",
+            json={"email": "sso.facilitator@demo.local", "password": "demo-pass-2028"},
+        ).status_code
+        == 401
+    )
+    assert (
+        iw_local.post(
+            "/api/v1/auth/login",
+            json={"email": "facilitator@demo.local", "password": "demo-pass-2028"},
+        ).status_code
+        == 200
+    )

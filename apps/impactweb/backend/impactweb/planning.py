@@ -139,17 +139,45 @@ LIBRARY_INJECTS: list[dict[str, Any]] = [
 LIBRARY_INJECTS_BY_ID: dict[str, dict[str, Any]] = {row["inject_id"]: row for row in LIBRARY_INJECTS}
 
 
+SSO_DISABLED_PASSWORD_HASH = "!sso-only-disabled"
+BOOTSTRAP_FACILITATOR_ID_PREFIX = "usr-fac-"
+
+
 def facilitator_email_allowlist() -> set[str]:
     raw = os.environ.get("FACILITATOR_EMAILS", "")
     return {e.strip().lower() for e in raw.split(",") if e.strip()}
 
 
-def is_global_facilitator(user: UserAccount) -> bool:
-    return bool(user.is_superuser or user.email.strip().lower() in facilitator_email_allowlist())
+def is_bootstrap_sso_user(user: UserAccount) -> bool:
+    return user.id.startswith(BOOTSTRAP_FACILITATOR_ID_PREFIX) and user.password_hash == SSO_DISABLED_PASSWORD_HASH
 
 
-def is_facilitator(session: Session, user: UserAccount, exercise_id: str | None = None) -> bool:
-    if is_global_facilitator(user):
+def is_global_facilitator(user: UserAccount, *, auth_mode: str = "local") -> bool:
+    email = user.email.strip().lower()
+    if auth_mode == "exe":
+        return email in facilitator_email_allowlist()
+    return bool(user.is_superuser or email in facilitator_email_allowlist())
+
+
+def is_active_bootstrap_membership(user: UserAccount, mem: ExerciseMembership, *, auth_mode: str = "local") -> bool:
+    """Return False for bootstrap-owned EX-DEMO facilitator grants whose email is no longer in FACILITATOR_EMAILS."""
+    if mem.exercise_id == "EX-DEMO" and mem.role == "facilitator":
+        email = user.email.strip().lower()
+        if is_bootstrap_sso_user(user) and email not in facilitator_email_allowlist():
+            return False
+        if auth_mode == "exe" and user.id == "usr-facilitator" and email not in facilitator_email_allowlist():
+            return False
+    return True
+
+
+def is_facilitator(
+    session: Session,
+    user: UserAccount,
+    exercise_id: str | None = None,
+    *,
+    auth_mode: str = "local",
+) -> bool:
+    if is_global_facilitator(user, auth_mode=auth_mode):
         return True
     if exercise_id is not None:
         mem = session.exec(
@@ -159,7 +187,7 @@ def is_facilitator(session: Session, user: UserAccount, exercise_id: str | None 
                 ExerciseMembership.role == "facilitator",
             )
         ).first()
-        return mem is not None
+        return mem is not None and is_active_bootstrap_membership(user, mem, auth_mode=auth_mode)
     # Creating a new exercise or listing users requires global facilitator privilege
     return False
 

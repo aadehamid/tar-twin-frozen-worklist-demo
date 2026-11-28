@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from impactweb.auth import hash_password
@@ -16,6 +18,12 @@ from impactweb.models import (
     TurnaroundEvent,
     UserAccount,
     WorkRequest,
+)
+from impactweb.planning import (
+    BOOTSTRAP_FACILITATOR_ID_PREFIX,
+    SSO_DISABLED_PASSWORD_HASH,
+    facilitator_email_allowlist,
+    is_bootstrap_sso_user,
 )
 
 DEMO_PASSWORD = "demo-pass-2028"
@@ -218,7 +226,73 @@ def seed_exercise_work_requests(
     session.commit()
 
 
-def seed_demo_exercise(session: Session, scenario_dir: Path) -> None:
+def seed_facilitator_emails(session: Session, *, auth_mode: str = "local") -> None:
+    """Reconcile FACILITATOR_EMAILS against bootstrap-owned UserAccount rows and EX-DEMO memberships.
+
+    Bootstrapped accounts use a disabled password hash (usable only via SSO, never local login)
+    and keep is_superuser=False so removing an email from FACILITATOR_EMAILS immediately revokes
+    global facilitator, maintenance, and bootstrap-owned EX-DEMO facilitator privileges.
+    """
+    allowlist_set = facilitator_email_allowlist()
+    allowlist = sorted(allowlist_set)
+    demo_exists = session.get(Exercise, "EX-DEMO") is not None
+    changed = False
+
+    for email in allowlist:
+        user = session.exec(select(UserAccount).where(func.lower(UserAccount.email) == email)).first()
+        if user is None:
+            uid = f"{BOOTSTRAP_FACILITATOR_ID_PREFIX}{hashlib.sha256(email.encode('utf-8')).hexdigest()[:10]}"
+            user = UserAccount(
+                id=uid,
+                email=email,
+                full_name=email.split("@")[0] or email,
+                password_hash=SSO_DISABLED_PASSWORD_HASH,
+                is_superuser=False,
+            )
+            session.add(user)
+            session.flush()
+            changed = True
+        if demo_exists:
+            mem = session.exec(
+                select(ExerciseMembership).where(
+                    ExerciseMembership.exercise_id == "EX-DEMO",
+                    ExerciseMembership.user_id == user.id,
+                )
+            ).first()
+            if mem is None:
+                session.add(
+                    ExerciseMembership(
+                        exercise_id="EX-DEMO",
+                        user_id=user.id,
+                        role="facilitator",
+                        source_group=None,
+                    )
+                )
+                changed = True
+
+    if demo_exists:
+        demo_fac_mems = session.exec(
+            select(ExerciseMembership).where(
+                ExerciseMembership.exercise_id == "EX-DEMO",
+                ExerciseMembership.role == "facilitator",
+            )
+        ).all()
+        for mem in demo_fac_mems:
+            user = session.get(UserAccount, mem.user_id)
+            if user is None:
+                continue
+            email = user.email.strip().lower()
+            revoke_bootstrap = is_bootstrap_sso_user(user) and email not in allowlist_set
+            revoke_demo_in_exe = auth_mode == "exe" and user.id == "usr-facilitator" and email not in allowlist_set
+            if revoke_bootstrap or revoke_demo_in_exe:
+                session.delete(mem)
+                changed = True
+
+    if changed:
+        session.commit()
+
+
+def seed_demo_exercise(session: Session, scenario_dir: Path, *, auth_mode: str = "local") -> None:
     seed_cmms(session, scenario_dir)
     seed_users(session)
     if session.get(Exercise, "EX-DEMO") is None:
@@ -239,8 +313,12 @@ def seed_demo_exercise(session: Session, scenario_dir: Path) -> None:
         m.user_id
         for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.exercise_id == "EX-DEMO")).all()
     }
-    for uid, _email, _name, role, sg in DEMO_USERS:
+    allowlist_set = facilitator_email_allowlist()
+    for uid, email, _name, role, sg in DEMO_USERS:
+        if auth_mode == "exe" and uid == "usr-facilitator" and email.strip().lower() not in allowlist_set:
+            continue
         if uid not in existing_mems:
             session.add(ExerciseMembership(exercise_id="EX-DEMO", user_id=uid, role=role, source_group=sg))
     session.commit()
+    seed_facilitator_emails(session, auth_mode=auth_mode)
     seed_exercise_work_requests(session, scenario_dir, "EX-DEMO", starting_fixture="seeded")

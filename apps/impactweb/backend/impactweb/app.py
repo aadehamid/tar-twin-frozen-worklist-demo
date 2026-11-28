@@ -49,11 +49,13 @@ from impactweb.planning import (
     PRE_FREEZE_EDIT_STEPS,
     enforce_expected_epoch,
     enforce_planning_phase,
+    is_active_bootstrap_membership,
     is_facilitator,
+    is_global_facilitator,
     load_starting_fixture,
     seed_exercise_from_fixture,
 )
-from impactweb.seed import DEMO_PASSWORD, seed_demo_exercise
+from impactweb.seed import DEMO_PASSWORD, seed_demo_exercise, seed_facilitator_emails
 
 DEFAULT_CRAFT_RATES: dict[str, int] = {
     "boilermaker": 235,
@@ -438,7 +440,9 @@ def create_app(
     SQLModel.metadata.create_all(engine)
     with Session(engine) as s:
         if (scen_dir / "work-requests.json").exists():
-            seed_demo_exercise(s, scen_dir)
+            seed_demo_exercise(s, scen_dir, auth_mode=mode)
+        else:
+            seed_facilitator_emails(s, auth_mode=mode)
 
     locks: dict[str, threading.Lock] = defaultdict(threading.Lock)
 
@@ -520,14 +524,15 @@ def create_app(
             return
         if caller.user is None:
             raise HTTPException(status_code=401, detail="Authentication required")
-        if is_facilitator(session, caller.user, exercise_id):
+        if is_facilitator(session, caller.user, exercise_id, auth_mode=mode):
             return
-        if get_membership(session, exercise_id, caller.user.id) is None:
+        mem = get_membership(session, exercise_id, caller.user.id)
+        if mem is None or not is_active_bootstrap_membership(caller.user, mem, auth_mode=mode):
             raise HTTPException(status_code=403, detail="Not a member of this exercise")
 
     def _require_facilitator(session: Session, caller: Caller, exercise_id: str | None = None) -> UserAccount:
         user = _require_user(caller)
-        if not is_facilitator(session, user, exercise_id):
+        if not is_facilitator(session, user, exercise_id, auth_mode=mode):
             raise HTTPException(status_code=403, detail="Facilitator role required for this action")
         return user
 
@@ -683,7 +688,11 @@ def create_app(
     @api.get("/api/v1/auth/me")
     def auth_me(caller: Caller = Depends(get_caller), session: Session = Depends(get_session)) -> dict:
         user = _require_user(caller)
-        mems = session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all()
+        mems = [
+            m
+            for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all()
+            if is_active_bootstrap_membership(user, m, auth_mode=mode)
+        ]
         return {
             "id": user.id,
             "email": user.email,
@@ -698,10 +707,14 @@ def create_app(
         _forbid_delegate_token(caller)
         exs = session.exec(select(Exercise).order_by(Exercise.created_at)).all()
         allowed_ids: set[str] | None = None
-        if caller.kind == "user" and caller.user is not None and not is_facilitator(session, caller.user):
-            mems = session.exec(
-                select(ExerciseMembership.exercise_id).where(ExerciseMembership.user_id == caller.user.id)
-            ).all()
+        if caller.kind == "user" and caller.user is not None and not is_facilitator(session, caller.user, auth_mode=mode):
+            mems = [
+                m.exercise_id
+                for m in session.exec(
+                    select(ExerciseMembership).where(ExerciseMembership.user_id == caller.user.id)
+                ).all()
+                if is_active_bootstrap_membership(caller.user, m, auth_mode=mode)
+            ]
             allowed_ids = set(mems)
         out = []
         for ex in exs:
@@ -848,6 +861,7 @@ def create_app(
                 "source_group": m.source_group,
             }
             for m in mems
+            if m.user_id not in users or is_active_bootstrap_membership(users[m.user_id], m, auth_mode=mode)
         ]
 
     @api.post("/api/v1/exercises/{exercise_id}/memberships", status_code=201)
@@ -1494,7 +1508,8 @@ def create_app(
     ) -> dict:
         user = _require_user(caller)
         mem = get_membership(session, exercise_id, user.id)
-        if mem is None or mem.role not in {"facilitator", "ta_manager"}:
+        is_ta = mem is not None and mem.role == "ta_manager"
+        if not is_facilitator(session, user, exercise_id, auth_mode=mode) and not is_ta:
             raise HTTPException(status_code=403, detail="Only facilitator or TA manager can change write-through switch")
         with locks[exercise_id]:
             ex = session.get(Exercise, exercise_id)
@@ -2344,7 +2359,7 @@ def create_app(
         if caller.kind == "twin_sync":
             raise HTTPException(status_code=403, detail="Read-only sync token cannot toggle maintenance mode")
         user = _require_user(caller)
-        if not user.is_superuser:
+        if not is_global_facilitator(user, auth_mode=mode):
             raise HTTPException(status_code=403, detail="Facilitator/superuser role required for maintenance mode")
         with app.state.write_barrier_cond:
             app.state.maintenance_mode = body.enabled
@@ -2365,7 +2380,7 @@ def create_app(
         _forbid_delegate_token(caller)
         if caller.kind == "user":
             user = _require_user(caller)
-            if not user.is_superuser:
+            if not is_global_facilitator(user, auth_mode=mode):
                 raise HTTPException(status_code=403, detail="Facilitator or sync token required to read watermarks")
         exs = session.exec(select(Exercise).order_by(Exercise.id)).all()
         cutoffs: dict[str, int] = {}
