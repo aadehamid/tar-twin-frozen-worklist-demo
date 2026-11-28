@@ -1,0 +1,18 @@
+[project]
+name = "tar-twin-impactweb"
+version = "0.1.0"
+description = "IMPACT Web system-of-record mock and CMMS/TLM module for the Unit 200 TAR digital twin demo."
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115.0",
+  "sqlmodel>=0.0.22",
+  "uvicorn>=0.32.0",
+  "psycopg[binary]>=3.2.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["impactweb"]
