@@ -3,7 +3,9 @@
 	auto_https off
 }
 
-http://127.0.0.1:8000 {
+:8000 {
+	bind 127.0.0.1
+
 	@loopback {
 		remote_ip 127.0.0.1 ::1
 	}
@@ -11,26 +13,28 @@ http://127.0.0.1:8000 {
 		not remote_ip 127.0.0.1 ::1
 	}
 
-	# Always strip client-sent X-Edge-Auth; strip X-ExeDev-* for non-loopback peers.
-	# Inject X-Edge-Auth ONLY when the immediate peer is loopback (exe.dev proxy).
-	request_header -X-Edge-Auth
-	request_header @not_loopback -X-ExeDev-Email
-	request_header @not_loopback -X-ExeDev-UserID
-	request_header @loopback X-Edge-Auth {$EDGE_AUTH_SECRET}
+	# Use route to preserve exact directive order: strip any client-sent X-Edge-Auth first,
+	# strip X-ExeDev-* for non-loopback peers, then inject X-Edge-Auth only for loopback peers.
+	route {
+		request_header -X-Edge-Auth
+		request_header @not_loopback -X-ExeDev-Email
+		request_header @not_loopback -X-ExeDev-UserID
+		request_header @loopback X-Edge-Auth {$EDGE_AUTH_SECRET}
 
-	redir /impactweb /impactweb/ 308
-	redir /twin /twin/ 308
+		redir /impactweb /impactweb/ 308
+		redir /twin /twin/ 308
 
-	handle /impactweb/* {
-		reverse_proxy 127.0.0.1:18001
-	}
+		handle /impactweb/* {
+			reverse_proxy 127.0.0.1:18001
+		}
 
-	handle /twin/* {
-		reverse_proxy 127.0.0.1:18002
-	}
+		handle /twin/* {
+			reverse_proxy 127.0.0.1:18002
+		}
 
-	handle {
-		root * /srv/landing
-		file_server
+		handle {
+			root * /srv/landing
+			file_server
+		}
 	}
 }
