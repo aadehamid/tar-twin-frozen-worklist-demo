@@ -1,0 +1,256 @@
+{
+  "unit": "Unit 200 Diesel Hydrotreater",
+  "provenance": "SYNTHETIC",
+  "envelopes": [
+    {
+      "id": "ENV-200-01",
+      "name": "Feed",
+      "equipment_tags": [
+        "FL-201A",
+        "FL-201B",
+        "D-201",
+        "P-201A",
+        "P-201B"
+      ],
+      "boundary_sides": {
+        "FL-201A": "full",
+        "FL-201B": "full",
+        "D-201": "full",
+        "P-201A": "suction",
+        "P-201B": "suction"
+      },
+      "boundary_valves": [
+        "HV-2011",
+        "HV-2012",
+        "HV-2013",
+        "HV-2014",
+        "HV-2016",
+        "HV-2017",
+        "HV-2018",
+        "HV-2019",
+        "HV-2020",
+        "HV-2010",
+        "XV-2011",
+        "XV-2012",
+        "XV-2013",
+        "XV-2014"
+      ],
+      "blind_estimate": 16,
+      "closed": true
+    },
+    {
+      "id": "ENV-200-02",
+      "name": "HP reaction loop",
+      "equipment_tags": [
+        "P-201A",
+        "P-201B",
+        "E-201A",
+        "E-201B",
+        "E-201C",
+        "H-201",
+        "R-201",
+        "R-202",
+        "A-201",
+        "E-202",
+        "D-202"
+      ],
+      "boundary_sides": {
+        "P-201A": "discharge",
+        "P-201B": "discharge",
+        "E-201A": "full",
+        "E-201B": "full",
+        "E-201C": "full",
+        "H-201": "full",
+        "R-201": "full",
+        "R-202": "full",
+        "A-201": "full",
+        "E-202": "full",
+        "D-202": "full"
+      },
+      "boundary_valves": [
+        "HV-2001",
+        "HV-2002",
+        "HV-2003",
+        "HV-2015",
+        "XV-2210",
+        "HV-2021",
+        "HV-2022",
+        "HV-2023",
+        "HV-2024",
+        "HV-2025",
+        "HV-2026",
+        "HV-2027",
+        "HV-2028",
+        "HV-2029",
+        "HV-2030",
+        "HV-2031",
+        "HV-2032",
+        "HV-2033",
+        "HV-2034",
+        "HV-2035",
+        "HV-2036",
+        "HV-2037",
+        "HV-2038",
+        "HV-2039",
+        "HV-2040",
+        "HV-2041",
+        "HV-2042",
+        "HV-2043",
+        "HV-2044",
+        "XV-2201",
+        "XV-2202",
+        "XV-2203",
+        "XV-2204",
+        "XV-2205",
+        "XV-2206",
+        "XV-2207",
+        "XV-2208",
+        "XV-2209"
+      ],
+      "blind_estimate": 43,
+      "closed": true
+    },
+    {
+      "id": "ENV-200-03",
+      "name": "Recycle gas",
+      "equipment_tags": [
+        "D-204",
+        "C-202",
+        "K-201"
+      ],
+      "boundary_sides": {
+        "D-204": "full",
+        "C-202": "full",
+        "K-201": "full"
+      },
+      "boundary_valves": [
+        "HV-2051",
+        "HV-2052",
+        "HV-2053",
+        "HV-2054",
+        "HV-2055",
+        "HV-2056",
+        "HV-2057",
+        "HV-2058",
+        "HV-2059",
+        "HV-2060",
+        "HV-2061",
+        "HV-2062",
+        "XV-2221",
+        "XV-2222",
+        "XV-2223",
+        "XV-2224"
+      ],
+      "blind_estimate": 18,
+      "closed": true
+    },
+    {
+      "id": "ENV-200-04",
+      "name": "Makeup gas",
+      "equipment_tags": [
+        "D-206",
+        "K-202A",
+        "K-202B"
+      ],
+      "boundary_sides": {
+        "D-206": "full",
+        "K-202A": "full",
+        "K-202B": "full"
+      },
+      "boundary_valves": [
+        "HV-2071",
+        "HV-2072",
+        "HV-2073",
+        "HV-2074",
+        "HV-2075",
+        "HV-2076",
+        "HV-2077",
+        "HV-2078",
+        "XV-2231",
+        "XV-2232",
+        "XV-2233",
+        "XV-2234"
+      ],
+      "blind_estimate": 14,
+      "closed": true
+    },
+    {
+      "id": "ENV-200-05",
+      "name": "LP separation",
+      "equipment_tags": [
+        "D-203",
+        "P-204A",
+        "P-204B"
+      ],
+      "boundary_sides": {
+        "D-203": "full",
+        "P-204A": "full",
+        "P-204B": "full"
+      },
+      "boundary_valves": [
+        "HV-2081",
+        "HV-2082",
+        "HV-2083",
+        "HV-2084",
+        "HV-2085",
+        "HV-2086",
+        "HV-2087",
+        "HV-2088",
+        "XV-2241",
+        "XV-2242"
+      ],
+      "blind_estimate": 12,
+      "closed": true
+    },
+    {
+      "id": "ENV-200-06",
+      "name": "Stripper",
+      "equipment_tags": [
+        "C-201",
+        "E-203",
+        "D-205",
+        "P-202A",
+        "P-202B",
+        "P-203A",
+        "P-203B",
+        "E-204"
+      ],
+      "boundary_sides": {
+        "C-201": "full",
+        "E-203": "full",
+        "D-205": "full",
+        "P-202A": "full",
+        "P-202B": "full",
+        "P-203A": "full",
+        "P-203B": "full",
+        "E-204": "full"
+      },
+      "boundary_valves": [
+        "HV-2091",
+        "HV-2092",
+        "HV-2093",
+        "HV-2094",
+        "HV-2095",
+        "HV-2096",
+        "HV-2097",
+        "HV-2098",
+        "HV-2099",
+        "HV-2100",
+        "HV-2101",
+        "HV-2102",
+        "HV-2103",
+        "HV-2104",
+        "HV-2105",
+        "HV-2106",
+        "XV-2251",
+        "XV-2252",
+        "XV-2253",
+        "XV-2254",
+        "XV-2255",
+        "XV-2256"
+      ],
+      "blind_estimate": 26,
+      "closed": true
+    }
+  ]
+}

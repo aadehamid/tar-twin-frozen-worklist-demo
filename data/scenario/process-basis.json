@@ -1,0 +1,116 @@
+{
+  "event_id": "TAR-200-2028",
+  "unit": "Unit 200 Diesel Hydrotreater",
+  "provenance": "SYNTHETIC",
+  "feed": {
+    "rate_bbl_day": 42000.0,
+    "api_gravity": 33.8,
+    "sg_60_60": 0.856019,
+    "rho_ref_kg_m3": 855.177,
+    "mass_rate_t_day": 5710.415911,
+    "sr_wt_fraction": 0.85,
+    "lco_wt_fraction": 0.15,
+    "sulfur_wt_fraction": 0.0135
+  },
+  "hydrogen": {
+    "c_h2_sr_wt_fraction": 0.0055,
+    "c_h2_lco_wt_fraction": 0.0115,
+    "chemical_h2_t_day": 36.546662,
+    "purge_and_dissolved_h2_t_day": 6.852499,
+    "makeup_h2_t_day": 43.399161,
+    "recycle_gas_h2_mol_fraction": 0.85
+  },
+  "products": {
+    "ulsd": {
+      "mass_rate_t_day": 5496.275314,
+      "api_gravity": 36.4,
+      "sg_60_60": 0.842764,
+      "sulfur_ppmw": 9.2,
+      "flash_point_c": 64.5,
+      "cetane_number": 47.2
+    },
+    "wild_naphtha": {
+      "mass_rate_t_day": 94.221863
+    },
+    "sour_offgas": {
+      "mass_rate_t_day": 163.317895,
+      "h2s_t_day": 81.883493
+    }
+  },
+  "feed_effluent_exchangers": [
+    {
+      "tag": "E-201A",
+      "tube_mass_kg_s": 67.5,
+      "tube_cp_kj_kg_k": 2.65,
+      "tube_in_c": 62.0,
+      "tube_out_c": 134.0,
+      "shell_mass_kg_s": 68.4,
+      "shell_cp_kj_kg_k": 2.75,
+      "shell_in_c": 237.0622,
+      "shell_out_c": 168.5933,
+      "duty_mw": 12.879
+    },
+    {
+      "tag": "E-201B",
+      "tube_mass_kg_s": 67.5,
+      "tube_cp_kj_kg_k": 2.65,
+      "tube_in_c": 134.0,
+      "tube_out_c": 206.0,
+      "shell_mass_kg_s": 68.4,
+      "shell_cp_kj_kg_k": 2.75,
+      "shell_in_c": 305.5311,
+      "shell_out_c": 237.0622,
+      "duty_mw": 12.879
+    },
+    {
+      "tag": "E-201C",
+      "tube_mass_kg_s": 67.5,
+      "tube_cp_kj_kg_k": 2.65,
+      "tube_in_c": 206.0,
+      "tube_out_c": 278.0,
+      "shell_mass_kg_s": 68.4,
+      "shell_cp_kj_kg_k": 2.75,
+      "shell_in_c": 374.0,
+      "shell_out_c": 305.5311,
+      "duty_mw": 12.879
+    }
+  ],
+  "reactors": {
+    "r201_in_c": 332.0,
+    "r201_out_c": 346.0,
+    "r202_bed1_in_c": 346.0,
+    "r202_bed1_out_c": 368.0,
+    "r202_bed2_in_c": 352.0,
+    "r202_bed2_out_c": 374.0,
+    "bed1_out_mass_kg_s": 67.5,
+    "process_cp_kj_kg_k": 2.75,
+    "quench_mass_kg_s": 0.868421,
+    "quench_cp_kj_kg_k": 11.4,
+    "quench_temp_c": 52.0
+  },
+  "charge_pump": {
+    "tags": [
+      "P-201A",
+      "P-201B"
+    ],
+    "suction_barg": 4.5,
+    "discharge_barg": 98.5,
+    "vol_flow_m3_s": 0.077285,
+    "hydraulic_efficiency": 0.76,
+    "shaft_power_kw": 955.899
+  },
+  "recycle_compressor": {
+    "tag": "K-201",
+    "suction_barg": 74.0,
+    "discharge_barg": 96.0,
+    "suction_temp_c": 48.0,
+    "gas_mw_g_mol": 5.2,
+    "gamma_k": 1.36,
+    "z_avg": 1.035,
+    "polytropic_efficiency": 0.79,
+    "mechanical_efficiency": 0.97,
+    "mass_flow_kg_s": 4.85,
+    "polytropic_head_kj_kg": 142.7473,
+    "shaft_power_kw": 903.464
+  }
+}

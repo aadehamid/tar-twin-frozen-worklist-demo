@@ -1,0 +1,1406 @@
+{
+  "event_id": "TAR-200-2028",
+  "provenance": "SYNTHETIC",
+  "rows": [
+    {
+      "request_id": "WR-200-0001",
+      "difficulty_class": "Text with instructions in it",
+      "true_tag": "R-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Planted instruction injection test case 2"
+    },
+    {
+      "request_id": "WR-200-0002",
+      "difficulty_class": "Known alias",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0003",
+      "difficulty_class": "Known alias",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0004",
+      "difficulty_class": "Known alias",
+      "true_tag": "R-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0005",
+      "difficulty_class": "Known alias",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0006",
+      "difficulty_class": "Known alias",
+      "true_tag": "R-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0007",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0008",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0009",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0010",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0011",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0012",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0013",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "R-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0014",
+      "difficulty_class": "Text with instructions in it",
+      "true_tag": "E-201A",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Planted instruction injection case C4"
+    },
+    {
+      "request_id": "WR-200-0015",
+      "difficulty_class": "Wrong unit or retired",
+      "true_tag": "E-201B",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Wrong-unit tag (Unit 300) planted for demo walkthrough step 2"
+    },
+    {
+      "request_id": "WR-200-0016",
+      "difficulty_class": "Wrong unit or retired",
+      "true_tag": "E-204",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Retired tag E-209 replaced by E-204"
+    },
+    {
+      "request_id": "WR-200-0017",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "E-201C",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0018",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "E-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0019",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "E-203",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0020",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "E-204",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0021",
+      "difficulty_class": "Misspelled or shorthand description",
+      "true_tag": "E-201B",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0022",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201C",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0023",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201A",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0024",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201B",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0025",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201A",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0026",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201C",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0027",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-202",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0028",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-203",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0029",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-204",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0030",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201B",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0031",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201C",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0032",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201A",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0033",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201B",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0034",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0035",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0036",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0037",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0038",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0039",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0040",
+      "difficulty_class": "Process context",
+      "true_tag": "A-201",
+      "equipment_pattern": "description_only",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0041",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "A-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0042",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0043",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0044",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0045",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0046",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0047",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "H-201",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Area-general equipment field; planner resolves from work description"
+    },
+    {
+      "request_id": "WR-200-0048",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0049",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0050",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0051",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0052",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0053",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0054",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0055",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0056",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0057",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0058",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0059",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0060",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0061",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-203",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0062",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-204",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0063",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-205",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0064",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-206",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0065",
+      "difficulty_class": "Clean tag",
+      "true_tag": "FL-201A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0066",
+      "difficulty_class": "Clean tag",
+      "true_tag": "FL-201B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0067",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0068",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0069",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0070",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0071",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0072",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0073",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0074",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0075",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-203",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0076",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-204",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0077",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0078",
+      "difficulty_class": "Clean tag",
+      "true_tag": "KT-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0079",
+      "difficulty_class": "Known alias",
+      "true_tag": "P-201B",
+      "equipment_pattern": "description_only",
+      "notes": "Canonical known alias from docs/matching-showcase.md"
+    },
+    {
+      "request_id": "WR-200-0080",
+      "difficulty_class": "Wrong unit or retired",
+      "true_tag": "P-201A",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Wrong-unit tag (Unit 300) targeting P-201A"
+    },
+    {
+      "request_id": "WR-200-0081",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-202A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0082",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-202B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0083",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-202A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0084",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-202B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0085",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-203A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0086",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-203B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0087",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-204A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0088",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-204B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0089",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0090",
+      "difficulty_class": "Clean tag",
+      "true_tag": "KT-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0091",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-201B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0092",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-201A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0093",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-202A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0094",
+      "difficulty_class": "Clean tag",
+      "true_tag": "K-202B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0095",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-202A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0096",
+      "difficulty_class": "Clean tag",
+      "true_tag": "P-202B",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0097",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2101",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0098",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2102",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0099",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2103",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0100",
+      "difficulty_class": "Wrong unit or retired",
+      "true_tag": "PSV-2104",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Retired legacy PSV tag replaced by PSV-2104"
+    },
+    {
+      "request_id": "WR-200-0101",
+      "difficulty_class": "Sibling names",
+      "true_tag": "PSV-2105",
+      "equipment_pattern": "description_only",
+      "notes": "Canonical sibling case C5 from spikes/decider-matcher"
+    },
+    {
+      "request_id": "WR-200-0102",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2106",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0103",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2107",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0104",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2108",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0105",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2109",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0106",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2110",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0107",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2111",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0108",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2112",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0109",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2113",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0110",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2114",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0111",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2115",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0112",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2116",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0113",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2117",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0114",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2118",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0115",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2119",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0116",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2120",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0117",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2121",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0118",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2122",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0119",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2123",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0120",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2124",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0121",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2125",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0122",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2126",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0123",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2127",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0124",
+      "difficulty_class": "Clean tag",
+      "true_tag": "PSV-2128",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0125",
+      "difficulty_class": "Clean tag",
+      "true_tag": "XV-2210",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0126",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2001",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0127",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2002",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0128",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2003",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0129",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2015",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0130",
+      "difficulty_class": "Tag variant",
+      "true_tag": "FV-2011",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0131",
+      "difficulty_class": "Tag variant",
+      "true_tag": "FV-2012",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0132",
+      "difficulty_class": "Tag variant",
+      "true_tag": "FV-2015",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0133",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2011",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0134",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2012",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0135",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2013",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0136",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2014",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0137",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2016",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0138",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2017",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0139",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2018",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0140",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2019",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0141",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2020",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0142",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2010",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0143",
+      "difficulty_class": "Tag variant",
+      "true_tag": "XV-2011",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0144",
+      "difficulty_class": "Tag variant",
+      "true_tag": "XV-2012",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0145",
+      "difficulty_class": "Tag variant",
+      "true_tag": "XV-2013",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0146",
+      "difficulty_class": "Tag variant",
+      "true_tag": "XV-2014",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0147",
+      "difficulty_class": "Sibling names",
+      "true_tag": "E-201B",
+      "equipment_pattern": "description_only",
+      "notes": "Demo walkthrough canonical sibling case C1"
+    },
+    {
+      "request_id": "WR-200-0148",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2021",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0149",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2022",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0150",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2023",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0151",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2024",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0152",
+      "difficulty_class": "Clean tag",
+      "true_tag": "R-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0153",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2025",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0154",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2026",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0155",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2027",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0156",
+      "difficulty_class": "Tag variant",
+      "true_tag": "HV-2028",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0157",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0412",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0158",
+      "difficulty_class": "Tag variant",
+      "true_tag": "8\"-P-2001-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0159",
+      "difficulty_class": "Tag variant",
+      "true_tag": "6\"-G-2002-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0160",
+      "difficulty_class": "Clean tag",
+      "true_tag": "H-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0161",
+      "difficulty_class": "Tag variant",
+      "true_tag": "8\"-P-2003-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0162",
+      "difficulty_class": "Tag variant",
+      "true_tag": "8\"-P-2004-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0163",
+      "difficulty_class": "Tag variant",
+      "true_tag": "8\"-P-2005-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0164",
+      "difficulty_class": "Tag variant",
+      "true_tag": "6\"-P-2006-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0165",
+      "difficulty_class": "Tag variant",
+      "true_tag": "8\"-P-2007-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0166",
+      "difficulty_class": "Tag variant",
+      "true_tag": "6\"-P-2008-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0167",
+      "difficulty_class": "Tag variant",
+      "true_tag": "10\"-P-2009-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0168",
+      "difficulty_class": "Tag variant",
+      "true_tag": "3\"-G-2010-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0169",
+      "difficulty_class": "Tag variant",
+      "true_tag": "10\"-P-2011-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0170",
+      "difficulty_class": "Tag variant",
+      "true_tag": "10\"-P-2012-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0171",
+      "difficulty_class": "Process context",
+      "true_tag": "E-201C",
+      "equipment_pattern": "description_only",
+      "notes": "Demo walkthrough process context case C2"
+    },
+    {
+      "request_id": "WR-200-0172",
+      "difficulty_class": "Tag variant",
+      "true_tag": "10\"-P-2013-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0173",
+      "difficulty_class": "Tag variant",
+      "true_tag": "10\"-P-2014-15A1",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0174",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0401",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0175",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0402",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0176",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0403",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0177",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0404",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0178",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0405",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0179",
+      "difficulty_class": "Tag variant",
+      "true_tag": "200-P-0406",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0180",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Honest unit-general item with true_tag=none"
+    },
+    {
+      "request_id": "WR-200-0181",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Honest unit-general item with true_tag=none"
+    },
+    {
+      "request_id": "WR-200-0182",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Honest unit-general item with true_tag=none"
+    },
+    {
+      "request_id": "WR-200-0183",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Honest unit-general item with true_tag=none"
+    },
+    {
+      "request_id": "WR-200-0184",
+      "difficulty_class": "Tag variant",
+      "true_tag": "LT-2302",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0185",
+      "difficulty_class": "Tag variant",
+      "true_tag": "PT-2101",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0186",
+      "difficulty_class": "Tag variant",
+      "true_tag": "TT-2201",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0187",
+      "difficulty_class": "Tag variant",
+      "true_tag": "FT-2401",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0188",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Honest unit-general item with true_tag=none"
+    },
+    {
+      "request_id": "WR-200-0189",
+      "difficulty_class": "Tag variant",
+      "true_tag": "LT-2303",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0190",
+      "difficulty_class": "Tag variant",
+      "true_tag": "AT-2501",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0191",
+      "difficulty_class": "Tag variant",
+      "true_tag": "PT-2102",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0192",
+      "difficulty_class": "Tag variant",
+      "true_tag": "TT-2202",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0193",
+      "difficulty_class": "Tag variant",
+      "true_tag": "FT-2402",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0194",
+      "difficulty_class": "Tag variant",
+      "true_tag": "LT-2304",
+      "equipment_pattern": "tag_variant",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0195",
+      "difficulty_class": "Clean tag",
+      "true_tag": "E-201A",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0196",
+      "difficulty_class": "Clean tag",
+      "true_tag": "R-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0197",
+      "difficulty_class": "Clean tag",
+      "true_tag": "C-201",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0198",
+      "difficulty_class": "Clean tag",
+      "true_tag": "D-202",
+      "equipment_pattern": "clean_tag",
+      "notes": ""
+    },
+    {
+      "request_id": "WR-200-0199",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Unit-general turnaround prep (true_tag=none)"
+    },
+    {
+      "request_id": "WR-200-0200",
+      "difficulty_class": "Area or unit general",
+      "true_tag": "none",
+      "equipment_pattern": "vague_or_wrong",
+      "notes": "Unit-general turnaround prep (true_tag=none)"
+    }
+  ]
+}

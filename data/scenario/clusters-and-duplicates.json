@@ -1,0 +1,565 @@
+{
+  "event_id": "TAR-200-2028",
+  "provenance": "SYNTHETIC",
+  "duplicate_pairs": [
+    {
+      "id": "DUP-01",
+      "request_ids": [
+        "WR-200-0034",
+        "WR-200-0035"
+      ],
+      "equipment_tag": "A-201",
+      "reason": "Overlapping turnaround scope on A-201 submitted by fixed_equipment and inspection."
+    },
+    {
+      "id": "DUP-02",
+      "request_ids": [
+        "WR-200-0053",
+        "WR-200-0054"
+      ],
+      "equipment_tag": "C-201",
+      "reason": "Overlapping turnaround scope on C-201 submitted by fixed_equipment and inspection."
+    },
+    {
+      "id": "DUP-03",
+      "request_ids": [
+        "WR-200-0055",
+        "WR-200-0197"
+      ],
+      "equipment_tag": "C-201",
+      "reason": "Overlapping turnaround scope on C-201 submitted by fixed_equipment and projects."
+    },
+    {
+      "id": "DUP-04",
+      "request_ids": [
+        "WR-200-0056",
+        "WR-200-0057"
+      ],
+      "equipment_tag": "C-202",
+      "reason": "Overlapping turnaround scope on C-202 submitted by fixed_equipment and inspection."
+    },
+    {
+      "id": "DUP-05",
+      "request_ids": [
+        "WR-200-0058",
+        "WR-200-0059"
+      ],
+      "equipment_tag": "D-202",
+      "reason": "Overlapping turnaround scope on D-202 submitted by fixed_equipment and inspection."
+    },
+    {
+      "id": "DUP-06",
+      "request_ids": [
+        "WR-200-0072",
+        "WR-200-0198"
+      ],
+      "equipment_tag": "D-202",
+      "reason": "Overlapping turnaround scope on D-202 submitted by fixed_equipment and projects."
+    },
+    {
+      "id": "DUP-07",
+      "request_ids": [
+        "WR-200-0014",
+        "WR-200-0195"
+      ],
+      "equipment_tag": "E-201A",
+      "reason": "Overlapping turnaround scope on E-201A submitted by fixed_equipment and projects."
+    },
+    {
+      "id": "DUP-08",
+      "request_ids": [
+        "WR-200-0015",
+        "WR-200-0021"
+      ],
+      "equipment_tag": "E-201B",
+      "reason": "Overlapping turnaround scope on E-201B submitted by inspection and fixed_equipment."
+    },
+    {
+      "id": "DUP-09",
+      "request_ids": [
+        "WR-200-0018",
+        "WR-200-0027"
+      ],
+      "equipment_tag": "E-202",
+      "reason": "Overlapping turnaround scope on E-202 submitted by inspection and fixed_equipment."
+    }
+  ],
+  "scaffold_clusters": [
+    {
+      "id": "CL-SCAF-01",
+      "type": "scaffold",
+      "name": "Reactor structure top heads",
+      "area": "200-B",
+      "equipment_tags": [
+        "R-201",
+        "R-202"
+      ],
+      "request_ids": [
+        "WR-200-0001",
+        "WR-200-0002",
+        "WR-200-0003",
+        "WR-200-0004",
+        "WR-200-0005",
+        "WR-200-0006",
+        "WR-200-0007",
+        "WR-200-0008",
+        "WR-200-0009",
+        "WR-200-0010",
+        "WR-200-0011",
+        "WR-200-0012",
+        "WR-200-0013",
+        "WR-200-0152",
+        "WR-200-0196"
+      ],
+      "shared_hours": 1450,
+      "shared_cost_usd": 282750
+    },
+    {
+      "id": "CL-SCAF-02",
+      "type": "scaffold",
+      "name": "Stripper C-201 upper manways",
+      "area": "200-G",
+      "equipment_tags": [
+        "C-201",
+        "E-203"
+      ],
+      "request_ids": [
+        "WR-200-0019",
+        "WR-200-0028",
+        "WR-200-0053",
+        "WR-200-0054",
+        "WR-200-0055",
+        "WR-200-0067",
+        "WR-200-0068",
+        "WR-200-0069",
+        "WR-200-0197"
+      ],
+      "shared_hours": 1120,
+      "shared_cost_usd": 218400
+    },
+    {
+      "id": "CL-SCAF-03",
+      "type": "scaffold",
+      "name": "Air cooler A-201 header boxes",
+      "area": "200-E",
+      "equipment_tags": [
+        "A-201"
+      ],
+      "request_ids": [
+        "WR-200-0034",
+        "WR-200-0035",
+        "WR-200-0036",
+        "WR-200-0037",
+        "WR-200-0038",
+        "WR-200-0039",
+        "WR-200-0040",
+        "WR-200-0041"
+      ],
+      "shared_hours": 980,
+      "shared_cost_usd": 191100
+    },
+    {
+      "id": "CL-SCAF-04",
+      "type": "scaffold",
+      "name": "Feed/effluent exchanger bank",
+      "area": "200-C",
+      "equipment_tags": [
+        "E-201A",
+        "E-201B",
+        "E-201C"
+      ],
+      "request_ids": [
+        "WR-200-0014",
+        "WR-200-0015",
+        "WR-200-0017",
+        "WR-200-0021",
+        "WR-200-0022",
+        "WR-200-0023",
+        "WR-200-0024",
+        "WR-200-0025",
+        "WR-200-0026",
+        "WR-200-0030",
+        "WR-200-0031",
+        "WR-200-0032",
+        "WR-200-0033",
+        "WR-200-0147",
+        "WR-200-0171",
+        "WR-200-0195"
+      ],
+      "shared_hours": 1260,
+      "shared_cost_usd": 245700
+    },
+    {
+      "id": "CL-SCAF-05",
+      "type": "scaffold",
+      "name": "Charge heater H-201 convection deck",
+      "area": "200-D",
+      "equipment_tags": [
+        "H-201"
+      ],
+      "request_ids": [
+        "WR-200-0042",
+        "WR-200-0043",
+        "WR-200-0044",
+        "WR-200-0045",
+        "WR-200-0046",
+        "WR-200-0047",
+        "WR-200-0048",
+        "WR-200-0049",
+        "WR-200-0050",
+        "WR-200-0051",
+        "WR-200-0052",
+        "WR-200-0160"
+      ],
+      "shared_hours": 890,
+      "shared_cost_usd": 173550
+    },
+    {
+      "id": "CL-SCAF-06",
+      "type": "scaffold",
+      "name": "HP/LP separator platforms",
+      "area": "200-E",
+      "equipment_tags": [
+        "D-202",
+        "D-203"
+      ],
+      "request_ids": [
+        "WR-200-0058",
+        "WR-200-0059",
+        "WR-200-0061",
+        "WR-200-0072",
+        "WR-200-0073",
+        "WR-200-0075",
+        "WR-200-0198"
+      ],
+      "shared_hours": 740,
+      "shared_cost_usd": 144300
+    },
+    {
+      "id": "CL-SCAF-07",
+      "type": "scaffold",
+      "name": "Amine scrubber C-202 manways",
+      "area": "200-F",
+      "equipment_tags": [
+        "C-202",
+        "D-204"
+      ],
+      "request_ids": [
+        "WR-200-0056",
+        "WR-200-0057",
+        "WR-200-0062",
+        "WR-200-0070",
+        "WR-200-0071",
+        "WR-200-0076"
+      ],
+      "shared_hours": 680,
+      "shared_cost_usd": 132600
+    }
+  ],
+  "isolation_clusters": [
+    {
+      "id": "ENV-200-01",
+      "type": "isolation",
+      "name": "ENV-200-01 Feed shared blind list",
+      "area": "200-A",
+      "equipment_tags": [
+        "FL-201A",
+        "FL-201B",
+        "D-201",
+        "P-201A",
+        "P-201B"
+      ],
+      "request_ids": [
+        "WR-200-0060",
+        "WR-200-0065",
+        "WR-200-0066",
+        "WR-200-0074",
+        "WR-200-0079",
+        "WR-200-0080",
+        "WR-200-0091",
+        "WR-200-0092"
+      ],
+      "shared_hours": 576,
+      "shared_cost_usd": 129600
+    },
+    {
+      "id": "ENV-200-02",
+      "type": "isolation",
+      "name": "ENV-200-02 HP reaction loop shared blind list",
+      "area": "200-A",
+      "equipment_tags": [
+        "P-201A",
+        "P-201B",
+        "E-201A",
+        "E-201B",
+        "E-201C",
+        "H-201",
+        "R-201",
+        "R-202",
+        "A-201",
+        "E-202",
+        "D-202"
+      ],
+      "request_ids": [
+        "WR-200-0001",
+        "WR-200-0002",
+        "WR-200-0003",
+        "WR-200-0004",
+        "WR-200-0005",
+        "WR-200-0006",
+        "WR-200-0007",
+        "WR-200-0008",
+        "WR-200-0009",
+        "WR-200-0010",
+        "WR-200-0011",
+        "WR-200-0012",
+        "WR-200-0013",
+        "WR-200-0014",
+        "WR-200-0015",
+        "WR-200-0017",
+        "WR-200-0018",
+        "WR-200-0021",
+        "WR-200-0022",
+        "WR-200-0023",
+        "WR-200-0024",
+        "WR-200-0025",
+        "WR-200-0026",
+        "WR-200-0027",
+        "WR-200-0030",
+        "WR-200-0031",
+        "WR-200-0032",
+        "WR-200-0033",
+        "WR-200-0034",
+        "WR-200-0035",
+        "WR-200-0036",
+        "WR-200-0037",
+        "WR-200-0038",
+        "WR-200-0039",
+        "WR-200-0040",
+        "WR-200-0041",
+        "WR-200-0042",
+        "WR-200-0043",
+        "WR-200-0044",
+        "WR-200-0045",
+        "WR-200-0046",
+        "WR-200-0047",
+        "WR-200-0048",
+        "WR-200-0049",
+        "WR-200-0050",
+        "WR-200-0051",
+        "WR-200-0052",
+        "WR-200-0058",
+        "WR-200-0059",
+        "WR-200-0072",
+        "WR-200-0073",
+        "WR-200-0079",
+        "WR-200-0080",
+        "WR-200-0091",
+        "WR-200-0092",
+        "WR-200-0147",
+        "WR-200-0152",
+        "WR-200-0160",
+        "WR-200-0171",
+        "WR-200-0195",
+        "WR-200-0196",
+        "WR-200-0198"
+      ],
+      "shared_hours": 1548,
+      "shared_cost_usd": 348300
+    },
+    {
+      "id": "ENV-200-03",
+      "type": "isolation",
+      "name": "ENV-200-03 Recycle gas shared blind list",
+      "area": "200-F",
+      "equipment_tags": [
+        "D-204",
+        "C-202",
+        "K-201"
+      ],
+      "request_ids": [
+        "WR-200-0056",
+        "WR-200-0057",
+        "WR-200-0062",
+        "WR-200-0070",
+        "WR-200-0071",
+        "WR-200-0076",
+        "WR-200-0077",
+        "WR-200-0089"
+      ],
+      "shared_hours": 648,
+      "shared_cost_usd": 145800
+    },
+    {
+      "id": "ENV-200-04",
+      "type": "isolation",
+      "name": "ENV-200-04 Makeup gas shared blind list",
+      "area": "200-F",
+      "equipment_tags": [
+        "D-206",
+        "K-202A",
+        "K-202B"
+      ],
+      "request_ids": [
+        "WR-200-0064",
+        "WR-200-0081",
+        "WR-200-0082",
+        "WR-200-0093",
+        "WR-200-0094"
+      ],
+      "shared_hours": 504,
+      "shared_cost_usd": 113400
+    },
+    {
+      "id": "ENV-200-05",
+      "type": "isolation",
+      "name": "ENV-200-05 LP separation shared blind list",
+      "area": "200-E",
+      "equipment_tags": [
+        "D-203",
+        "P-204A",
+        "P-204B"
+      ],
+      "request_ids": [
+        "WR-200-0061",
+        "WR-200-0075",
+        "WR-200-0087",
+        "WR-200-0088"
+      ],
+      "shared_hours": 432,
+      "shared_cost_usd": 97200
+    },
+    {
+      "id": "ENV-200-06",
+      "type": "isolation",
+      "name": "ENV-200-06 Stripper shared blind list",
+      "area": "200-G",
+      "equipment_tags": [
+        "C-201",
+        "E-203",
+        "D-205",
+        "P-202A",
+        "P-202B",
+        "P-203A",
+        "P-203B",
+        "E-204"
+      ],
+      "request_ids": [
+        "WR-200-0016",
+        "WR-200-0019",
+        "WR-200-0020",
+        "WR-200-0028",
+        "WR-200-0029",
+        "WR-200-0053",
+        "WR-200-0054",
+        "WR-200-0055",
+        "WR-200-0063",
+        "WR-200-0067",
+        "WR-200-0068",
+        "WR-200-0069",
+        "WR-200-0083",
+        "WR-200-0084",
+        "WR-200-0085",
+        "WR-200-0086",
+        "WR-200-0095",
+        "WR-200-0096",
+        "WR-200-0197"
+      ],
+      "shared_hours": 936,
+      "shared_cost_usd": 210600
+    }
+  ],
+  "access_clusters": [
+    {
+      "id": "CL-ACC-01",
+      "type": "access",
+      "name": "Exchanger bay bundle-pull crane pad",
+      "area": "200-C",
+      "equipment_tags": [
+        "E-201A",
+        "E-201B",
+        "E-201C",
+        "E-202",
+        "E-204"
+      ],
+      "request_ids": [
+        "WR-200-0014",
+        "WR-200-0015",
+        "WR-200-0016",
+        "WR-200-0017",
+        "WR-200-0018",
+        "WR-200-0020",
+        "WR-200-0021",
+        "WR-200-0022",
+        "WR-200-0023",
+        "WR-200-0024",
+        "WR-200-0025",
+        "WR-200-0026",
+        "WR-200-0027",
+        "WR-200-0029",
+        "WR-200-0030",
+        "WR-200-0031",
+        "WR-200-0032",
+        "WR-200-0033",
+        "WR-200-0147",
+        "WR-200-0171",
+        "WR-200-0195"
+      ],
+      "shared_hours": 1620,
+      "shared_cost_usd": 445500
+    },
+    {
+      "id": "CL-ACC-02",
+      "type": "access",
+      "name": "Reactor catalyst handling crane and hopper",
+      "area": "200-B",
+      "equipment_tags": [
+        "R-201",
+        "R-202"
+      ],
+      "request_ids": [
+        "WR-200-0001",
+        "WR-200-0002",
+        "WR-200-0003",
+        "WR-200-0004",
+        "WR-200-0005",
+        "WR-200-0006",
+        "WR-200-0007",
+        "WR-200-0008",
+        "WR-200-0009",
+        "WR-200-0010",
+        "WR-200-0011",
+        "WR-200-0012",
+        "WR-200-0013",
+        "WR-200-0152",
+        "WR-200-0196"
+      ],
+      "shared_hours": 1380,
+      "shared_cost_usd": 379500
+    },
+    {
+      "id": "CL-ACC-03",
+      "type": "access",
+      "name": "Compressor shelter overhead bridge rigging",
+      "area": "200-F",
+      "equipment_tags": [
+        "K-201",
+        "KT-201",
+        "K-202A",
+        "K-202B"
+      ],
+      "request_ids": [
+        "WR-200-0077",
+        "WR-200-0078",
+        "WR-200-0081",
+        "WR-200-0082",
+        "WR-200-0089",
+        "WR-200-0090",
+        "WR-200-0093",
+        "WR-200-0094"
+      ],
+      "shared_hours": 940,
+      "shared_cost_usd": 258500
+    }
+  ]
+}

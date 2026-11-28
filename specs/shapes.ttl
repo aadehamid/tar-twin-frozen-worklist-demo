@@ -1,0 +1,186 @@
+# Production SHACL shapes for Unit 200 plant and scope validation.
+# Uses only constructs supported identically by Neo4j neosemantics (n10s 5.26)
+# and standard SHACL Core (pySHACL). See docs/spikes/shacl-n10s.md section 1.
+
+@prefix neo4j: <neo4j://graph.schema#> .
+@prefix sh: <http://www.w3.org/ns/shacl#> .
+@prefix xsd: <http://www.w3.org/2001/XMLSchema#> .
+
+# Major equipment tags and required links.
+neo4j:EquipmentShape a sh:NodeShape ;
+  sh:targetClass neo4j:Equipment ;
+  sh:property [
+    sh:path neo4j:tag ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:pattern "^(FL|D|P|R|E|H|A|C|K|KT)-2[0-9]{2}[A-Z]?$" ;
+  ] ;
+  sh:property [
+    sh:path neo4j:ON_SHEET ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class neo4j:PidSheet ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:property [
+    sh:path neo4j:LOCATED_IN ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class neo4j:Area ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:property [
+    sh:path neo4j:POSITIONED_AT ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:class neo4j:PlotPosition ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:property [
+    sh:path neo4j:HAS_NOZZLE ;
+    sh:class neo4j:Nozzle ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Manual, control, check, and relief valves.
+neo4j:ValveShape a sh:NodeShape ;
+  sh:targetClass neo4j:Valve ;
+  sh:property [
+    sh:path neo4j:tag ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:pattern "^(HV|XV|FV|LV|PV|PSV)-2[0-9]{3}$" ;
+  ] ;
+  sh:property [
+    sh:path neo4j:role ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ( "block" "control" "check" "relief" ) ;
+  ] .
+
+# Every PSV protects at least one piece of equipment (verification.md section 2).
+neo4j:ReliefValveShape a sh:NodeShape ;
+  sh:targetClass neo4j:ReliefValve ;
+  sh:property [
+    sh:path neo4j:tag ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:pattern "^PSV-2[0-9]{3}$" ;
+  ] ;
+  sh:property [
+    sh:path neo4j:PROTECTS ;
+    sh:minCount 1 ;
+    sh:class neo4j:Equipment ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Field instruments and analyzers.
+neo4j:InstrumentShape a sh:NodeShape ;
+  sh:targetClass neo4j:Instrument ;
+  sh:property [
+    sh:path neo4j:tag ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:pattern "^(PT|TT|FT|LT|AT)-2[0-9]{3}$" ;
+  ] ;
+  sh:property [
+    sh:path neo4j:MEASURES ;
+    sh:minCount 1 ;
+    sh:class neo4j:Equipment ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Scope items mirrored from IMPACT Web.
+neo4j:ScopeItemShape a sh:NodeShape ;
+  sh:targetClass neo4j:ScopeItem ;
+  sh:property [
+    sh:path neo4j:request_id ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+    sh:pattern "^WR-200-[0-9]{4}$" ;
+  ] ;
+  sh:property [
+    sh:path neo4j:exercise_id ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:datatype xsd:string ;
+  ] ;
+  sh:property [
+    sh:path neo4j:driver ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ( "inspection" "reliability" "regulatory" "capital" "operations" ) ;
+  ] ;
+  sh:property [
+    sh:path neo4j:source_group ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:in ( "fixed_equipment" "rotating" "inspection" "operations" "projects" "instrumentation" ) ;
+  ] ;
+  sh:property [
+    sh:path neo4j:ript ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:minInclusive 1 ;
+    sh:maxInclusive 25 ;
+  ] ;
+  sh:property [
+    sh:path neo4j:RESOLVES_TO ;
+    sh:maxCount 1 ;
+    sh:class neo4j:Asset ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Work-type to equipment-class compatibility (verification.md section 2).
+neo4j:BundlePullShape a sh:NodeShape ;
+  sh:targetClass neo4j:BundlePull ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:Exchanger ; sh:nodeKind sh:IRI ] .
+
+neo4j:RetubeShape a sh:NodeShape ;
+  sh:targetClass neo4j:Retube ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:Exchanger ; sh:nodeKind sh:IRI ] .
+
+neo4j:CatalystChangeoutShape a sh:NodeShape ;
+  sh:targetClass neo4j:CatalystChangeout ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:Reactor ; sh:nodeKind sh:IRI ] .
+
+neo4j:HeaterDecokeShape a sh:NodeShape ;
+  sh:targetClass neo4j:HeaterDecoke ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:FiredHeater ; sh:nodeKind sh:IRI ] .
+
+neo4j:TrayInspectionShape a sh:NodeShape ;
+  sh:targetClass neo4j:TrayInspection ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:Column ; sh:nodeKind sh:IRI ] .
+
+neo4j:PsvRecertificationShape a sh:NodeShape ;
+  sh:targetClass neo4j:PsvRecertification ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:ReliefValve ; sh:nodeKind sh:IRI ] .
+
+neo4j:RotatingOverhaulShape a sh:NodeShape ;
+  sh:targetClass neo4j:RotatingOverhaul ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:RotatingEquipment ; sh:nodeKind sh:IRI ] .
+
+neo4j:AirCoolerCleanShape a sh:NodeShape ;
+  sh:targetClass neo4j:AirCoolerClean ;
+  sh:property [ sh:path neo4j:RESOLVES_TO ; sh:class neo4j:AirCooler ; sh:nodeKind sh:IRI ] .
+
+# Isolation envelopes.
+neo4j:IsolationEnvelopeShape a sh:NodeShape ;
+  sh:targetClass neo4j:IsolationEnvelope ;
+  sh:property [
+    sh:path neo4j:CONTAINS ;
+    sh:minCount 1 ;
+    sh:class neo4j:Equipment ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:property [
+    sh:path neo4j:BOUNDED_BY ;
+    sh:minCount 1 ;
+    sh:class neo4j:Valve ;
+    sh:nodeKind sh:IRI ;
+  ] .

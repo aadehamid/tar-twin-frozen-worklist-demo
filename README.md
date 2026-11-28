@@ -2,7 +2,7 @@
 
 A working demo of the 3.1 Frozen Work List MVP from the turnaround (TAR) digital twin proposal. It runs on synthetic data for a made-up diesel hydrotreater, Unit 200, and is built like production software so the audience sees how the real thing would behave.
 
-> Status: design phase. This repo holds the design and scenario documents only. No application code has been written yet. Build starts at phase 0 once the documents are approved.
+> Status: Phase 0 spikes and Phase 1 Unit 200 scenario data are complete. Application services build next (Phases 2 to 8 in [docs/design.md](docs/design.md)).
 
 ## What the demo shows
 
