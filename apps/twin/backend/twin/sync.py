@@ -24,7 +24,10 @@ class ExerciseSyncState:
         self.scope_items: dict[str, dict[str, Any]] = {}
         self.manual_reviews: dict[str, dict[str, Any]] = {}  # request_id -> {version, equipment_text, decision...}
         self.baseline_freeze_id: str | None = None
+        self.baseline_frozen_at: str | None = None
+        self.baseline_list_version: int = 0
         self.baseline_items: list[dict[str, Any]] = []
+        self.match_by_version: dict[str, dict[str, Any]] = {}  # f"{request_id}@v{version}" -> match snapshot
         self.change_events: dict[str, dict[str, Any]] = {}  # keyed by change_request_id (unique!)
         self.all_change_requests: list[dict[str, Any]] = []
         self.saved_cut_line_runs: list[dict[str, Any]] = []
@@ -110,7 +113,10 @@ class SyncEngine:
             "scope_items": state.scope_items,
             "manual_reviews": state.manual_reviews,
             "baseline_freeze_id": state.baseline_freeze_id,
+            "baseline_frozen_at": state.baseline_frozen_at,
+            "baseline_list_version": state.baseline_list_version,
             "baseline_items": state.baseline_items,
+            "match_by_version": state.match_by_version,
             "change_events": state.change_events,
             "all_change_requests": state.all_change_requests,
             "saved_cut_line_runs": state.saved_cut_line_runs,
@@ -125,7 +131,10 @@ class SyncEngine:
         st.scope_items = dict(snap.get("scope_items", {}))
         st.manual_reviews = dict(snap.get("manual_reviews", {}))
         st.baseline_freeze_id = snap.get("baseline_freeze_id")
+        st.baseline_frozen_at = snap.get("baseline_frozen_at")
+        st.baseline_list_version = int(snap.get("baseline_list_version", 0))
         st.baseline_items = list(snap.get("baseline_items", []))
+        st.match_by_version = dict(snap.get("match_by_version", {}))
         st.change_events = dict(snap.get("change_events", {}))
         st.all_change_requests = list(snap.get("all_change_requests", []))
         st.saved_cut_line_runs = list(snap.get("saved_cut_line_runs", []))
@@ -237,6 +246,8 @@ class SyncEngine:
                 if freeze_id and state.baseline_freeze_id != freeze_id:
                     state.baseline_items = self.impactweb_client.get_freeze_items(freeze_id)
                     state.baseline_freeze_id = freeze_id
+                    state.baseline_frozen_at = datetime.now(timezone.utc).isoformat()
+                    state.baseline_list_version = 1
             else:
                 wl = json.loads((self.scenario_dir / "work-requests.json").read_text(encoding="utf-8"))
                 wrs = [
@@ -322,6 +333,39 @@ class SyncEngine:
                 if manual and manual["equipment_text"] == wr["equipment_text"]:
                     self._apply_manual_decision_to_item(item, manual)
                 new_scope[rid] = item
+                state.match_by_version[f"{rid}@v{item['version']}"] = self._match_snapshot(item)
+
+            for rid, item in new_scope.items():
+                vkey = f"{rid}@v{item['version']}"
+                if vkey not in state.match_by_version:
+                    state.match_by_version[vkey] = self._match_snapshot(item)
+
+            # Ensure every frozen item version has a pinned match snapshot (even if already past frozen version)
+            if state.baseline_items:
+                for bi in state.baseline_items:
+                    brid = bi["request_id"]
+                    bver = int(bi.get("request_version", 1))
+                    bkey = f"{brid}@v{bver}"
+                    if bkey not in state.match_by_version:
+                        frozen_match = pipeline.match_work_request(
+                            {
+                                "id": brid,
+                                "title": bi.get("title", ""),
+                                "description": bi.get("description", ""),
+                                "equipment_text": bi.get("equipment_text", ""),
+                                "area": bi.get("area", ""),
+                                "work_type_label": bi.get("work_type_label", "GeneralCleanup"),
+                                "updated_at": "",
+                            },
+                            use_ai=use_ai,
+                            live_ai=live_ai,
+                        )
+                        state.match_by_version[bkey] = {
+                            "match_status": frozen_match["match_status"],
+                            "resolved_tag": frozen_match["resolved_tag"],
+                            "work_type_label": bi.get("work_type_label", "GeneralCleanup"),
+                            "findings": (frozen_match.get("mapping_trace") or {}).get("findings") or [],
+                        }
 
             state.scope_items = new_scope
             state.all_change_requests = crs
@@ -434,8 +478,17 @@ class SyncEngine:
             }
             state.manual_reviews[request_id] = manual
             self._apply_manual_decision_to_item(item, manual)
+            state.match_by_version[f"{request_id}@v{item['version']}"] = self._match_snapshot(item)
             self._push_scope_to_graph_store(state)
             return copy.deepcopy(item)
+
+    def _match_snapshot(self, item: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "match_status": item.get("match_status"),
+            "resolved_tag": item.get("resolved_tag"),
+            "work_type_label": item.get("work_type_label", "GeneralCleanup"),
+            "findings": copy.deepcopy((item.get("mapping_trace") or {}).get("findings") or []),
+        }
 
     def list_scope_items(self, exercise_id: str) -> list[dict[str, Any]]:
         state = self._get_state(exercise_id)
@@ -549,3 +602,267 @@ class SyncEngine:
             }
             state.saved_cut_line_runs.append(run_rec)
         return result
+
+    def _classify_frozen_outcome(self, match_snap: dict[str, Any] | None) -> str:
+        """One of four frozen outcomes (docs/verification.md section 2): matched, unresolved, unit_general, incompatible."""
+        if match_snap is None:
+            return "unresolved"
+        if match_snap.get("match_status") == "accepted" and match_snap.get("resolved_tag"):
+            return "matched"
+        findings = match_snap.get("findings") or ((match_snap.get("mapping_trace") or {}).get("findings") or [])
+        if any(f.get("kind") in {"incompatible_class", "wrong_unit", "retired_tag"} for f in findings):
+            return "incompatible"
+        if match_snap.get("work_type_label") == "GeneralCleanup":
+            return "unit_general"
+        return "unresolved"
+
+    def baseline_summary(self, exercise_id: str) -> dict[str, Any]:
+        state = self._get_state(exercise_id)
+        frozen = state.baseline_freeze_id is not None
+        baseline_items = state.baseline_items
+        total = len(baseline_items)
+        matched = 0
+        outcome_counts: dict[str, int] = {"matched": 0, "unresolved": 0, "unit_general": 0, "incompatible": 0}
+        enriched_items: list[dict[str, Any]] = []
+        for bi in baseline_items:
+            rid = bi["request_id"]
+            bver = int(bi.get("request_version", 1))
+            # Always evaluate readiness strictly against the frozen request_version snapshot,
+            # never against a later post-freeze version of the request.
+            snap = state.match_by_version.get(f"{rid}@v{bver}")
+            outcome = self._classify_frozen_outcome(snap)
+            outcome_counts[outcome] += 1
+            if outcome == "matched":
+                matched += 1
+            enriched_items.append(
+                {
+                    "request_id": rid,
+                    "request_version": bver,
+                    "title": bi.get("title", ""),
+                    "area": bi.get("area", ""),
+                    "source_group": bi.get("source_group", ""),
+                    "estimate_hours": int(bi.get("estimate_hours", 0)),
+                    "estimate_cost_usd": int(bi.get("estimate_cost_usd", 0)),
+                    "resolved_tag": snap.get("resolved_tag") if snap else None,
+                    "outcome": outcome,
+                }
+            )
+
+        frozen_rate = round(matched / total, 4) if total > 0 else None
+        ready_for_use = bool(frozen and frozen_rate is not None and frozen_rate >= self.match_rate_gate)
+        baseline_hours = sum(int(bi.get("estimate_hours", 0)) for bi in baseline_items)
+        baseline_cost = sum(int(bi.get("estimate_cost_usd", 0)) for bi in baseline_items)
+
+        return {
+            "exercise_id": exercise_id,
+            "event_id": "TAR-200-2028",
+            "frozen": frozen,
+            "freeze_id": state.baseline_freeze_id,
+            "frozen_at": state.baseline_frozen_at,
+            "list_version": state.baseline_list_version,
+            "baseline_item_count": total,
+            "baseline_hours": baseline_hours,
+            "baseline_cost_usd": baseline_cost,
+            "frozen_matched_count": matched,
+            "frozen_match_rate": frozen_rate,
+            "gate_threshold": self.match_rate_gate,
+            "ready_for_use": ready_for_use,
+            "outcome_counts": outcome_counts,
+            "items": enriched_items,
+            # Release-one scope rule: 4.1 and 4.2 stay schema slots only, null with no features.
+            "reserved_slots": {
+                "work_packages_4_1": {
+                    "status": "schema_slot_only",
+                    "work_packages": None,
+                    "standards": None,
+                    "materials": None,
+                    "redlines": None,
+                },
+                "execution_plan_4_2": {
+                    "status": "schema_slot_only",
+                    "activities": None,
+                    "logistics_objects": None,
+                    "permits": None,
+                },
+            },
+        }
+
+    def kpis_summary(self, exercise_id: str) -> dict[str, Any]:
+        state = self._get_state(exercise_id)
+        baseline = self.baseline_summary(exercise_id)
+        matching = self.matching_summary(exercise_id)
+        clusters = self.clusters_and_duplicates(exercise_id)
+
+        # Refresh live exercise_meta if IMPACT Web is connected so twin_write_through reflects current switch
+        ex_meta = dict(state.exercise_meta)
+        if self.impactweb_client is not None:
+            try:
+                ex_meta = self.impactweb_client.get_exercise(exercise_id)
+                state.exercise_meta = ex_meta
+            except Exception:
+                pass
+
+        events = list(state.change_events.values())
+        growth_hours = sum(int(ev["hours_delta"]) for ev in events)
+        growth_cost = sum(int(ev["cost_delta_usd"]) for ev in events)
+        mandatory_hours = sum(int(ev["hours_delta"]) for ev in events if ev.get("mandatory"))
+        discretionary_hours = sum(int(ev["hours_delta"]) for ev in events if not ev.get("mandatory"))
+        adds_approved = sum(1 for ev in events if ev.get("type") == "add")
+        deletes_approved = sum(1 for ev in events if ev.get("type") == "delete")
+        changes_approved = sum(1 for ev in events if ev.get("type") == "change")
+
+        all_crs = state.all_change_requests
+        pending_count = sum(1 for c in all_crs if c.get("status") == "pending")
+        rejected_count = sum(1 for c in all_crs if c.get("status") == "rejected")
+
+        baseline_hours = baseline["baseline_hours"]
+        growth_pct = round((growth_hours / baseline_hours) * 100.0, 2) if baseline_hours > 0 else 0.0
+
+        all_cl = clusters["isolation_clusters"] + clusters["scaffold_clusters"] + clusters["access_clusters"]
+        hours_bundled = sum(int(c["shared_hours"]) for c in all_cl)
+        duplicate_hours = sum(int(p["overlap_hours"]) for p in clusters["duplicate_pairs"])
+
+        return {
+            "exercise_id": exercise_id,
+            "frozen": baseline["frozen"],
+            "freeze_id": baseline["freeze_id"],
+            "ready_for_use": baseline["ready_for_use"],
+            "twin_write_through": bool(ex_meta.get("twin_write_through", True)),
+            "baseline_hours": baseline_hours,
+            "baseline_item_count": baseline["baseline_item_count"],
+            "growth_hours": growth_hours,
+            "growth_cost_usd": growth_cost,
+            "growth_pct_of_baseline": growth_pct,
+            "mandatory_growth_hours": mandatory_hours,
+            "discretionary_growth_hours": discretionary_hours,
+            "adds_approved": adds_approved,
+            "deletes_approved": deletes_approved,
+            "changes_approved": changes_approved,
+            "pending_count": pending_count,
+            "rejected_count": rejected_count,
+            "change_events": events,
+            "all_change_requests": all_crs,
+            "tag_match_rate": matching["match_rate"],
+            "hours_bundled": hours_bundled,
+            "duplicate_hours_flagged": duplicate_hours,
+            "duplicate_pair_count": len(clusters["duplicate_pairs"]),
+            "last_synced_at": state.last_synced_at,
+        }
+
+    def value_panel(self, exercise_id: str) -> dict[str, Any]:
+        """Focus-area brief defaults for 3.1, explicitly labeled as unvalidated assumptions (docs/scenario-spec.md section 6)."""
+        kpis = self.kpis_summary(exercise_id)
+        levers = [
+            {
+                "lever": "Shared costs bundled",
+                "default_usd": 1_130_000,
+                "display_amount": "$1.13M",
+                "unvalidated_assumption": True,
+                "basis": "Focus-area brief 3.1 default assumption",
+            },
+            {
+                "lever": "Scope removed or avoided",
+                "default_usd": 750_000,
+                "display_amount": "$0.75M",
+                "unvalidated_assumption": True,
+                "basis": "Focus-area brief 3.1 default assumption",
+            },
+            {
+                "lever": "Duration (0.3 days)",
+                "default_usd": 600_000,
+                "display_amount": "$0.60M",
+                "unvalidated_assumption": True,
+                "basis": "Focus-area brief 3.1 default assumption",
+            },
+            {
+                "lever": "Planning hours saved (250 hours)",
+                "default_usd": 40_000,
+                "display_amount": "$0.04M",
+                "unvalidated_assumption": True,
+                "basis": "Focus-area brief 3.1 default assumption",
+            },
+        ]
+        return {
+            "exercise_id": exercise_id,
+            "unvalidated_assumption": True,
+            "assumption_notice": (
+                "All dollar figures below are unvalidated assumptions from the 3.1 focus-area brief, not measured results. "
+                "Measured counts from the synthetic Unit 200 demo dataset are shown separately."
+            ),
+            "levers": levers,
+            "total_default_usd": sum(lv["default_usd"] for lv in levers),
+            "total_display": "about $2.5M",
+            "measured_in_demo": {
+                "hours_bundled": kpis["hours_bundled"],
+                "duplicate_pair_count": kpis["duplicate_pair_count"],
+                "duplicate_hours_flagged": kpis["duplicate_hours_flagged"],
+                "baseline_hours": kpis["baseline_hours"],
+                "post_freeze_growth_hours": kpis["growth_hours"],
+                "tag_match_rate": kpis["tag_match_rate"],
+            },
+        }
+
+    def change_request_prefill(self, exercise_id: str, tag: str) -> dict[str, Any]:
+        """Build plain-text prefill evidence for raising a post-freeze change request from the Twin."""
+        state = self._get_state(exercise_id)
+        ex_meta = dict(state.exercise_meta)
+        if self.impactweb_client is not None:
+            try:
+                ex_meta = self.impactweb_client.get_exercise(exercise_id)
+                state.exercise_meta = ex_meta
+            except Exception:
+                pass
+
+        eq = self.plant_store.get_equipment(tag)
+        if eq is None:
+            raise KeyError(f"Equipment {tag} not found in Unit 200 plant graph")
+
+        matching_jobs = [it for it in state.scope_items.values() if it.get("resolved_tag") == tag]
+        clusters = self.clusters_and_duplicates(exercise_id)
+        shared_scaffolds = [c["id"] for c in clusters["scaffold_clusters"] if tag in c["equipment_tags"]]
+        shared_access = [c["id"] for c in clusters["access_clusters"] if tag in c["equipment_tags"]]
+        shared_envelopes = list(eq.get("envelopes", []))
+
+        # Special walkthrough step 7 case: C-201 nozzle N3 while column is already open
+        late_path = self.scenario_dir / "late-scope.json"
+        live_demo = json.loads(late_path.read_text(encoding="utf-8")).get("live_walkthrough_add", {}) if late_path.is_file() else {}
+        if tag == "C-201" and live_demo:
+            prefilled_title = live_demo["title"]
+            prefilled_reason = live_demo["reason"]
+            default_hours = int(live_demo["hours_delta"])
+            default_cost = int(live_demo["cost_delta_usd"])
+            shared_saved_hours = int(live_demo.get("shared_setup_hours_saved", 420))
+        else:
+            env_str = ", ".join(shared_envelopes) or "its active isolation boundary"
+            scaf_str = f" and scaffold cluster {', '.join(shared_scaffolds)}" if shared_scaffolds else ""
+            prefilled_title = f"Post-freeze scope addition on {tag} ({eq['description']})"
+            prefilled_reason = (
+                f"Add work on {tag}; {len(matching_jobs)} job(s) are already scheduled on this asset sharing "
+                f"isolation {env_str}{scaf_str}. Only direct craft execution hours are incremental."
+            )
+            default_hours = 140
+            default_cost = 32900
+            shared_saved_hours = 240 if (shared_envelopes or shared_scaffolds) else 0
+
+        return {
+            "exercise_id": exercise_id,
+            "equipment_tag": tag,
+            "equipment_description": eq["description"],
+            "area": eq["area"],
+            "sheet": eq["sheet"],
+            "frozen": bool(ex_meta.get("frozen", state.baseline_freeze_id is not None)),
+            "twin_write_through": bool(ex_meta.get("twin_write_through", True)),
+            "already_open_job_count": len(matching_jobs),
+            "already_open_jobs": [{"request_id": j["request_id"], "title": j["title"]} for j in matching_jobs[:8]],
+            "shared_envelopes": shared_envelopes,
+            "shared_scaffolds": shared_scaffolds,
+            "shared_access": shared_access,
+            "shared_setup_hours_saved": shared_saved_hours,
+            "prefilled_title": prefilled_title,
+            "prefilled_equipment_text": f"{tag} {eq['description']}",
+            "prefilled_reason": prefilled_reason,
+            "default_hours_delta": default_hours,
+            "default_cost_delta_usd": default_cost,
+            "default_source_group": "operations",
+            "default_driver": "operations",
+        }

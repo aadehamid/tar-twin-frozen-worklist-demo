@@ -24,6 +24,7 @@ interface PlotPlanViewProps {
   onOpenPid: (sheetNo: string, tag: string) => void;
   onOpenGraph: (tag: string) => void;
   onOpenTrace: (requestId: string) => void;
+  onRaiseChangeRequest: (tag: string) => void;
 }
 
 const SCALE = 8; // 120m x 80m -> 960 x 640 SVG units
@@ -42,6 +43,7 @@ export const PlotPlanView: React.FC<PlotPlanViewProps> = ({
   onOpenPid,
   onOpenGraph,
   onOpenTrace,
+  onRaiseChangeRequest,
 }) => {
   const svgRef = useRef<SVGSVGElement>(null);
   const gRef = useRef<SVGGElement>(null);
@@ -451,6 +453,9 @@ export const PlotPlanView: React.FC<PlotPlanViewProps> = ({
                 </button>
                 <button type="button" onClick={() => onOpenGraph(activeEq.tag)}>
                   Open in Relate graph
+                </button>
+                <button type="button" onClick={() => onRaiseChangeRequest(activeEq.tag)}>
+                  Raise change request
                 </button>
               </div>
 
