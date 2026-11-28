@@ -385,14 +385,52 @@ def test_twin_delegated_write_through_full_contract_and_walkthrough_step7(tmp_pa
 
 
 def test_property_baseline_growth_equals_approved_deltas_only():
-    """Hypothesis property test: growth_hours == exact sum of approved deltas; pending/rejected add zero."""
+    """Hypothesis property test driving real SyncEngine.sync_exercise + kpis_summary over arbitrary CR mixes."""
     from hypothesis import given, settings, strategies as st
+    from twin.graph_store import MemoryPlantStore
+    from twin.plant_loader import build_plant_graph
+    from twin.sync import SyncEngine
 
-    @settings(max_examples=40)
+    scen_dir = REPO_ROOT / "data" / "scenario"
+    store = MemoryPlantStore(shapes_path=REPO_ROOT / "specs" / "shapes.ttl")
+    store.load_plant_graph(build_plant_graph(scen_dir))
+
+    class _StubIw:
+        def __init__(self, crs: list[dict]):
+            self._crs = crs
+
+        def get_exercise(self, exercise_id: str) -> dict:
+            return {
+                "id": exercise_id,
+                "name": "Property Test",
+                "mode": "demo",
+                "twin_write_through": True,
+                "frozen": True,
+                "freeze_id": "FRZ-PROP",
+                "epoch": 1,
+            }
+
+        def list_work_requests(self, exercise_id: str) -> list[dict]:
+            return []
+
+        def get_changes(self, exercise_id: str, after_seq: int = 0) -> list[dict]:
+            return []
+
+        def list_change_requests(self, exercise_id: str) -> list[dict]:
+            return list(self._crs)
+
+        def get_freeze_items(self, freeze_id: str) -> list[dict]:
+            return []
+
+    from itertools import count
+    case_ids = count(1)
+
+    @settings(max_examples=40, deadline=None)
     @given(
         st.lists(
             st.tuples(
                 st.sampled_from(["approved", "pending", "rejected"]),
+                st.sampled_from(["add", "delete", "change"]),
                 st.integers(min_value=-400, max_value=600),
                 st.booleans(),
             ),
@@ -401,10 +439,47 @@ def test_property_baseline_growth_equals_approved_deltas_only():
         )
     )
     def _check(events):
-        approved_sum = sum(delta for status, delta, _m in events if status == "approved")
-        mandatory_sum = sum(delta for status, delta, m in events if status == "approved" and m)
-        discretionary_sum = sum(delta for status, delta, m in events if status == "approved" and not m)
-        assert mandatory_sum + discretionary_sum == approved_sum
+        ex_id = f"EX-PROP-{next(case_ids)}"
+        crs = [
+            {
+                "id": f"CR-PROP-{idx:03d}",
+                "request_id": None if ctype == "add" else f"WR-200-{idx + 1:04d}",
+                "change_type": ctype,
+                "mandatory": mandatory,
+                "hours_delta": delta,
+                "cost_delta_usd": delta * 235,
+                "title": f"Prop change {idx}",
+                "reason": "Synthetic property case",
+                "raised_by": "usr-planner",
+                "raised_by_name": "J. Planner",
+                "raised_via": "iw",
+                "source_group": "operations",
+                "status": status,
+                "created_at": "2028-01-01T00:00:00Z",
+                "decided_at": "2028-01-02T00:00:00Z" if status != "pending" else None,
+            }
+            for idx, (status, ctype, delta, mandatory) in enumerate(events)
+        ]
+        engine = SyncEngine(
+            plant_store=store,
+            scenario_dir=scen_dir,
+            impactweb_client=_StubIw(crs),  # type: ignore[arg-type]
+        )
+        engine.sync_exercise(ex_id)
+        # Replay sync twice to verify idempotence on ChangeEvents
+        engine.sync_exercise(ex_id)
+        kpis = engine.kpis_summary(ex_id)
+
+        expected_approved = sum(delta for status, _ct, delta, _m in events if status == "approved")
+        expected_mandatory = sum(delta for status, _ct, delta, m in events if status == "approved" and m)
+        expected_discretionary = sum(delta for status, _ct, delta, m in events if status == "approved" and not m)
+
+        assert kpis["growth_hours"] == expected_approved
+        assert kpis["mandatory_growth_hours"] == expected_mandatory
+        assert kpis["discretionary_growth_hours"] == expected_discretionary
+        assert len(kpis["change_events"]) == sum(1 for status, *_ in events if status == "approved")
+        assert kpis["pending_count"] == sum(1 for status, *_ in events if status == "pending")
+        assert kpis["rejected_count"] == sum(1 for status, *_ in events if status == "rejected")
 
     _check()
 
