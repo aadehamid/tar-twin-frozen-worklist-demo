@@ -988,6 +988,7 @@ def create_app(
     def advance_clock(
         exercise_id: str,
         body: AdvanceClockBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -1001,6 +1002,7 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
             cur_idx = CLOCK_INDEX.get(ex.clock_step, 0)
             tgt_idx = CLOCK_INDEX[body.target_step]
             if tgt_idx <= cur_idx:
@@ -1074,6 +1076,7 @@ def create_app(
     def apply_inject(
         exercise_id: str,
         body: ApplyInjectBody,
+        request: Request,
         caller: Caller = Depends(get_caller),
         session: Session = Depends(get_session),
     ) -> dict:
@@ -1116,6 +1119,7 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            enforce_expected_epoch(request, ex)
             existing = session.exec(
                 select(ExerciseInject).where(
                     ExerciseInject.exercise_id == exercise_id,

@@ -504,10 +504,30 @@ class SyncEngine:
         reviewer: str,
         reason: str = "",
         tag: str | None = None,
+        expected_epoch: int | None = None,
     ) -> dict[str, Any]:
         with self._locks[exercise_id]:
             pipeline = self._ensure_pipeline()
             state = self._get_state(exercise_id)
+            if self.impactweb_client is not None:
+                ex_meta = self.impactweb_client.get_exercise(exercise_id)
+                live_epoch = int(ex_meta.get("epoch", 1))
+                if ex_meta.get("mode") == "planning" and expected_epoch is None:
+                    raise RuntimeError(
+                        f"Missing required X-Exercise-Epoch header for planning-mode match review (current epoch is {live_epoch})"
+                    )
+                if expected_epoch is not None and int(expected_epoch) != live_epoch:
+                    raise RuntimeError(
+                        f"Stale match review epoch {expected_epoch}; exercise {exercise_id} is now at epoch {live_epoch}"
+                    )
+                if live_epoch != state.epoch:
+                    raise RuntimeError(
+                        f"Stale twin state epoch {state.epoch}; exercise {exercise_id} reset to epoch {live_epoch}. Sync before reviewing."
+                    )
+            elif expected_epoch is not None and int(expected_epoch) != state.epoch:
+                raise RuntimeError(
+                    f"Stale match review epoch {expected_epoch}; exercise {exercise_id} is now at epoch {state.epoch}"
+                )
             item = state.scope_items.get(request_id)
             if item is None:
                 raise KeyError(f"ScopeItem {request_id} not found in {exercise_id}")

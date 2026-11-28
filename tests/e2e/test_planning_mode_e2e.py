@@ -182,9 +182,12 @@ def test_planning_mode_end_to_end_facilitator_switch_debrief_and_reset(tmp_path:
             ut_row.get_by_role("button", name="Apply inject").click()
             page.get_by_text("Applied inject INJ-UT-THINNING", exact=False).wait_for(timeout=10_000)
 
-            # 2. Digital Twin: switch exercise selector -> verify isolation, Relate WASM reload, and Debrief view
+            # 2. Digital Twin: sign in as planner, switch exercise selector -> verify isolation, Relate WASM reload, and Debrief view
             page.goto(twin_url, wait_until="networkidle")
             page.get_by_role("heading", name="Unit 200 plot plan").wait_for(timeout=12_000)
+            page.get_by_role("button", name="Sign in", exact=True).click()
+            page.get_by_role("dialog").get_by_role("button", name="Sign in", exact=True).click()
+            page.get_by_role("button", name="J. Planner", exact=True).wait_for(timeout=10_000)
             page.get_by_label("Active exercise").select_option(new_ex_id)
             page.get_by_role("button", name="Sync now").click()
             page.locator(".sync-stamp").wait_for(timeout=15_000)

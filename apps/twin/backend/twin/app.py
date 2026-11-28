@@ -298,11 +298,38 @@ def create_app(
 
     @api.post("/api/v1/sync")
     def trigger_sync(
+        request: Request,
         exercise_id: str = Query(default="EX-DEMO"),
         use_ai: bool = Query(default=False),
         live_ai: bool = Query(default=False),
         expected_epoch: int | None = Query(default=None),
     ) -> dict:
+        if iw_cli is not None:
+            try:
+                live_ex = iw_cli.get_exercise(exercise_id)
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"Failed to verify exercise metadata before sync: {exc}") from exc
+            if live_ex.get("mode") == "planning":
+                hdr = request.headers.get("Authorization", "")
+                is_sync_token = (
+                    hdr.startswith("Bearer ")
+                    and bool(sync_tok)
+                    and hmac.compare_digest(hdr[len("Bearer ") :].strip(), sync_tok)
+                )
+                if not is_sync_token:
+                    member = resolve_authenticated_member(
+                        request,
+                        exercise_id=exercise_id,
+                        auth_mode=mode,
+                        jwt_secret=j_secret,
+                        edge_auth_secret=e_secret,
+                        impactweb_client=iw_cli,
+                    )
+                    if member.role not in {"facilitator", "ta_manager", "planner"}:
+                        raise HTTPException(
+                            status_code=403,
+                            detail="Only facilitator, TA manager, or planner roles may run sync now in planning mode",
+                        )
         try:
             return sync_engine.sync_exercise(
                 exercise_id=exercise_id,
@@ -356,6 +383,13 @@ def create_app(
                 status_code=403,
                 detail="Only planner or TA manager roles may accept or reject equipment matches",
             )
+        epoch_hdr = request.headers.get("X-Exercise-Epoch")
+        expected_epoch: int | None = None
+        if epoch_hdr is not None and epoch_hdr.strip():
+            try:
+                expected_epoch = int(epoch_hdr.strip())
+            except ValueError as exc:
+                raise HTTPException(status_code=422, detail="X-Exercise-Epoch must be an integer") from exc
         try:
             return sync_engine.decide_review(
                 exercise_id=exercise_id,
@@ -364,7 +398,10 @@ def create_app(
                 reviewer=member.full_name,
                 reason=body.reason,
                 tag=body.tag,
+                expected_epoch=expected_epoch,
             )
+        except RuntimeError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
         except KeyError as exc:
             raise HTTPException(status_code=404, detail=str(exc)) from exc
         except ValueError as exc:
@@ -396,7 +433,13 @@ def create_app(
     def post_cut_line(body: CutLineEvaluatePayload, request: Request) -> dict:
         saved_by = body.saved_by
         if body.save_name and iw_cli is not None:
-            ex_meta = sync_engine._get_state(body.exercise_id).exercise_meta
+            try:
+                ex_meta = iw_cli.get_exercise(body.exercise_id)
+            except Exception as exc:
+                raise HTTPException(
+                    status_code=502,
+                    detail=f"Failed to verify exercise phase from IMPACT Web before saving cut-line option: {exc}",
+                ) from exc
             if ex_meta.get("mode") == "planning":
                 member = resolve_authenticated_member(
                     request,

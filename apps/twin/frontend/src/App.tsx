@@ -195,8 +195,12 @@ export default function App() {
 
         let items = await twinApi.scopeItems(exerciseId);
         if (items.length === 0) {
-          await twinApi.sync(exerciseId, true);
-          items = await twinApi.scopeItems(exerciseId);
+          try {
+            await twinApi.sync(exerciseId, true, savedToken);
+            items = await twinApi.scopeItems(exerciseId);
+          } catch {
+            // Planning exercises require facilitator/TA/planner sign-in before triggering Sync now
+          }
         }
         if (cancelled) return;
         setScopeItems(items);
@@ -231,11 +235,15 @@ export default function App() {
 
   const handleSyncNow = async () => {
     setSyncing(true);
+    setBootError(null);
     try {
-      await twinApi.sync(exerciseId, true);
+      const activeEx = exercises.find((e) => e.id === exerciseId);
+      await twinApi.sync(exerciseId, true, token, activeEx?.epoch);
       const exList = await twinApi.exercises().catch(() => exercises);
       setExercises(exList);
       await refreshScopeData(budgetUsd, exerciseId);
+    } catch (err) {
+      setBootError(err instanceof Error ? err.message : String(err));
     } finally {
       setSyncing(false);
     }
@@ -355,7 +363,8 @@ export default function App() {
     requestId: string,
     payload: { action: "accept" | "reject" | "pick_another"; tag?: string; reason?: string }
   ) => {
-    await twinApi.decideReview(requestId, payload, token, exerciseId);
+    const activeEx = exercises.find((e) => e.id === exerciseId);
+    await twinApi.decideReview(requestId, payload, token, exerciseId, activeEx?.epoch);
     await refreshScopeData(budgetUsd, exerciseId);
   };
 
@@ -646,7 +655,7 @@ export default function App() {
           <DebriefView
             debrief={debrief}
             onRefresh={async () => {
-              await twinApi.sync(exerciseId, true);
+              await twinApi.sync(exerciseId, true, token);
               await refreshScopeData(budgetUsd, exerciseId);
             }}
           />
@@ -662,7 +671,7 @@ export default function App() {
           token={token}
           onQuickPlannerLogin={handleQuickPlannerLogin}
           onRaised={async () => {
-            await twinApi.sync(exerciseId, true);
+            await twinApi.sync(exerciseId, true, token);
             await refreshScopeData(budgetUsd, exerciseId);
           }}
           onClose={() => setRaiseModalTag(null)}

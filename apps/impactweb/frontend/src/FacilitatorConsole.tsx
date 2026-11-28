@@ -133,6 +133,7 @@ export const FacilitatorConsole: React.FC<FacilitatorConsoleProps> = ({
     try {
       const res = await apiFetch<{ clock_step: string }>(`/api/v1/exercises/${exercise.id}/clock`, token, {
         method: "POST",
+        headers: { "X-Exercise-Epoch": String(exercise.epoch) },
         body: JSON.stringify({ target_step: targetStep, reason: "Facilitator clock move" }),
       });
       await onRefreshWorkspace();
@@ -198,6 +199,7 @@ export const FacilitatorConsole: React.FC<FacilitatorConsoleProps> = ({
         token,
         {
           method: "POST",
+          headers: { "X-Exercise-Epoch": String(exercise.epoch) },
           body: JSON.stringify({ inject_id: injectId }),
         },
       );
@@ -219,6 +221,7 @@ export const FacilitatorConsole: React.FC<FacilitatorConsoleProps> = ({
     try {
       await apiFetch(`/api/v1/exercises/${exercise.id}/injects`, token, {
         method: "POST",
+        headers: { "X-Exercise-Epoch": String(exercise.epoch) },
         body: JSON.stringify({
           inject_id: customId,
           custom: true,

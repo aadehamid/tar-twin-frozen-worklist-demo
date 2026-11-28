@@ -97,7 +97,7 @@ def test_fixtures_load_exact_counts_and_briefing_packs(tmp_path: Path):
         packs = iw.get(f"/api/v1/exercises/{eid}/briefing-packs", headers=fac).json()
         assert len(packs["briefing_packs"]) == 6
 
-        sr = twin.post(f"/api/v1/sync?exercise_id={eid}")
+        sr = twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac)
         assert sr.status_code == 200
         assert sr.json()["synced_count"] == expected_count
         items = twin.get(f"/api/v1/scope-items?exercise_id={eid}").json()
@@ -266,7 +266,7 @@ def test_role_phase_permission_matrix_and_own_group_and_drb_recommendations(tmp_
     assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "t_minus_9"}, headers=fac).status_code == 200
 
     # Twin match review: allowed for planner/ta_manager, refused for facilitator/viewer
-    assert twin.post(f"/api/v1/sync?exercise_id={eid}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac).status_code == 200
     queue = twin.get(f"/api/v1/matching/review-queue?exercise_id={eid}").json()
     if queue:
         qid = queue[0]["request_id"]
@@ -300,8 +300,8 @@ def test_membership_changes_immediate_and_multi_exercise_isolation(tmp_path: Pat
     assert iw.get(f"/api/v1/work-requests/WR-200-0001?exercise_id={ex2}", headers=fac).json()["version"] == 1
 
     # Sync both into Twin and confirm complete isolation (scope items, Cypher export, cut line)
-    assert twin.post(f"/api/v1/sync?exercise_id={ex1}").status_code == 200
-    assert twin.post(f"/api/v1/sync?exercise_id={ex2}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={ex1}", headers=fac).status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={ex2}", headers=fac).status_code == 200
     assert twin.get(f"/api/v1/scope-items/WR-200-0001?exercise_id={ex1}").json()["version"] == 2
     assert twin.get(f"/api/v1/scope-items/WR-200-0001?exercise_id={ex2}").json()["version"] == 1
 
@@ -417,8 +417,8 @@ def test_reset_bumps_epoch_archives_log_refuses_stale_ops_and_isolates_others(tm
     assert iw.post(f"/api/v1/exercises/{ex1}/clock", json={"target_step": "challenge"}, headers=fac).status_code == 200
 
     assert twin.post("/api/v1/sync?exercise_id=EX-DEMO").status_code == 200
-    assert twin.post(f"/api/v1/sync?exercise_id={ex1}").status_code == 200
-    assert twin.post(f"/api/v1/sync?exercise_id={ex2}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={ex1}", headers=fac).status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={ex2}", headers=fac).status_code == 200
 
     # Reset ex1
     rst = iw.post(f"/api/v1/exercises/{ex1}/reset", headers=fac)
@@ -439,11 +439,11 @@ def test_reset_bumps_epoch_archives_log_refuses_stale_ops_and_isolates_others(tm
     assert stale_patch.status_code == 409
 
     # Stale Twin sync specifying old expected_epoch=1 is refused with 409
-    stale_sync = twin.post(f"/api/v1/sync?exercise_id={ex1}&expected_epoch=1")
+    stale_sync = twin.post(f"/api/v1/sync?exercise_id={ex1}&expected_epoch=1", headers=fac)
     assert stale_sync.status_code == 409
 
     # Fresh Twin sync picks up epoch=2 and wipes pre-reset state cleanly
-    ok_sync = twin.post(f"/api/v1/sync?exercise_id={ex1}")
+    ok_sync = twin.post(f"/api/v1/sync?exercise_id={ex1}", headers=fac)
     assert ok_sync.status_code == 200
     assert twin.get(f"/api/v1/scope-items/WR-200-0001?exercise_id={ex1}").json()["version"] == 1
 
@@ -466,7 +466,7 @@ def test_rules_only_default_in_planning_mode_and_debrief_numbers_and_cut_line_co
     assert ex_meta["allow_external_ai"] is False
 
     # Even with use_ai=true, planning mode with allow_external_ai=False runs strictly rules-only (zero AI calls)
-    sr0 = twin.post(f"/api/v1/sync?exercise_id={eid}&use_ai=true&live_ai=true")
+    sr0 = twin.post(f"/api/v1/sync?exercise_id={eid}&use_ai=true&live_ai=true", headers=fac)
     assert sr0.status_code == 200
     assert sr0.json()["ai_used"] is False
 
@@ -514,7 +514,7 @@ def test_rules_only_default_in_planning_mode_and_debrief_numbers_and_cut_line_co
 
     # Advance to DRB, save a cut-line option (verify IMPACT Web feed is NOT modified!), record DRB accepts
     assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "drb"}, headers=fac).status_code == 200
-    assert twin.post(f"/api/v1/sync?exercise_id={eid}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac).status_code == 200
 
     feed_before = iw.get(f"/api/v1/changes?exercise_id={eid}", headers=fac).json()
     cl_save = twin.post(
@@ -546,7 +546,7 @@ def test_rules_only_default_in_planning_mode_and_debrief_numbers_and_cut_line_co
     # Freeze below 95% match gate succeeds; Twin marks ready_for_use=False
     assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "freeze"}, headers=fac).status_code == 200
     assert iw.post("/api/v1/freezes", json={"exercise_id": eid, "event_id": "TAR-200-2028"}, headers=ta).status_code == 201
-    assert twin.post(f"/api/v1/sync?exercise_id={eid}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac).status_code == 200
     bl = twin.get(f"/api/v1/baseline?exercise_id={eid}").json()
     assert bl["frozen"] is True and bl["frozen_match_rate"] == 0.5 and bl["ready_for_use"] is False
 
@@ -582,7 +582,7 @@ def test_rules_only_default_in_planning_mode_and_debrief_numbers_and_cut_line_co
 
     # Close exercise and fetch debrief
     assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "closed"}, headers=fac).status_code == 200
-    assert twin.post(f"/api/v1/sync?exercise_id={eid}").status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac).status_code == 200
 
     debrief = twin.get(f"/api/v1/debrief?exercise_id={eid}").json()
     # First sample at blank candidate_list had 0 active items -> "n/a"
@@ -679,7 +679,7 @@ def test_hypothesis_debrief_growth_equals_sum_over_approved_events(tmp_path_fact
         else:
             exp_pend += 1
 
-    twin.post(f"/api/v1/sync?exercise_id={eid}")
+    twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fac)
     gr = twin.get(f"/api/v1/debrief?exercise_id={eid}").json()["growth_after_freeze"]
     assert gr["mandatory_growth_hours"] == exp_mand
     assert gr["discretionary_growth_hours"] == exp_disc
@@ -836,4 +836,104 @@ def test_codex_review_guardrails_per_exercise_facilitator_required_epoch_and_tag
             headers=pl_epoch1,
         ).status_code
         == 422
+    )
+
+
+def test_cursor_review_guardrails_clock_inject_sync_cutline_and_match_review_epoch(tmp_path: Path):
+    """Prove all 4 PR #28 Cursor review guardrails:
+    1. advance_clock and apply_inject reject missing or stale X-Exercise-Epoch (409).
+    2. post_cut_line save enforces live IMPACT Web role/phase BEFORE first sync AND after IMPACT Web leaves DRB.
+    3. trigger_sync in planning mode refuses unauthenticated, source_group, drb_member, and viewer callers.
+    4. matching_review_decide rejects missing or stale pre-reset X-Exercise-Epoch even after resync.
+    """
+    iw, twin = _make_stack(tmp_path)
+    fac_no_epoch = _login(iw, "facilitator@demo.local", epoch=None)
+    fac_e1 = _login(iw, "facilitator@demo.local", epoch=1)
+    pl_no_epoch = _login(iw, "j.planner@demo.local", epoch=None)
+    pl_e1 = _login(iw, "j.planner@demo.local", epoch=1)
+    fixed_e1 = _login(iw, "fixed.lead@demo.local", epoch=1)
+    drb_e1 = _login(iw, "drb.member@demo.local", epoch=1)
+    viewer_e1 = _login(iw, "viewer@demo.local", epoch=1)
+
+    eid = _create_planning_ex(iw, fac_e1, name="Cursor PR28 Guardrails", starting_fixture="partial", ex_id="EX-CUR-28")
+
+    # 2a. BEFORE first sync (empty twin cache), cut-line save MUST still enforce planning role!
+    assert (
+        twin.post(
+            "/api/v1/cut-line/evaluate",
+            json={"exercise_id": eid, "budget_usd": 20_000_000, "save_name": "Unauth Pre-Sync"},
+        ).status_code
+        == 401
+    )
+    assert (
+        twin.post(
+            "/api/v1/cut-line/evaluate",
+            json={"exercise_id": eid, "budget_usd": 20_000_000, "save_name": "Viewer Pre-Sync"},
+            headers=viewer_e1,
+        ).status_code
+        == 403
+    )
+
+    # 3. trigger_sync in planning mode refuses unauthenticated, source_group, drb_member, viewer; allows planner/ta/fac/sync_token
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}").status_code == 401
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=fixed_e1).status_code == 403
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=drb_e1).status_code == 403
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=viewer_e1).status_code == 403
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=pl_e1).status_code == 200
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers={"Authorization": "Bearer sync-p8"}).status_code == 200
+
+    # 1a. advance_clock and apply_inject reject missing X-Exercise-Epoch in planning mode
+    assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "fit_to_frame"}, headers=fac_no_epoch).status_code == 409
+    assert iw.post(f"/api/v1/exercises/{eid}/injects", json={"inject_id": "INJ-RETIRED-TAG"}, headers=fac_no_epoch).status_code == 409
+
+    # 2b. Advance IMPACT Web to freeze WITHOUT syncing Twin -> cut-line save MUST still see live phase 'freeze' and refuse (409)!
+    assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "freeze"}, headers=fac_e1).status_code == 200
+    assert (
+        twin.post(
+            "/api/v1/cut-line/evaluate",
+            json={"exercise_id": eid, "budget_usd": 20_000_000, "save_name": "Post-DRB Save"},
+            headers=pl_e1,
+        ).status_code
+        == 409
+    )
+
+    # 4a. Match review requires X-Exercise-Epoch in planning mode
+    queue = twin.get(f"/api/v1/matching/review-queue?exercise_id={eid}").json()
+    assert len(queue) > 0
+    target_req = queue[0]["request_id"]
+    assert (
+        twin.post(
+            f"/api/v1/matching/review/{target_req}?exercise_id={eid}",
+            json={"action": "reject", "reason": "Missing epoch"},
+            headers=pl_no_epoch,
+        ).status_code
+        == 409
+    )
+
+    # Reset exercise -> epoch bumps 1 -> 2
+    assert iw.post(f"/api/v1/exercises/{eid}/reset", headers=fac_e1).status_code == 200
+
+    # 1b. Stale epoch=1 clock advance & inject are refused with 409 after reset!
+    assert iw.post(f"/api/v1/exercises/{eid}/clock", json={"target_step": "fit_to_frame"}, headers=fac_e1).status_code == 409
+    assert iw.post(f"/api/v1/exercises/{eid}/injects", json={"inject_id": "INJ-RETIRED-TAG"}, headers=fac_e1).status_code == 409
+
+    # 4b. Even AFTER Twin resyncs the restored request IDs at epoch 2, a match review carrying stale epoch=1 is refused (409)!
+    assert twin.post(f"/api/v1/sync?exercise_id={eid}", headers=pl_e1).status_code == 200
+    assert (
+        twin.post(
+            f"/api/v1/matching/review/{target_req}?exercise_id={eid}",
+            json={"action": "reject", "reason": "Stale pre-reset decision"},
+            headers=pl_e1,
+        ).status_code
+        == 409
+    )
+    # With current epoch=2, match review succeeds
+    pl_e2 = _login(iw, "j.planner@demo.local", epoch=2)
+    assert (
+        twin.post(
+            f"/api/v1/matching/review/{target_req}?exercise_id={eid}",
+            json={"action": "reject", "reason": "Current epoch decision"},
+            headers=pl_e2,
+        ).status_code
+        == 200
     )

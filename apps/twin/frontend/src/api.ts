@@ -34,9 +34,9 @@ function apiUrl(path: string): string {
 
 export async function apiFetch<T>(
   path: string,
-  options: { method?: string; body?: unknown; token?: string | null } = {}
+  options: { method?: string; body?: unknown; token?: string | null; extraHeaders?: Record<string, string> } = {}
 ): Promise<T> {
-  const headers: Record<string, string> = {};
+  const headers: Record<string, string> = { ...(options.extraHeaders ?? {}) };
   if (options.body !== undefined) {
     headers["Content-Type"] = "application/json";
   }
@@ -84,11 +84,13 @@ export const twinApi = {
   envelopes: () => apiFetch<IsolationEnvelope[]>("/api/v1/plant/envelopes"),
 
   exercises: () => apiFetch<ExerciseSummary[]>("/api/v1/exercises"),
-  sync: (exerciseId = "EX-DEMO", useAi = true) =>
-    apiFetch<Record<string, unknown>>(
-      `/api/v1/sync?exercise_id=${encodeURIComponent(exerciseId)}&use_ai=${useAi ? "true" : "false"}`,
-      { method: "POST" }
-    ),
+  sync: (exerciseId = "EX-DEMO", useAi = true, token?: string | null, expectedEpoch?: number) => {
+    const epochParam = expectedEpoch !== undefined ? `&expected_epoch=${encodeURIComponent(String(expectedEpoch))}` : "";
+    return apiFetch<Record<string, unknown>>(
+      `/api/v1/sync?exercise_id=${encodeURIComponent(exerciseId)}&use_ai=${useAi ? "true" : "false"}${epochParam}`,
+      { method: "POST", token }
+    );
+  },
   scopeItems: (exerciseId = "EX-DEMO") =>
     apiFetch<ScopeItem[]>(`/api/v1/scope-items?exercise_id=${encodeURIComponent(exerciseId)}`),
   matchingSummary: (exerciseId = "EX-DEMO") =>
@@ -99,11 +101,17 @@ export const twinApi = {
     requestId: string,
     payload: { action: "accept" | "reject" | "pick_another"; tag?: string; reason?: string },
     token: string | null,
-    exerciseId = "EX-DEMO"
+    exerciseId = "EX-DEMO",
+    epoch?: number
   ) =>
     apiFetch<ScopeItem>(
       `/api/v1/matching/review/${encodeURIComponent(requestId)}?exercise_id=${encodeURIComponent(exerciseId)}`,
-      { method: "POST", body: payload, token }
+      {
+        method: "POST",
+        body: payload,
+        token,
+        extraHeaders: epoch !== undefined ? { "X-Exercise-Epoch": String(epoch) } : undefined,
+      }
     ),
 
   labStep: (requestId: string, exerciseId = "EX-DEMO") =>
