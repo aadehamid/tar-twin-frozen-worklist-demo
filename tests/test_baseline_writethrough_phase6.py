@@ -113,6 +113,93 @@ def test_baseline_readiness_gate_independent_of_freeze_and_reserved_slots(tmp_pa
     assert b2["frozen_match_rate"] >= 0.95
     assert b2["ready_for_use"] is True
 
+    # Post-freeze change CR moving WR-200-0001 to v2 with unmatchable equipment text MUST NOT alter frozen_match_rate!
+    r_cr = iw.post(
+        "/api/v1/change-requests",
+        json={
+            "exercise_id": "EX-DEMO",
+            "request_id": "WR-200-0001",
+            "change_type": "change",
+            "mandatory": False,
+            "hours_delta": 10,
+            "cost_delta_usd": 2350,
+            "title": "Post-freeze text edit on WR-200-0001",
+            "equipment_text": "unknown post freeze mystery asset",
+            "reason": "Verify frozen version match snapshot stays pinned",
+        },
+        headers=planner_hdr,
+    )
+    assert r_cr.status_code == 201
+    assert (
+        iw.post(
+            f"/api/v1/change-requests/{r_cr.json()['id']}/decide?exercise_id=EX-DEMO",
+            json={"decision": "approved", "reason": "Approve v2 edit"},
+            headers=ta_hdr,
+        ).status_code
+        == 200
+    )
+    assert twin.post("/api/v1/sync?exercise_id=EX-DEMO").status_code == 200
+    b3 = twin.get("/api/v1/baseline?exercise_id=EX-DEMO").json()
+    assert b3["frozen_match_rate"] == b2["frozen_match_rate"]
+    assert b3["ready_for_use"] is True
+
+
+def test_late_scope_simulation_fails_closed_on_missing_delete_target_and_resumes_pending(tmp_path: Path):
+    from simulate_late_scope import _find_delete_target, run_late_scope_simulation
+
+    # 1. Fail-closed delete target lookup never deletes unrelated equipment
+    unrelated = [{"id": "WR-200-0001", "status": "candidate", "equipment_text": "E-201A", "title": "E-201A", "estimate_hours": 500}]
+    assert (
+        _find_delete_target(
+            unrelated,
+            equipment_tag="FL-201B",
+            abs_hours=180,
+            used_ids=set(),
+            true_tag_by_request={"WR-200-0001": "E-201A"},
+        )
+        is None
+    )
+
+    # 2. Resumes a pending scripted CR left from an interrupted run instead of skipping it
+    iw, twin = _make_pair(tmp_path)
+    ta_hdr = _login(iw, "ta.manager@demo.local")
+    pl_hdr = _login(iw, "j.planner@demo.local")
+    _accept_all_and_freeze(iw, ta_hdr, count=200)
+    assert twin.post("/api/v1/sync?exercise_id=EX-DEMO").status_code == 200
+
+    # Pre-create CR-200-001 as pending (simulating crash before decision)
+    late_first = json.loads((REPO_ROOT / "data" / "scenario" / "late-scope.json").read_text(encoding="utf-8"))["scripted_changes"][0]
+    r_pre = iw.post(
+        "/api/v1/change-requests",
+        json={
+            "exercise_id": "EX-DEMO",
+            "request_id": None,
+            "change_type": "add",
+            "mandatory": True,
+            "hours_delta": late_first["hours_delta"],
+            "cost_delta_usd": late_first["cost_delta_usd"],
+            "title": late_first["title"],
+            "equipment_text": late_first["equipment_tag"],
+            "source_group": late_first["source_group"],
+            "area": "200-C",
+            "evidence": f"[SIM:{late_first['change_id']}] Scripted checkpoint T-9.",
+            "reason": late_first["reason"],
+        },
+        headers=pl_hdr,
+    )
+    assert r_pre.status_code == 201
+
+    res = run_late_scope_simulation(
+        impactweb_client=iw,
+        twin_client=twin,
+        scenario_dir=REPO_ROOT / "data" / "scenario",
+        exercise_id="EX-DEMO",
+    )
+    assert res["resumed_pending"] == 1
+    assert res["adds_approved"] == 18
+    assert res["deletes_approved"] == 6
+    assert res["rejected"] == 5
+
 
 def test_late_scope_simulation_and_kpis_and_unvalidated_value_panel(tmp_path: Path):
     from simulate_late_scope import run_late_scope_simulation

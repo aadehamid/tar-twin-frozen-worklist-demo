@@ -27,6 +27,7 @@ class ExerciseSyncState:
         self.baseline_frozen_at: str | None = None
         self.baseline_list_version: int = 0
         self.baseline_items: list[dict[str, Any]] = []
+        self.match_by_version: dict[str, dict[str, Any]] = {}  # f"{request_id}@v{version}" -> match snapshot
         self.change_events: dict[str, dict[str, Any]] = {}  # keyed by change_request_id (unique!)
         self.all_change_requests: list[dict[str, Any]] = []
         self.saved_cut_line_runs: list[dict[str, Any]] = []
@@ -115,6 +116,7 @@ class SyncEngine:
             "baseline_frozen_at": state.baseline_frozen_at,
             "baseline_list_version": state.baseline_list_version,
             "baseline_items": state.baseline_items,
+            "match_by_version": state.match_by_version,
             "change_events": state.change_events,
             "all_change_requests": state.all_change_requests,
             "saved_cut_line_runs": state.saved_cut_line_runs,
@@ -132,6 +134,7 @@ class SyncEngine:
         st.baseline_frozen_at = snap.get("baseline_frozen_at")
         st.baseline_list_version = int(snap.get("baseline_list_version", 0))
         st.baseline_items = list(snap.get("baseline_items", []))
+        st.match_by_version = dict(snap.get("match_by_version", {}))
         st.change_events = dict(snap.get("change_events", {}))
         st.all_change_requests = list(snap.get("all_change_requests", []))
         st.saved_cut_line_runs = list(snap.get("saved_cut_line_runs", []))
@@ -330,6 +333,39 @@ class SyncEngine:
                 if manual and manual["equipment_text"] == wr["equipment_text"]:
                     self._apply_manual_decision_to_item(item, manual)
                 new_scope[rid] = item
+                state.match_by_version[f"{rid}@v{item['version']}"] = self._match_snapshot(item)
+
+            for rid, item in new_scope.items():
+                vkey = f"{rid}@v{item['version']}"
+                if vkey not in state.match_by_version:
+                    state.match_by_version[vkey] = self._match_snapshot(item)
+
+            # Ensure every frozen item version has a pinned match snapshot (even if already past frozen version)
+            if state.baseline_items:
+                for bi in state.baseline_items:
+                    brid = bi["request_id"]
+                    bver = int(bi.get("request_version", 1))
+                    bkey = f"{brid}@v{bver}"
+                    if bkey not in state.match_by_version:
+                        frozen_match = pipeline.match_work_request(
+                            {
+                                "id": brid,
+                                "title": bi.get("title", ""),
+                                "description": bi.get("description", ""),
+                                "equipment_text": bi.get("equipment_text", ""),
+                                "area": bi.get("area", ""),
+                                "work_type_label": bi.get("work_type_label", "GeneralCleanup"),
+                                "updated_at": "",
+                            },
+                            use_ai=use_ai,
+                            live_ai=live_ai,
+                        )
+                        state.match_by_version[bkey] = {
+                            "match_status": frozen_match["match_status"],
+                            "resolved_tag": frozen_match["resolved_tag"],
+                            "work_type_label": bi.get("work_type_label", "GeneralCleanup"),
+                            "findings": (frozen_match.get("mapping_trace") or {}).get("findings") or [],
+                        }
 
             state.scope_items = new_scope
             state.all_change_requests = crs
@@ -442,8 +478,17 @@ class SyncEngine:
             }
             state.manual_reviews[request_id] = manual
             self._apply_manual_decision_to_item(item, manual)
+            state.match_by_version[f"{request_id}@v{item['version']}"] = self._match_snapshot(item)
             self._push_scope_to_graph_store(state)
             return copy.deepcopy(item)
+
+    def _match_snapshot(self, item: dict[str, Any]) -> dict[str, Any]:
+        return {
+            "match_status": item.get("match_status"),
+            "resolved_tag": item.get("resolved_tag"),
+            "work_type_label": item.get("work_type_label", "GeneralCleanup"),
+            "findings": copy.deepcopy((item.get("mapping_trace") or {}).get("findings") or []),
+        }
 
     def list_scope_items(self, exercise_id: str) -> list[dict[str, Any]]:
         state = self._get_state(exercise_id)
@@ -558,16 +603,16 @@ class SyncEngine:
             state.saved_cut_line_runs.append(run_rec)
         return result
 
-    def _classify_frozen_outcome(self, scope_item: dict[str, Any] | None) -> str:
+    def _classify_frozen_outcome(self, match_snap: dict[str, Any] | None) -> str:
         """One of four frozen outcomes (docs/verification.md section 2): matched, unresolved, unit_general, incompatible."""
-        if scope_item is None:
+        if match_snap is None:
             return "unresolved"
-        if scope_item.get("match_status") == "accepted" and scope_item.get("resolved_tag"):
+        if match_snap.get("match_status") == "accepted" and match_snap.get("resolved_tag"):
             return "matched"
-        findings = (scope_item.get("mapping_trace") or {}).get("findings") or []
+        findings = match_snap.get("findings") or ((match_snap.get("mapping_trace") or {}).get("findings") or [])
         if any(f.get("kind") in {"incompatible_class", "wrong_unit", "retired_tag"} for f in findings):
             return "incompatible"
-        if scope_item.get("work_type_label") == "GeneralCleanup":
+        if match_snap.get("work_type_label") == "GeneralCleanup":
             return "unit_general"
         return "unresolved"
 
@@ -581,21 +626,24 @@ class SyncEngine:
         enriched_items: list[dict[str, Any]] = []
         for bi in baseline_items:
             rid = bi["request_id"]
-            si = state.scope_items.get(rid)
-            outcome = self._classify_frozen_outcome(si)
+            bver = int(bi.get("request_version", 1))
+            # Always evaluate readiness strictly against the frozen request_version snapshot,
+            # never against a later post-freeze version of the request.
+            snap = state.match_by_version.get(f"{rid}@v{bver}")
+            outcome = self._classify_frozen_outcome(snap)
             outcome_counts[outcome] += 1
             if outcome == "matched":
                 matched += 1
             enriched_items.append(
                 {
                     "request_id": rid,
-                    "request_version": bi.get("request_version", 1),
+                    "request_version": bver,
                     "title": bi.get("title", ""),
                     "area": bi.get("area", ""),
                     "source_group": bi.get("source_group", ""),
                     "estimate_hours": int(bi.get("estimate_hours", 0)),
                     "estimate_cost_usd": int(bi.get("estimate_cost_usd", 0)),
-                    "resolved_tag": si.get("resolved_tag") if si else None,
+                    "resolved_tag": snap.get("resolved_tag") if snap else None,
                     "outcome": outcome,
                 }
             )
