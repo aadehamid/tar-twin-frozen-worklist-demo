@@ -16,7 +16,7 @@ python3 "$REPO_ROOT/scripts/tree_guard.py" --repo "$REPO_ROOT" -- bash -euo pipe
   python3 "$repo/scripts/twin_graph.py" --repo "$repo" check
 
   echo "==> Running repository pytest suite"
-  uv run --no-project --with pydexpi==2.1.0 --with lxml --with pydantic --with pyshacl --with rdflib --with fastapi --with sqlmodel --with httpx --with pytest python -m pytest -p no:cacheprovider -q "$repo/tests" --ignore="$repo/tests/e2e"
+  uv run --no-project --with pydexpi==2.1.0 --with lxml --with pydantic --with pyshacl --with rdflib --with fastapi --with sqlmodel --with httpx --with rapidfuzz --with hypothesis --with pytest python -m pytest -p no:cacheprovider -q "$repo/tests" --ignore="$repo/tests/e2e"
 ' _ "$REPO_ROOT"
 
 echo "All checks passed."
