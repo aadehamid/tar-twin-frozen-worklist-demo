@@ -216,11 +216,34 @@ def test_paired_watermark_maintenance_export_import_and_mismatch_rejection(tmp_p
     )
     assert broken_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
 
-    # Multi-exercise partial mismatch MUST NOT mutate earlier exercises (all-or-nothing atomic restore)
+    # Multi-exercise partial mismatch at the Twin cursor layer MUST NOT mutate earlier exercises
+    # (both exercises match IMPACT Web watermarks so the check reaches Phase 1 inside the locks)
+    from sqlmodel import Session
+    from impactweb.models import ChangeFeedEntry, Exercise
+
+    with Session(iw_app.state.engine) as s:
+        s.add(Exercise(id="EX-Z-LATER", name="Later Exercise", mode="planning", starting_fixture="blank"))
+        feed_row = ChangeFeedEntry(
+            exercise_id="EX-Z-LATER",
+            entity_type="exercise",
+            entity_id="EX-Z-LATER",
+            action="created",
+            payload_json="{}",
+            epoch=1,
+        )
+        s.add(feed_row)
+        s.commit()
+        s.refresh(feed_row)
+        z_seq = int(feed_row.seq or 1)
+
     partial_bad = json.loads(json.dumps(bundle))
-    partial_bad["cutoffs"]["EX-Z-LATER"] = 99
-    partial_bad["exercises"]["EX-Z-LATER"] = {"cursor_seq": 99, "manual_reviews": {}, "saved_cut_line_runs": []}
-    assert fresh_twin.post("/api/v1/backup/import", json=partial_bad, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
+    partial_bad["cutoffs"]["EX-Z-LATER"] = z_seq
+    partial_bad["exercises"]["EX-Z-LATER"] = {"cursor_seq": z_seq, "manual_reviews": {}, "saved_cut_line_runs": []}
+    r_partial = fresh_twin.post("/api/v1/backup/import", json=partial_bad, headers={"Authorization": "Bearer sync-p7"})
+    assert r_partial.status_code == 409
+    assert "twin cursor" in r_partial.json()["detail"].lower(), (
+        f"Expected twin-cursor phase-1 rejection, got: {r_partial.json()}"
+    )
     still_unreviewed = fresh_twin.get(f"/api/v1/scope-items/{target_req}?exercise_id=EX-DEMO").json()
     assert still_unreviewed["match_status"] != "accepted", "Earlier exercise must not be mutated when a later exercise mismatches"
 
