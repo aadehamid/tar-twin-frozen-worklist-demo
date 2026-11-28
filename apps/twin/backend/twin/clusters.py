@@ -136,23 +136,16 @@ def evaluate_cut_line(
         for rid in cl["request_ids"]:
             clusters_of_req[rid].append(cl["id"])
 
-    # Compute direct cost per request (backing out per-job unclustered share when shared cluster cost applies,
-    # keeping direct >= 65% of estimate so clustered cost <= unclustered sum cleanly).
-    unclustered_cost: dict[str, int] = {}
-    direct_cost: dict[str, int] = {}
-    for it in active:
-        rid = it["request_id"]
-        est = int(it["estimate_cost_usd"])
-        unclustered_cost[rid] = est
-        cids = clusters_of_req.get(rid, [])
-        if cids:
-            share_deduct = sum(
-                cluster_cost[cid] // max(2, len(next(c["request_ids"] for c in all_clusters if c["id"] == cid)))
-                for cid in cids
-            )
-            direct_cost[rid] = max(round(est * 0.65), est - share_deduct)
-        else:
-            direct_cost[rid] = est
+    # Exact Bend shared-cost rule (spikes/bend-cost/cost.py):
+    # Each job carries its own direct execution cost (estimate_cost_usd).
+    # Unclustered cost adds each cluster's shared setup cost to every job in that cluster;
+    # clustered cost counts each active cluster's shared setup cost once.
+    direct_cost: dict[str, int] = {it["request_id"]: int(it["estimate_cost_usd"]) for it in active}
+    unclustered_cost: dict[str, int] = {
+        it["request_id"]: direct_cost[it["request_id"]]
+        + sum(cluster_cost[cid] for cid in clusters_of_req.get(it["request_id"], []))
+        for it in active
+    }
 
     def _rank_key(it: dict[str, Any]) -> tuple[int, int, float, str]:
         rid = it["request_id"]
@@ -212,19 +205,9 @@ def evaluate_cut_line(
             below_ids.append(it["request_id"])
             below_hours += int(it["estimate_hours"])
 
-    below_cost = sum(unclustered_cost[rid] for rid in below_ids)
-    # Count how many above-the-line jobs share each paid cluster; each additional bundled job avoids
-    # re-erecting/re-blinding its standalone setup share (~20% of the full shared cluster cost).
-    cluster_above_counts: dict[str, int] = defaultdict(int)
-    for rid in above_ids:
-        for cid in clusters_of_req.get(rid, []):
-            cluster_above_counts[cid] += 1
-    shared_saved = sum(
-        max(0, count - 1) * round(cluster_cost[cid] * 0.20)
-        for cid, count in cluster_above_counts.items()
-        if cid in paid_clusters
-    )
-    above_unclustered_effective = running_cost + shared_saved
+    below_cost = sum(direct_cost[rid] for rid in below_ids)
+    shared_saved = above_unclustered - running_cost
+    assert shared_saved >= 0
 
     return {
         "budget_usd": int(budget_usd),
@@ -234,7 +217,7 @@ def evaluate_cut_line(
         "above_count": len(above_ids),
         "below_count": len(below_ids),
         "above_cost_usd": int(running_cost),
-        "above_unclustered_cost_usd": int(above_unclustered_effective),
+        "above_unclustered_cost_usd": int(above_unclustered),
         "shared_cost_saved_usd": int(shared_saved),
         "below_cost_usd": int(below_cost),
         "above_hours": int(above_hours),
