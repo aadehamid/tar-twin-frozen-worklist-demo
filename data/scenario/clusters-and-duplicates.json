@@ -9,7 +9,7 @@
         "WR-200-0035"
       ],
       "equipment_tag": "A-201",
-      "reason": "Overlapping turnaround scope on A-201 submitted by fixed_equipment and inspection."
+      "reason": "Duplicate air cooler scope on A-201 submitted by fixed_equipment and inspection."
     },
     {
       "id": "DUP-02",
@@ -18,70 +18,70 @@
         "WR-200-0054"
       ],
       "equipment_tag": "C-201",
-      "reason": "Overlapping turnaround scope on C-201 submitted by fixed_equipment and inspection."
+      "reason": "Duplicate columns and vessels scope on C-201 submitted by fixed_equipment and inspection."
     },
     {
       "id": "DUP-03",
-      "request_ids": [
-        "WR-200-0055",
-        "WR-200-0197"
-      ],
-      "equipment_tag": "C-201",
-      "reason": "Overlapping turnaround scope on C-201 submitted by fixed_equipment and projects."
-    },
-    {
-      "id": "DUP-04",
       "request_ids": [
         "WR-200-0056",
         "WR-200-0057"
       ],
       "equipment_tag": "C-202",
-      "reason": "Overlapping turnaround scope on C-202 submitted by fixed_equipment and inspection."
+      "reason": "Duplicate columns and vessels scope on C-202 submitted by fixed_equipment and inspection."
     },
     {
-      "id": "DUP-05",
+      "id": "DUP-04",
       "request_ids": [
         "WR-200-0058",
         "WR-200-0059"
       ],
       "equipment_tag": "D-202",
-      "reason": "Overlapping turnaround scope on D-202 submitted by fixed_equipment and inspection."
+      "reason": "Duplicate columns and vessels scope on D-202 submitted by fixed_equipment and inspection."
     },
     {
-      "id": "DUP-06",
-      "request_ids": [
-        "WR-200-0072",
-        "WR-200-0198"
-      ],
-      "equipment_tag": "D-202",
-      "reason": "Overlapping turnaround scope on D-202 submitted by fixed_equipment and projects."
-    },
-    {
-      "id": "DUP-07",
-      "request_ids": [
-        "WR-200-0014",
-        "WR-200-0195"
-      ],
-      "equipment_tag": "E-201A",
-      "reason": "Overlapping turnaround scope on E-201A submitted by fixed_equipment and projects."
-    },
-    {
-      "id": "DUP-08",
+      "id": "DUP-05",
       "request_ids": [
         "WR-200-0015",
         "WR-200-0021"
       ],
       "equipment_tag": "E-201B",
-      "reason": "Overlapping turnaround scope on E-201B submitted by inspection and fixed_equipment."
+      "reason": "Duplicate exchanger bundle work scope on E-201B submitted by inspection and fixed_equipment."
     },
     {
-      "id": "DUP-09",
+      "id": "DUP-06",
       "request_ids": [
         "WR-200-0018",
         "WR-200-0027"
       ],
       "equipment_tag": "E-202",
-      "reason": "Overlapping turnaround scope on E-202 submitted by inspection and fixed_equipment."
+      "reason": "Duplicate exchanger bundle work scope on E-202 submitted by inspection and fixed_equipment."
+    },
+    {
+      "id": "DUP-07",
+      "request_ids": [
+        "WR-200-0019",
+        "WR-200-0028"
+      ],
+      "equipment_tag": "E-203",
+      "reason": "Duplicate exchanger bundle work scope on E-203 submitted by inspection and fixed_equipment."
+    },
+    {
+      "id": "DUP-08",
+      "request_ids": [
+        "WR-200-0016",
+        "WR-200-0020"
+      ],
+      "equipment_tag": "E-204",
+      "reason": "Duplicate exchanger bundle work scope on E-204 submitted by operations and fixed_equipment."
+    },
+    {
+      "id": "DUP-09",
+      "request_ids": [
+        "WR-200-0042",
+        "WR-200-0043"
+      ],
+      "equipment_tag": "H-201",
+      "reason": "Duplicate heater scope on H-201 submitted by fixed_equipment and operations."
     }
   ],
   "scaffold_clusters": [

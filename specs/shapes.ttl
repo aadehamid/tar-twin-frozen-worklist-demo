@@ -39,7 +39,34 @@ neo4j:EquipmentShape a sh:NodeShape ;
   ] ;
   sh:property [
     sh:path neo4j:HAS_NOZZLE ;
+    sh:minCount 2 ;
     sh:class neo4j:Nozzle ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Shell-and-tube exchangers carry at least 4 nozzles (tube in/out + shell in/out).
+neo4j:ExchangerNozzleShape a sh:NodeShape ;
+  sh:targetClass neo4j:Exchanger ;
+  sh:property [
+    sh:path neo4j:HAS_NOZZLE ;
+    sh:minCount 4 ;
+    sh:class neo4j:Nozzle ;
+    sh:nodeKind sh:IRI ;
+  ] .
+
+# Pumps and compressors carry suction and discharge block valves.
+neo4j:RotatingBlockValveShape a sh:NodeShape ;
+  sh:targetClass neo4j:PumpingOrCompression ;
+  sh:property [
+    sh:path neo4j:SUCTION_VALVE ;
+    sh:minCount 1 ;
+    sh:class neo4j:BlockValve ;
+    sh:nodeKind sh:IRI ;
+  ] ;
+  sh:property [
+    sh:path neo4j:DISCHARGE_VALVE ;
+    sh:minCount 1 ;
+    sh:class neo4j:BlockValve ;
     sh:nodeKind sh:IRI ;
   ] .
 
@@ -128,6 +155,18 @@ neo4j:ScopeItemShape a sh:NodeShape ;
     sh:maxCount 1 ;
     sh:minInclusive 1 ;
     sh:maxInclusive 25 ;
+  ] ;
+  sh:property [
+    sh:path neo4j:estimate_hours ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:minInclusive 1 ;
+  ] ;
+  sh:property [
+    sh:path neo4j:estimate_cost_usd ;
+    sh:minCount 1 ;
+    sh:maxCount 1 ;
+    sh:minInclusive 1 ;
   ] ;
   sh:property [
     sh:path neo4j:RESOLVES_TO ;

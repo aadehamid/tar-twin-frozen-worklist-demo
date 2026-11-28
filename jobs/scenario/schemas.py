@@ -15,6 +15,7 @@ class FeedBasis(BaseModel):
     sg_60_60: float = Field(gt=0.5, lt=1.2)
     rho_ref_kg_m3: float = Field(gt=500, lt=1200)
     mass_rate_t_day: float = Field(gt=0)
+    mass_rate_kg_s: float = Field(gt=0)
     sr_wt_fraction: float = Field(ge=0.0, le=1.0)
     lco_wt_fraction: float = Field(ge=0.0, le=0.20)
     sulfur_wt_fraction: float = Field(gt=0.0, lt=0.05)
@@ -27,6 +28,8 @@ class HydrogenBasis(BaseModel):
     purge_and_dissolved_h2_t_day: float = Field(gt=0)
     makeup_h2_t_day: float = Field(gt=0)
     recycle_gas_h2_mol_fraction: float = Field(gt=0.5, lt=1.0)
+    recycle_to_feed_kg_s: float = Field(gt=0)
+    recycle_to_quench_kg_s: float = Field(gt=0)
 
 
 class UlsdProduct(BaseModel):

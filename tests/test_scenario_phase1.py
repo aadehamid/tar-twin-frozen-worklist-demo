@@ -187,6 +187,26 @@ class TestProcessPhysics:
         s_h2s = products["sour_offgas"]["h2s_t_day"] * (MW_S / MW_H2S)
         assert abs(s_in - (s_ulsd + s_h2s)) <= 1e-4 * s_in
 
+        # Recycle-gas loop mass closure across K-201, E-201A/B/C, and R-202 quench
+        comp = basis["recycle_compressor"]
+        ex_a = basis["feed_effluent_exchangers"][0]
+        rx = basis["reactors"]
+        assert math.isclose(
+            comp["mass_flow_kg_s"],
+            h2["recycle_to_feed_kg_s"] + h2["recycle_to_quench_kg_s"],
+            rel_tol=1e-5,
+        )
+        assert math.isclose(
+            ex_a["tube_mass_kg_s"],
+            feed["mass_rate_kg_s"] + h2["recycle_to_feed_kg_s"],
+            rel_tol=1e-5,
+        )
+        assert math.isclose(
+            ex_a["shell_mass_kg_s"],
+            ex_a["tube_mass_kg_s"] + rx["quench_mass_kg_s"],
+            rel_tol=1e-5,
+        )
+
         # ASTM D975 S15 ULSD specs
         ulsd = products["ulsd"]
         assert ulsd["sulfur_ppmw"] <= 15.0
@@ -416,7 +436,10 @@ class TestWorkListAndPlantedProblems:
 
         assert cat_counts == EXPECTED_CATEGORY_COUNTS
         assert 115_000 <= total_hours <= 125_000, total_hours
-        assert 26_500_000 <= total_cost <= 29_500_000, total_cost
+        # Candidate list is about 27% over the $22M DRB target (~$27.94M, ~21% reduction needed)
+        assert 27_400_000 <= total_cost <= 28_200_000, total_cost
+        for req in requests:
+            assert "T-010" not in req["title"]
 
     def test_answer_key_difficulty_classes_and_match_targets(self):
         ak = _load_json("answer-key.json")
@@ -467,6 +490,11 @@ class TestWorkListAndPlantedProblems:
             a, b = pair["request_ids"]
             assert a != b and a in req_by_id and b in req_by_id
             assert req_by_id[a]["source_group"] != req_by_id[b]["source_group"]
+            assert req_by_id[a]["category"] == req_by_id[b]["category"], (pair["id"], a, b)
+            assert req_by_id[a]["work_type_label"] == req_by_id[b]["work_type_label"], (pair["id"], a, b)
+            assert req_by_id[a]["category"] != "Capital tie-in", pair["id"]
+            if truth_by_id[a] == "A-201":
+                assert "BAY 1" in req_by_id[a]["title"] and "BAY 1" in req_by_id[b]["title"], pair["id"]
             assert truth_by_id[a] == truth_by_id[b] and truth_by_id[a] != "none"
 
         assert len(cd["scaffold_clusters"]) == 7
@@ -642,3 +670,49 @@ class TestShaclValidation:
             inference="none",
         )
         assert not c4
+
+        # Mutant 5: Shell-and-tube exchanger missing a nozzle (fails minCount 4)
+        m5 = json.loads(json.dumps(clean_graph))
+        ex_key = "eq:E-202"
+        ex_nozzle_rels = [r for r in m5["rels"] if r["type"] == "HAS_NOZZLE" and r["from"] == ex_key]
+        assert len(ex_nozzle_rels) == 4
+        m5["rels"].remove(ex_nozzle_rels[0])
+        c5, _, _ = pyshacl.validate(
+            rdflib.Graph().parse(data=graph_to_turtle(m5), format="turtle"),
+            shacl_graph=shapes_g,
+            inference="none",
+        )
+        assert not c5
+
+        # Mutant 6: Pump missing discharge block valve (fails SUCTION_VALVE/DISCHARGE_VALVE shape)
+        m6 = json.loads(json.dumps(clean_graph))
+        m6["rels"] = [r for r in m6["rels"] if not (r["type"] == "DISCHARGE_VALVE" and r["from"] == "eq:P-201A")]
+        c6, _, _ = pyshacl.validate(
+            rdflib.Graph().parse(data=graph_to_turtle(m6), format="turtle"),
+            shacl_graph=shapes_g,
+            inference="none",
+        )
+        assert not c6
+
+    def test_topology_engineering_rules_and_closure_mutants(self):
+        sys.path.insert(0, str(REPO_ROOT / "jobs"))
+        from scenario.shacl_export import build_scenario_graph, verify_engineering_rules
+
+        clean_graph = build_scenario_graph(SCENARIO_DIR)
+        assert verify_engineering_rules(SCENARIO_DIR, clean_graph) == []
+
+        # Mutant A: removing boundary valve HV-2043 from ENV-200-02 leaks HP reaction loop into C-202 (ENV-200-03)
+        m_env = json.loads(json.dumps(clean_graph))
+        m_env["rels"] = [
+            r for r in m_env["rels"] if not (r["type"] == "BOUNDED_BY" and r["from"] == "env:ENV-200-02" and r["to"] == "valve:HV-2043")
+        ]
+        errs = verify_engineering_rules(SCENARIO_DIR, m_env)
+        assert any("ENV-200-02" in e and "not closed" in e for e in errs), errs
+
+        # Mutant B: removing a shell-side nozzle from E-204 fails exchanger nozzle rule
+        m_nz = json.loads(json.dumps(clean_graph))
+        m_nz["rels"] = [
+            r for r in m_nz["rels"] if not (r["type"] == "HAS_NOZZLE" and r["from"] == "eq:E-204" and r["to"] == "nz:E-204:N3")
+        ]
+        errs_nz = verify_engineering_rules(SCENARIO_DIR, m_nz)
+        assert any("E-204" in e and "nozzles" in e for e in errs_nz), errs_nz

@@ -8,6 +8,7 @@
     "sg_60_60": 0.856019,
     "rho_ref_kg_m3": 855.177,
     "mass_rate_t_day": 5710.415911,
+    "mass_rate_kg_s": 66.092777,
     "sr_wt_fraction": 0.85,
     "lco_wt_fraction": 0.15,
     "sulfur_wt_fraction": 0.0135
@@ -18,7 +19,9 @@
     "chemical_h2_t_day": 36.546662,
     "purge_and_dissolved_h2_t_day": 6.852499,
     "makeup_h2_t_day": 43.399161,
-    "recycle_gas_h2_mol_fraction": 0.85
+    "recycle_gas_h2_mol_fraction": 0.85,
+    "recycle_to_feed_kg_s": 3.948879,
+    "recycle_to_quench_kg_s": 0.901121
   },
   "products": {
     "ulsd": {
@@ -40,39 +43,39 @@
   "feed_effluent_exchangers": [
     {
       "tag": "E-201A",
-      "tube_mass_kg_s": 67.5,
+      "tube_mass_kg_s": 70.041656,
       "tube_cp_kj_kg_k": 2.65,
       "tube_in_c": 62.0,
       "tube_out_c": 134.0,
-      "shell_mass_kg_s": 68.4,
+      "shell_mass_kg_s": 70.942777,
       "shell_cp_kj_kg_k": 2.75,
-      "shell_in_c": 237.0622,
-      "shell_out_c": 168.5933,
-      "duty_mw": 12.879
+      "shell_in_c": 236.999,
+      "shell_out_c": 168.4984,
+      "duty_mw": 13.3639
     },
     {
       "tag": "E-201B",
-      "tube_mass_kg_s": 67.5,
+      "tube_mass_kg_s": 70.041656,
       "tube_cp_kj_kg_k": 2.65,
       "tube_in_c": 134.0,
       "tube_out_c": 206.0,
-      "shell_mass_kg_s": 68.4,
+      "shell_mass_kg_s": 70.942777,
       "shell_cp_kj_kg_k": 2.75,
-      "shell_in_c": 305.5311,
-      "shell_out_c": 237.0622,
-      "duty_mw": 12.879
+      "shell_in_c": 305.4995,
+      "shell_out_c": 236.999,
+      "duty_mw": 13.3639
     },
     {
       "tag": "E-201C",
-      "tube_mass_kg_s": 67.5,
+      "tube_mass_kg_s": 70.041656,
       "tube_cp_kj_kg_k": 2.65,
       "tube_in_c": 206.0,
       "tube_out_c": 278.0,
-      "shell_mass_kg_s": 68.4,
+      "shell_mass_kg_s": 70.942777,
       "shell_cp_kj_kg_k": 2.75,
       "shell_in_c": 374.0,
-      "shell_out_c": 305.5311,
-      "duty_mw": 12.879
+      "shell_out_c": 305.4995,
+      "duty_mw": 13.3639
     }
   ],
   "reactors": {
@@ -82,9 +85,9 @@
     "r202_bed1_out_c": 368.0,
     "r202_bed2_in_c": 352.0,
     "r202_bed2_out_c": 374.0,
-    "bed1_out_mass_kg_s": 67.5,
+    "bed1_out_mass_kg_s": 70.041656,
     "process_cp_kj_kg_k": 2.75,
-    "quench_mass_kg_s": 0.868421,
+    "quench_mass_kg_s": 0.901121,
     "quench_cp_kj_kg_k": 11.4,
     "quench_temp_c": 52.0
   },

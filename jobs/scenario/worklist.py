@@ -267,6 +267,11 @@ def build_worklist_and_related(
                 pinned_notes="Retired tag E-209 replaced by E-204",
             )
         else:
+            # Ensure E-201C and E-202 get same-work BundlePull duplicates from inspection
+            src_grp = "inspection" if (i in (6, 7) or (i == 11 and t == "E-201C")) else "fixed_equipment"
+            if i == 11:
+                t = "E-201C"
+                wtype = "BundlePull"
             add_item(
                 "Exchanger bundle work",
                 t,
@@ -274,16 +279,16 @@ def build_worklist_and_related(
                 f"{t} EXCHANGER: {'RETUBE' if wtype == 'Retube' else 'BUNDLE PULL AND HYDROBLAST'} #{i + 1}",
                 f"Blind, open channel and floating head on {t}, pull bundle, hydroblast, inspect tubesheet and hydrotest.",
                 "inspection" if i % 2 == 0 else "reliability",
-                "inspection" if i in (6, 7) else "fixed_equipment",
+                src_grp,
                 rng.randint(780, 1020),
                 ["boilermaker", "crane_rigging", "scaffolder", "inspector_nde"],
                 rng.randint(12, 22),
                 i < 10,
             )
 
-    # 3. Air cooler (8)
+    # 3. Air cooler (8) — items 0 and 1 are a true Bay 1 duplicate across fixed_equipment and inspection
     for i in range(8):
-        bay = (i % 4) + 1
+        bay = 1 if i in (0, 1) else ((i - 1) % 4) + 1
         add_item(
             "Air cooler",
             "A-201",
@@ -516,7 +521,7 @@ def build_worklist_and_related(
             "Capital tie-in",
             t,
             "CapitalTieIn",
-            f"TIE-IN T-0{i + 7} NEW PROCESS CONNECTION AT {t}",
+            f"TIE-IN T-{i + 7:02d} NEW PROCESS CONNECTION AT {t}",
             f"Install new welded tie-in spool and block valve assembly at {t}, radiograph welds and hydrotest.",
             "capital",
             "projects",
@@ -790,9 +795,9 @@ def build_worklist_and_related(
             it["pinned_pattern"] = "vague_or_wrong"
             it["pinned_notes"] = "Area-general equipment field; planner resolves from work description"
 
-    # Scale total hours deterministically right onto ~120,000 hrs (~$28M)
+    # Scale total hours deterministically right onto ~118,500 hrs (~$27.94M, 27.0% over $22M target)
     raw_total_hours = sum(it["hours"] for it in ordered_items)
-    scale = 120_000.0 / raw_total_hours
+    scale = 118_500.0 / raw_total_hours
     work_requests: list[WorkRequestRecord] = []
     answer_rows: list[AnswerKeyRow] = []
 
@@ -830,17 +835,18 @@ def build_worklist_and_related(
             )
         )
 
-    # Plant exact 9 duplicate pairs (same true_tag != none, different source_group)
-    by_tag_reqs: dict[str, list[WorkRequestRecord]] = {}
+    # Plant exact 9 genuine duplicate pairs: same true_tag != none, same category, same work_type_label,
+    # and different source_group (never pairing unrelated work such as capital tie-ins with inspections)
+    by_work_key: dict[tuple[str, str, str], list[WorkRequestRecord]] = {}
     truth_by_id = {r.request_id: r.true_tag for r in answer_rows}
     for wr in work_requests:
         tt = truth_by_id[wr.request_id]
-        if tt != "none":
-            by_tag_reqs.setdefault(tt, []).append(wr)
+        if tt != "none" and wr.category != "Capital tie-in":
+            by_work_key.setdefault((tt, wr.category, wr.work_type_label), []).append(wr)
 
     duplicate_pairs: list[DuplicatePair] = []
     used_in_dup: set[str] = set()
-    for tag, wrs in sorted(by_tag_reqs.items()):
+    for (tag, cat, _wtype), wrs in sorted(by_work_key.items()):
         if len(duplicate_pairs) >= 9:
             break
         for i in range(len(wrs)):
@@ -849,12 +855,15 @@ def build_worklist_and_related(
                 if a.request_id in used_in_dup or b.request_id in used_in_dup:
                     continue
                 if a.source_group != b.source_group:
+                    # For A-201 ensure both items target the same bay
+                    if tag == "A-201" and ("BAY 1" not in a.title or "BAY 1" not in b.title):
+                        continue
                     duplicate_pairs.append(
                         DuplicatePair(
                             id=f"DUP-{len(duplicate_pairs) + 1:02d}",
                             request_ids=[a.request_id, b.request_id],
                             equipment_tag=tag,
-                            reason=f"Overlapping turnaround scope on {tag} submitted by {a.source_group} and {b.source_group}.",
+                            reason=f"Duplicate {cat.lower()} scope on {tag} submitted by {a.source_group} and {b.source_group}.",
                         )
                     )
                     used_in_dup.update([a.request_id, b.request_id])

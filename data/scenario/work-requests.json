@@ -29,14 +29,14 @@
       "area": "200-B",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 1600,
+      "estimate_hours": 1580,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 332,
-        "boilermaker": 324,
-        "scaffolder": 512,
-        "crane_rigging": 432
+        "catalyst_specialist": 324,
+        "boilermaker": 320,
+        "scaffolder": 508,
+        "crane_rigging": 428
       },
-      "estimate_cost_usd": 392720,
+      "estimate_cost_usd": 387540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -56,14 +56,14 @@
       "area": "200-B",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 1656,
+      "estimate_hours": 1636,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 396,
-        "boilermaker": 548,
-        "scaffolder": 380,
-        "crane_rigging": 332
+        "catalyst_specialist": 392,
+        "boilermaker": 544,
+        "scaffolder": 372,
+        "crane_rigging": 328
       },
-      "estimate_cost_usd": 411000,
+      "estimate_cost_usd": 406220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -83,14 +83,14 @@
       "area": "200-B",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 1544,
+      "estimate_hours": 1524,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 288,
-        "boilermaker": 492,
-        "scaffolder": 516,
-        "crane_rigging": 248
+        "catalyst_specialist": 280,
+        "boilermaker": 488,
+        "scaffolder": 512,
+        "crane_rigging": 244
       },
-      "estimate_cost_usd": 369400,
+      "estimate_cost_usd": 364220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -110,14 +110,14 @@
       "area": "200-B",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 1660,
+      "estimate_hours": 1640,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 444,
-        "boilermaker": 440,
-        "scaffolder": 420,
-        "crane_rigging": 356
+        "catalyst_specialist": 440,
+        "boilermaker": 436,
+        "scaffolder": 412,
+        "crane_rigging": 352
       },
-      "estimate_cost_usd": 414180,
+      "estimate_cost_usd": 409400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -137,14 +137,14 @@
       "area": "200-B",
       "ript_score": 18,
       "mandatory": true,
-      "estimate_hours": 1588,
+      "estimate_hours": 1568,
       "estimate_hours_by_craft": {
         "catalyst_specialist": 264,
-        "boilermaker": 420,
-        "scaffolder": 476,
-        "crane_rigging": 428
+        "boilermaker": 412,
+        "scaffolder": 472,
+        "crane_rigging": 420
       },
-      "estimate_cost_usd": 387100,
+      "estimate_cost_usd": 382240,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -164,14 +164,14 @@
       "area": "200-B",
       "ript_score": 18,
       "mandatory": true,
-      "estimate_hours": 1488,
+      "estimate_hours": 1468,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 400,
-        "boilermaker": 300,
-        "scaffolder": 388,
-        "crane_rigging": 400
+        "catalyst_specialist": 392,
+        "boilermaker": 296,
+        "scaffolder": 384,
+        "crane_rigging": 396
       },
-      "estimate_cost_usd": 374160,
+      "estimate_cost_usd": 368980,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -191,14 +191,14 @@
       "area": "200-B",
       "ript_score": 16,
       "mandatory": true,
-      "estimate_hours": 1500,
+      "estimate_hours": 1480,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 388,
-        "boilermaker": 452,
-        "scaffolder": 248,
-        "crane_rigging": 412
+        "catalyst_specialist": 380,
+        "boilermaker": 448,
+        "scaffolder": 244,
+        "crane_rigging": 408
       },
-      "estimate_cost_usd": 382340,
+      "estimate_cost_usd": 377160,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -218,14 +218,14 @@
       "area": "200-B",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 1384,
+      "estimate_hours": 1368,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 340,
-        "boilermaker": 272,
-        "scaffolder": 340,
-        "crane_rigging": 432
+        "catalyst_specialist": 336,
+        "boilermaker": 268,
+        "scaffolder": 336,
+        "crane_rigging": 428
       },
-      "estimate_cost_usd": 349320,
+      "estimate_cost_usd": 345320,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -245,14 +245,14 @@
       "area": "200-B",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 1416,
+      "estimate_hours": 1400,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 260,
-        "boilermaker": 376,
-        "scaffolder": 392,
-        "crane_rigging": 388
+        "catalyst_specialist": 256,
+        "boilermaker": 372,
+        "scaffolder": 388,
+        "crane_rigging": 384
       },
-      "estimate_cost_usd": 348200,
+      "estimate_cost_usd": 344200,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -272,14 +272,14 @@
       "area": "200-B",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 1624,
+      "estimate_hours": 1604,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 420,
-        "boilermaker": 336,
-        "scaffolder": 508,
-        "crane_rigging": 360
+        "catalyst_specialist": 416,
+        "boilermaker": 332,
+        "scaffolder": 500,
+        "crane_rigging": 356
       },
-      "estimate_cost_usd": 400920,
+      "estimate_cost_usd": 396140,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -299,14 +299,14 @@
       "area": "200-B",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 1348,
+      "estimate_hours": 1328,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 408,
-        "boilermaker": 244,
-        "scaffolder": 360,
-        "crane_rigging": 336
+        "catalyst_specialist": 400,
+        "boilermaker": 240,
+        "scaffolder": 356,
+        "crane_rigging": 332
       },
-      "estimate_cost_usd": 340300,
+      "estimate_cost_usd": 335120,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -326,14 +326,14 @@
       "area": "200-B",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 1416,
+      "estimate_hours": 1400,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 320,
-        "boilermaker": 440,
+        "catalyst_specialist": 316,
+        "boilermaker": 436,
         "scaffolder": 228,
-        "crane_rigging": 428
+        "crane_rigging": 420
       },
-      "estimate_cost_usd": 359960,
+      "estimate_cost_usd": 355640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -353,14 +353,14 @@
       "area": "200-B",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 1508,
+      "estimate_hours": 1488,
       "estimate_hours_by_craft": {
         "catalyst_specialist": 340,
-        "boilermaker": 336,
-        "scaffolder": 376,
-        "crane_rigging": 456
+        "boilermaker": 332,
+        "scaffolder": 368,
+        "crane_rigging": 448
       },
-      "estimate_cost_usd": 377980,
+      "estimate_cost_usd": 373280,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -380,14 +380,14 @@
       "area": "200-C",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 972,
+      "estimate_hours": 960,
       "estimate_hours_by_craft": {
-        "boilermaker": 204,
+        "boilermaker": 200,
         "crane_rigging": 228,
-        "scaffolder": 308,
-        "inspector_nde": 232
+        "scaffolder": 304,
+        "inspector_nde": 228
       },
-      "estimate_cost_usd": 231020,
+      "estimate_cost_usd": 228260,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -407,14 +407,14 @@
       "area": "200-C",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 832,
+      "estimate_hours": 824,
       "estimate_hours_by_craft": {
-        "boilermaker": 256,
+        "boilermaker": 252,
         "crane_rigging": 148,
-        "scaffolder": 208,
+        "scaffolder": 204,
         "inspector_nde": 220
       },
-      "estimate_cost_usd": 198620,
+      "estimate_cost_usd": 196900,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -434,14 +434,14 @@
       "area": "200-C",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 752,
+      "estimate_hours": 744,
       "estimate_hours_by_craft": {
-        "boilermaker": 236,
-        "crane_rigging": 192,
+        "boilermaker": 232,
+        "crane_rigging": 188,
         "scaffolder": 152,
         "inspector_nde": 172
       },
-      "estimate_cost_usd": 182620,
+      "estimate_cost_usd": 180580,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -461,14 +461,14 @@
       "area": "200-C",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 964,
+      "estimate_hours": 952,
       "estimate_hours_by_craft": {
         "boilermaker": 252,
-        "crane_rigging": 272,
-        "scaffolder": 180,
-        "inspector_nde": 260
+        "crane_rigging": 268,
+        "scaffolder": 176,
+        "inspector_nde": 256
       },
-      "estimate_cost_usd": 236720,
+      "estimate_cost_usd": 233800,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -488,14 +488,14 @@
       "area": "200-C",
       "ript_score": 14,
       "mandatory": true,
-      "estimate_hours": 860,
+      "estimate_hours": 852,
       "estimate_hours_by_craft": {
-        "boilermaker": 232,
+        "boilermaker": 224,
         "crane_rigging": 216,
         "scaffolder": 232,
         "inspector_nde": 180
       },
-      "estimate_cost_usd": 205960,
+      "estimate_cost_usd": 204080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -515,14 +515,14 @@
       "area": "200-G",
       "ript_score": 22,
       "mandatory": true,
-      "estimate_hours": 900,
+      "estimate_hours": 888,
       "estimate_hours_by_craft": {
-        "boilermaker": 224,
-        "crane_rigging": 228,
+        "boilermaker": 216,
+        "crane_rigging": 224,
         "scaffolder": 176,
         "inspector_nde": 272
       },
-      "estimate_cost_usd": 220380,
+      "estimate_cost_usd": 217400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -542,14 +542,14 @@
       "area": "200-C",
       "ript_score": 17,
       "mandatory": true,
-      "estimate_hours": 840,
+      "estimate_hours": 828,
       "estimate_hours_by_craft": {
         "boilermaker": 248,
-        "crane_rigging": 260,
-        "scaffolder": 160,
-        "inspector_nde": 172
+        "crane_rigging": 256,
+        "scaffolder": 156,
+        "inspector_nde": 168
       },
-      "estimate_cost_usd": 205700,
+      "estimate_cost_usd": 202780,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -569,14 +569,14 @@
       "area": "200-C",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 916,
+      "estimate_hours": 904,
       "estimate_hours_by_craft": {
         "boilermaker": 264,
-        "crane_rigging": 160,
-        "scaffolder": 268,
-        "inspector_nde": 224
+        "crane_rigging": 156,
+        "scaffolder": 264,
+        "inspector_nde": 220
       },
-      "estimate_cost_usd": 216540,
+      "estimate_cost_usd": 213620,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -596,14 +596,14 @@
       "area": "200-C",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 832,
+      "estimate_hours": 820,
       "estimate_hours_by_craft": {
         "boilermaker": 180,
-        "crane_rigging": 204,
-        "scaffolder": 248,
-        "inspector_nde": 200
+        "crane_rigging": 200,
+        "scaffolder": 244,
+        "inspector_nde": 196
       },
-      "estimate_cost_usd": 198760,
+      "estimate_cost_usd": 195840,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -613,9 +613,9 @@
     {
       "request_id": "WR-200-0023",
       "event_id": "TAR-200-2028",
-      "title": "E-201A EXCHANGER: BUNDLE PULL AND HYDROBLAST #12",
-      "description": "Blind, open channel and floating head on E-201A, pull bundle, hydroblast, inspect tubesheet and hydrotest.",
-      "equipment_text": "feed eff exchanger first shell",
+      "title": "E-201C EXCHANGER: BUNDLE PULL AND HYDROBLAST #12",
+      "description": "Blind, open channel and floating head on E-201C, pull bundle, hydroblast, inspect tubesheet and hydrotest.",
+      "equipment_text": "feed eff exchanger hot third shell",
       "category": "Exchanger bundle work",
       "work_type_label": "BundlePull",
       "driver": "reliability",
@@ -623,14 +623,14 @@
       "area": "200-C",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 948,
+      "estimate_hours": 936,
       "estimate_hours_by_craft": {
         "boilermaker": 184,
-        "crane_rigging": 292,
-        "scaffolder": 184,
-        "inspector_nde": 288
+        "crane_rigging": 288,
+        "scaffolder": 180,
+        "inspector_nde": 284
       },
-      "estimate_cost_usd": 234300,
+      "estimate_cost_usd": 231380,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -650,14 +650,14 @@
       "area": "200-C",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 912,
+      "estimate_hours": 900,
       "estimate_hours_by_craft": {
-        "boilermaker": 316,
-        "crane_rigging": 176,
+        "boilermaker": 308,
+        "crane_rigging": 172,
         "scaffolder": 248,
         "inspector_nde": 172
       },
-      "estimate_cost_usd": 215740,
+      "estimate_cost_usd": 212760,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -677,14 +677,14 @@
       "area": "200-C",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 792,
+      "estimate_hours": 780,
       "estimate_hours_by_craft": {
         "boilermaker": 256,
-        "crane_rigging": 176,
-        "scaffolder": 136,
-        "inspector_nde": 224
+        "crane_rigging": 172,
+        "scaffolder": 132,
+        "inspector_nde": 220
       },
-      "estimate_cost_usd": 193320,
+      "estimate_cost_usd": 190400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -704,14 +704,14 @@
       "area": "200-C",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 944,
+      "estimate_hours": 932,
       "estimate_hours_by_craft": {
-        "boilermaker": 252,
+        "boilermaker": 248,
         "crane_rigging": 188,
-        "scaffolder": 308,
-        "inspector_nde": 196
+        "scaffolder": 304,
+        "inspector_nde": 192
       },
-      "estimate_cost_usd": 221940,
+      "estimate_cost_usd": 219180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -731,14 +731,14 @@
       "area": "200-C",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 952,
+      "estimate_hours": 940,
       "estimate_hours_by_craft": {
-        "boilermaker": 200,
-        "crane_rigging": 308,
-        "scaffolder": 288,
+        "boilermaker": 196,
+        "crane_rigging": 304,
+        "scaffolder": 284,
         "inspector_nde": 156
       },
-      "estimate_cost_usd": 228420,
+      "estimate_cost_usd": 225600,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -758,14 +758,14 @@
       "area": "200-G",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 960,
+      "estimate_hours": 948,
       "estimate_hours_by_craft": {
-        "boilermaker": 244,
-        "crane_rigging": 224,
+        "boilermaker": 240,
+        "crane_rigging": 220,
         "scaffolder": 240,
-        "inspector_nde": 252
+        "inspector_nde": 248
       },
-      "estimate_cost_usd": 231260,
+      "estimate_cost_usd": 228180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -785,14 +785,14 @@
       "area": "200-C",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 884,
+      "estimate_hours": 876,
       "estimate_hours_by_craft": {
         "boilermaker": 184,
-        "crane_rigging": 192,
+        "crane_rigging": 188,
         "scaffolder": 236,
-        "inspector_nde": 272
+        "inspector_nde": 268
       },
-      "estimate_cost_usd": 212780,
+      "estimate_cost_usd": 210640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -812,14 +812,14 @@
       "area": "200-C",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 820,
+      "estimate_hours": 808,
       "estimate_hours_by_craft": {
-        "boilermaker": 140,
+        "boilermaker": 136,
         "crane_rigging": 200,
-        "scaffolder": 244,
-        "inspector_nde": 236
+        "scaffolder": 240,
+        "inspector_nde": 232
       },
-      "estimate_cost_usd": 196840,
+      "estimate_cost_usd": 194080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -839,14 +839,14 @@
       "area": "200-C",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 988,
+      "estimate_hours": 976,
       "estimate_hours_by_craft": {
-        "boilermaker": 240,
+        "boilermaker": 236,
         "crane_rigging": 208,
-        "scaffolder": 260,
-        "inspector_nde": 280
+        "scaffolder": 256,
+        "inspector_nde": 276
       },
-      "estimate_cost_usd": 237100,
+      "estimate_cost_usd": 234340,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -866,14 +866,14 @@
       "area": "200-C",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 812,
+      "estimate_hours": 804,
       "estimate_hours_by_craft": {
         "boilermaker": 164,
-        "crane_rigging": 260,
-        "scaffolder": 196,
+        "crane_rigging": 256,
+        "scaffolder": 192,
         "inspector_nde": 192
       },
-      "estimate_cost_usd": 198180,
+      "estimate_cost_usd": 196300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -893,14 +893,14 @@
       "area": "200-C",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 816,
+      "estimate_hours": 808,
       "estimate_hours_by_craft": {
-        "boilermaker": 212,
-        "crane_rigging": 180,
+        "boilermaker": 208,
+        "crane_rigging": 176,
         "scaffolder": 248,
         "inspector_nde": 176
       },
-      "estimate_cost_usd": 193440,
+      "estimate_cost_usd": 191400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -920,13 +920,13 @@
       "area": "200-E",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 656,
+      "estimate_hours": 648,
       "estimate_hours_by_craft": {
-        "boilermaker": 232,
-        "scaffolder": 188,
+        "boilermaker": 228,
+        "scaffolder": 184,
         "inspector_nde": 236
       },
-      "estimate_cost_usd": 152540,
+      "estimate_cost_usd": 150820,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -936,8 +936,8 @@
     {
       "request_id": "WR-200-0035",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 2: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #2",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 2, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 1: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #2",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 1, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -946,13 +946,13 @@
       "area": "200-E",
       "ript_score": 16,
       "mandatory": true,
-      "estimate_hours": 572,
+      "estimate_hours": 564,
       "estimate_hours_by_craft": {
         "boilermaker": 244,
-        "scaffolder": 172,
-        "inspector_nde": 156
+        "scaffolder": 168,
+        "inspector_nde": 152
       },
-      "estimate_cost_usd": 131440,
+      "estimate_cost_usd": 129620,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -962,8 +962,8 @@
     {
       "request_id": "WR-200-0036",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 3: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #3",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 3, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 2: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #3",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 2, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -972,13 +972,13 @@
       "area": "200-E",
       "ript_score": 13,
       "mandatory": true,
-      "estimate_hours": 636,
+      "estimate_hours": 628,
       "estimate_hours_by_craft": {
-        "boilermaker": 284,
+        "boilermaker": 276,
         "scaffolder": 200,
         "inspector_nde": 152
       },
-      "estimate_cost_usd": 145260,
+      "estimate_cost_usd": 143380,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -988,8 +988,8 @@
     {
       "request_id": "WR-200-0037",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 4: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #4",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 4, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 3: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #4",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 3, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -998,13 +998,13 @@
       "area": "200-E",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 556,
+      "estimate_hours": 548,
       "estimate_hours_by_craft": {
         "boilermaker": 168,
-        "scaffolder": 208,
-        "inspector_nde": 180
+        "scaffolder": 204,
+        "inspector_nde": 176
       },
-      "estimate_cost_usd": 126840,
+      "estimate_cost_usd": 125020,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1014,8 +1014,8 @@
     {
       "request_id": "WR-200-0038",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 1: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #5",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 1, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 4: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #5",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 4, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -1024,13 +1024,13 @@
       "area": "200-E",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 604,
+      "estimate_hours": 596,
       "estimate_hours_by_craft": {
-        "boilermaker": 220,
+        "boilermaker": 212,
         "scaffolder": 152,
         "inspector_nde": 232
       },
-      "estimate_cost_usd": 141660,
+      "estimate_cost_usd": 139780,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1040,8 +1040,8 @@
     {
       "request_id": "WR-200-0039",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 2: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #6",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 2, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 1: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #6",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 1, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -1050,13 +1050,13 @@
       "area": "200-E",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 696,
+      "estimate_hours": 684,
       "estimate_hours_by_craft": {
-        "boilermaker": 272,
-        "scaffolder": 248,
-        "inspector_nde": 176
+        "boilermaker": 268,
+        "scaffolder": 244,
+        "inspector_nde": 172
       },
-      "estimate_cost_usd": 158040,
+      "estimate_cost_usd": 155280,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1066,8 +1066,8 @@
     {
       "request_id": "WR-200-0040",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 3: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #7",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 3, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 2: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #7",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 2, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "cooler directly downstream of cold feed/effluent exchanger",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -1076,13 +1076,13 @@
       "area": "200-E",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 600,
+      "estimate_hours": 592,
       "estimate_hours_by_craft": {
-        "boilermaker": 240,
+        "boilermaker": 232,
         "scaffolder": 224,
         "inspector_nde": 136
       },
-      "estimate_cost_usd": 135440,
+      "estimate_cost_usd": 133560,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1092,8 +1092,8 @@
     {
       "request_id": "WR-200-0041",
       "event_id": "TAR-200-2028",
-      "title": "A-201 BAY 4: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #8",
-      "description": "Scaffold header boxes on effluent air cooler A-201 bay 4, remove plugs, mechanical tube clean and IRIS tube survey.",
+      "title": "A-201 BAY 3: OPEN HEADER PLUGS, CLEAN TUBES, IRIS INSPECTION #8",
+      "description": "Scaffold header boxes on effluent air cooler A-201 bay 3, remove plugs, mechanical tube clean and IRIS tube survey.",
       "equipment_text": "area 200-E general",
       "category": "Air cooler",
       "work_type_label": "AirCoolerClean",
@@ -1102,13 +1102,13 @@
       "area": "200-E",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 608,
+      "estimate_hours": 600,
       "estimate_hours_by_craft": {
-        "boilermaker": 172,
-        "scaffolder": 276,
+        "boilermaker": 168,
+        "scaffolder": 272,
         "inspector_nde": 160
       },
-      "estimate_cost_usd": 135840,
+      "estimate_cost_usd": 134120,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1128,14 +1128,14 @@
       "area": "200-D",
       "ript_score": 21,
       "mandatory": true,
-      "estimate_hours": 864,
+      "estimate_hours": 852,
       "estimate_hours_by_craft": {
         "boilermaker": 328,
-        "pipefitter": 164,
-        "inspector_nde": 184,
-        "scaffolder": 188
+        "pipefitter": 160,
+        "inspector_nde": 180,
+        "scaffolder": 184
       },
-      "estimate_cost_usd": 198480,
+      "estimate_cost_usd": 195760,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1155,14 +1155,14 @@
       "area": "200-D",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 856,
+      "estimate_hours": 848,
       "estimate_hours_by_craft": {
         "boilermaker": 168,
-        "pipefitter": 220,
-        "inspector_nde": 240,
+        "pipefitter": 216,
+        "inspector_nde": 236,
         "scaffolder": 228
       },
-      "estimate_cost_usd": 195840,
+      "estimate_cost_usd": 193900,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1182,14 +1182,14 @@
       "area": "200-D",
       "ript_score": 15,
       "mandatory": true,
-      "estimate_hours": 748,
+      "estimate_hours": 740,
       "estimate_hours_by_craft": {
         "boilermaker": 208,
-        "pipefitter": 212,
-        "inspector_nde": 180,
+        "pipefitter": 208,
+        "inspector_nde": 176,
         "scaffolder": 148
       },
-      "estimate_cost_usd": 172240,
+      "estimate_cost_usd": 170300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1209,14 +1209,14 @@
       "area": "200-D",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 908,
+      "estimate_hours": 896,
       "estimate_hours_by_craft": {
         "boilermaker": 216,
-        "pipefitter": 280,
-        "inspector_nde": 168,
-        "scaffolder": 244
+        "pipefitter": 276,
+        "inspector_nde": 164,
+        "scaffolder": 240
       },
-      "estimate_cost_usd": 205020,
+      "estimate_cost_usd": 202300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1236,14 +1236,14 @@
       "area": "200-D",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 788,
+      "estimate_hours": 776,
       "estimate_hours_by_craft": {
-        "boilermaker": 216,
-        "pipefitter": 176,
+        "boilermaker": 212,
+        "pipefitter": 172,
         "inspector_nde": 208,
-        "scaffolder": 188
+        "scaffolder": 184
       },
-      "estimate_cost_usd": 181100,
+      "estimate_cost_usd": 178480,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1263,14 +1263,14 @@
       "area": "200-D",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 856,
+      "estimate_hours": 844,
       "estimate_hours_by_craft": {
-        "boilermaker": 264,
-        "pipefitter": 212,
+        "boilermaker": 256,
+        "pipefitter": 208,
         "inspector_nde": 252,
         "scaffolder": 128
       },
-      "estimate_cost_usd": 200220,
+      "estimate_cost_usd": 197440,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1290,14 +1290,14 @@
       "area": "200-D",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 888,
+      "estimate_hours": 876,
       "estimate_hours_by_craft": {
         "boilermaker": 220,
-        "pipefitter": 208,
-        "inspector_nde": 228,
-        "scaffolder": 232
+        "pipefitter": 204,
+        "inspector_nde": 224,
+        "scaffolder": 228
       },
-      "estimate_cost_usd": 203020,
+      "estimate_cost_usd": 200300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1317,14 +1317,14 @@
       "area": "200-D",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 920,
+      "estimate_hours": 908,
       "estimate_hours_by_craft": {
         "boilermaker": 164,
-        "pipefitter": 236,
-        "inspector_nde": 192,
-        "scaffolder": 328
+        "pipefitter": 232,
+        "inspector_nde": 188,
+        "scaffolder": 324
       },
-      "estimate_cost_usd": 205520,
+      "estimate_cost_usd": 202800,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1344,14 +1344,14 @@
       "area": "200-D",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 932,
+      "estimate_hours": 920,
       "estimate_hours_by_craft": {
-        "boilermaker": 212,
-        "pipefitter": 292,
+        "boilermaker": 204,
+        "pipefitter": 288,
         "inspector_nde": 176,
         "scaffolder": 252
       },
-      "estimate_cost_usd": 210420,
+      "estimate_cost_usd": 207640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1371,14 +1371,14 @@
       "area": "200-D",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 852,
+      "estimate_hours": 844,
       "estimate_hours_by_craft": {
-        "boilermaker": 264,
+        "boilermaker": 260,
         "pipefitter": 192,
-        "inspector_nde": 224,
+        "inspector_nde": 220,
         "scaffolder": 172
       },
-      "estimate_cost_usd": 197020,
+      "estimate_cost_usd": 195040,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1398,14 +1398,14 @@
       "area": "200-D",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 864,
+      "estimate_hours": 852,
       "estimate_hours_by_craft": {
-        "boilermaker": 212,
+        "boilermaker": 200,
         "pipefitter": 236,
         "inspector_nde": 200,
         "scaffolder": 216
       },
-      "estimate_cost_usd": 197040,
+      "estimate_cost_usd": 194220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1425,13 +1425,13 @@
       "area": "200-G",
       "ript_score": 17,
       "mandatory": true,
-      "estimate_hours": 796,
+      "estimate_hours": 788,
       "estimate_hours_by_craft": {
-        "boilermaker": 272,
+        "boilermaker": 268,
         "scaffolder": 204,
-        "inspector_nde": 320
+        "inspector_nde": 316
       },
-      "estimate_cost_usd": 186900,
+      "estimate_cost_usd": 184920,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1451,13 +1451,13 @@
       "area": "200-G",
       "ript_score": 21,
       "mandatory": true,
-      "estimate_hours": 720,
+      "estimate_hours": 708,
       "estimate_hours_by_craft": {
-        "boilermaker": 288,
+        "boilermaker": 280,
         "scaffolder": 152,
-        "inspector_nde": 280
+        "inspector_nde": 276
       },
-      "estimate_cost_usd": 170120,
+      "estimate_cost_usd": 167200,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1477,13 +1477,13 @@
       "area": "200-G",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 796,
+      "estimate_hours": 784,
       "estimate_hours_by_craft": {
-        "boilermaker": 292,
-        "scaffolder": 264,
-        "inspector_nde": 240
+        "boilermaker": 288,
+        "scaffolder": 260,
+        "inspector_nde": 236
       },
-      "estimate_cost_usd": 182500,
+      "estimate_cost_usd": 179740,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1503,13 +1503,13 @@
       "area": "200-F",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 596,
+      "estimate_hours": 588,
       "estimate_hours_by_craft": {
-        "boilermaker": 148,
+        "boilermaker": 140,
         "scaffolder": 224,
         "inspector_nde": 224
       },
-      "estimate_cost_usd": 136700,
+      "estimate_cost_usd": 134820,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1529,13 +1529,13 @@
       "area": "200-F",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 608,
+      "estimate_hours": 600,
       "estimate_hours_by_craft": {
         "boilermaker": 244,
-        "scaffolder": 216,
-        "inspector_nde": 148
+        "scaffolder": 212,
+        "inspector_nde": 144
       },
-      "estimate_cost_usd": 137940,
+      "estimate_cost_usd": 136120,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1555,13 +1555,13 @@
       "area": "200-E",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 752,
+      "estimate_hours": 744,
       "estimate_hours_by_craft": {
         "boilermaker": 188,
-        "scaffolder": 320,
-        "inspector_nde": 244
+        "scaffolder": 316,
+        "inspector_nde": 240
       },
-      "estimate_cost_usd": 170020,
+      "estimate_cost_usd": 168200,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1581,13 +1581,13 @@
       "area": "200-E",
       "ript_score": 11,
       "mandatory": true,
-      "estimate_hours": 640,
+      "estimate_hours": 632,
       "estimate_hours_by_craft": {
         "boilermaker": 236,
-        "scaffolder": 180,
-        "inspector_nde": 224
+        "scaffolder": 176,
+        "inspector_nde": 220
       },
-      "estimate_cost_usd": 148800,
+      "estimate_cost_usd": 146980,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1607,13 +1607,13 @@
       "area": "200-A",
       "ript_score": 15,
       "mandatory": true,
-      "estimate_hours": 720,
+      "estimate_hours": 708,
       "estimate_hours_by_craft": {
-        "boilermaker": 244,
-        "scaffolder": 228,
-        "inspector_nde": 248
+        "boilermaker": 240,
+        "scaffolder": 224,
+        "inspector_nde": 244
       },
-      "estimate_cost_usd": 166280,
+      "estimate_cost_usd": 163520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1633,13 +1633,13 @@
       "area": "200-E",
       "ript_score": 18,
       "mandatory": true,
-      "estimate_hours": 700,
+      "estimate_hours": 692,
       "estimate_hours_by_craft": {
-        "boilermaker": 284,
+        "boilermaker": 280,
         "scaffolder": 196,
-        "inspector_nde": 220
+        "inspector_nde": 216
       },
-      "estimate_cost_usd": 162160,
+      "estimate_cost_usd": 160180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1659,13 +1659,13 @@
       "area": "200-F",
       "ript_score": 18,
       "mandatory": true,
-      "estimate_hours": 636,
+      "estimate_hours": 628,
       "estimate_hours_by_craft": {
-        "boilermaker": 268,
+        "boilermaker": 264,
         "scaffolder": 164,
-        "inspector_nde": 204
+        "inspector_nde": 200
       },
-      "estimate_cost_usd": 148000,
+      "estimate_cost_usd": 146020,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1685,13 +1685,13 @@
       "area": "200-G",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 764,
+      "estimate_hours": 756,
       "estimate_hours_by_craft": {
-        "boilermaker": 292,
-        "scaffolder": 276,
+        "boilermaker": 288,
+        "scaffolder": 272,
         "inspector_nde": 196
       },
-      "estimate_cost_usd": 173400,
+      "estimate_cost_usd": 171680,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1711,13 +1711,13 @@
       "area": "200-F",
       "ript_score": 11,
       "mandatory": false,
-      "estimate_hours": 652,
+      "estimate_hours": 644,
       "estimate_hours_by_craft": {
-        "boilermaker": 232,
+        "boilermaker": 224,
         "scaffolder": 208,
         "inspector_nde": 212
       },
-      "estimate_cost_usd": 150200,
+      "estimate_cost_usd": 148320,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1737,13 +1737,13 @@
       "area": "200-A",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 632,
+      "estimate_hours": 624,
       "estimate_hours_by_craft": {
-        "boilermaker": 232,
+        "boilermaker": 224,
         "scaffolder": 172,
         "inspector_nde": 228
       },
-      "estimate_cost_usd": 147340,
+      "estimate_cost_usd": 145460,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1763,13 +1763,13 @@
       "area": "200-A",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 608,
+      "estimate_hours": 600,
       "estimate_hours_by_craft": {
-        "boilermaker": 212,
+        "boilermaker": 208,
         "scaffolder": 200,
-        "inspector_nde": 196
+        "inspector_nde": 192
       },
-      "estimate_cost_usd": 139780,
+      "estimate_cost_usd": 137800,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1789,13 +1789,13 @@
       "area": "200-G",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 748,
+      "estimate_hours": 740,
       "estimate_hours_by_craft": {
         "boilermaker": 304,
-        "scaffolder": 156,
-        "inspector_nde": 288
+        "scaffolder": 152,
+        "inspector_nde": 284
       },
-      "estimate_cost_usd": 176740,
+      "estimate_cost_usd": 174920,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1815,13 +1815,13 @@
       "area": "200-G",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 684,
+      "estimate_hours": 676,
       "estimate_hours_by_craft": {
         "boilermaker": 180,
-        "scaffolder": 224,
-        "inspector_nde": 280
+        "scaffolder": 220,
+        "inspector_nde": 276
       },
-      "estimate_cost_usd": 158780,
+      "estimate_cost_usd": 156960,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1841,13 +1841,13 @@
       "area": "200-G",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 676,
+      "estimate_hours": 668,
       "estimate_hours_by_craft": {
-        "boilermaker": 284,
+        "boilermaker": 276,
         "scaffolder": 192,
         "inspector_nde": 200
       },
-      "estimate_cost_usd": 156180,
+      "estimate_cost_usd": 154300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1867,13 +1867,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 744,
+      "estimate_hours": 736,
       "estimate_hours_by_craft": {
-        "boilermaker": 276,
+        "boilermaker": 272,
         "scaffolder": 216,
-        "inspector_nde": 252
+        "inspector_nde": 248
       },
-      "estimate_cost_usd": 172500,
+      "estimate_cost_usd": 170520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1893,13 +1893,13 @@
       "area": "200-F",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 604,
+      "estimate_hours": 596,
       "estimate_hours_by_craft": {
-        "boilermaker": 244,
-        "scaffolder": 232,
+        "boilermaker": 240,
+        "scaffolder": 228,
         "inspector_nde": 128
       },
-      "estimate_cost_usd": 135860,
+      "estimate_cost_usd": 134140,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1919,13 +1919,13 @@
       "area": "200-E",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 788,
+      "estimate_hours": 780,
       "estimate_hours_by_craft": {
-        "boilermaker": 228,
+        "boilermaker": 224,
         "scaffolder": 272,
-        "inspector_nde": 288
+        "inspector_nde": 284
       },
-      "estimate_cost_usd": 181500,
+      "estimate_cost_usd": 179520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1945,13 +1945,13 @@
       "area": "200-E",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 724,
+      "estimate_hours": 716,
       "estimate_hours_by_craft": {
         "boilermaker": 236,
-        "scaffolder": 176,
-        "inspector_nde": 312
+        "scaffolder": 172,
+        "inspector_nde": 308
       },
-      "estimate_cost_usd": 170900,
+      "estimate_cost_usd": 169080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1971,13 +1971,13 @@
       "area": "200-A",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 620,
+      "estimate_hours": 612,
       "estimate_hours_by_craft": {
-        "boilermaker": 176,
+        "boilermaker": 172,
         "scaffolder": 176,
-        "inspector_nde": 268
+        "inspector_nde": 264
       },
-      "estimate_cost_usd": 145360,
+      "estimate_cost_usd": 143380,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -1997,13 +1997,13 @@
       "area": "200-E",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 768,
+      "estimate_hours": 760,
       "estimate_hours_by_craft": {
-        "boilermaker": 216,
+        "boilermaker": 212,
         "scaffolder": 252,
-        "inspector_nde": 300
+        "inspector_nde": 296
       },
-      "estimate_cost_usd": 177900,
+      "estimate_cost_usd": 175920,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2023,13 +2023,13 @@
       "area": "200-F",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 660,
+      "estimate_hours": 652,
       "estimate_hours_by_craft": {
-        "boilermaker": 232,
+        "boilermaker": 224,
         "scaffolder": 252,
         "inspector_nde": 176
       },
-      "estimate_cost_usd": 149420,
+      "estimate_cost_usd": 147540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2049,13 +2049,13 @@
       "area": "200-F",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 1112,
+      "estimate_hours": 1096,
       "estimate_hours_by_craft": {
-        "millwright": 340,
-        "crane_rigging": 440,
-        "pipefitter": 332
+        "millwright": 332,
+        "crane_rigging": 436,
+        "pipefitter": 328
       },
-      "estimate_cost_usd": 279000,
+      "estimate_cost_usd": 275040,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2075,13 +2075,13 @@
       "area": "200-F",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 760,
+      "estimate_hours": 752,
       "estimate_hours_by_craft": {
         "millwright": 276,
-        "crane_rigging": 272,
-        "pipefitter": 212
+        "crane_rigging": 268,
+        "pipefitter": 208
       },
-      "estimate_cost_usd": 190120,
+      "estimate_cost_usd": 188120,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2101,13 +2101,13 @@
       "area": "200-A",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 752,
+      "estimate_hours": 744,
       "estimate_hours_by_craft": {
         "millwright": 340,
-        "crane_rigging": 208,
-        "pipefitter": 204
+        "crane_rigging": 204,
+        "pipefitter": 200
       },
-      "estimate_cost_usd": 186400,
+      "estimate_cost_usd": 184400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2127,13 +2127,13 @@
       "area": "200-A",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 676,
+      "estimate_hours": 664,
       "estimate_hours_by_craft": {
-        "millwright": 140,
-        "crane_rigging": 284,
-        "pipefitter": 252
+        "millwright": 136,
+        "crane_rigging": 280,
+        "pipefitter": 248
       },
-      "estimate_cost_usd": 169100,
+      "estimate_cost_usd": 166120,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2153,13 +2153,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 576,
+      "estimate_hours": 568,
       "estimate_hours_by_craft": {
         "millwright": 256,
-        "crane_rigging": 160,
-        "pipefitter": 160
+        "crane_rigging": 156,
+        "pipefitter": 156
       },
-      "estimate_cost_usd": 142720,
+      "estimate_cost_usd": 140720,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2179,13 +2179,13 @@
       "area": "200-F",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 596,
+      "estimate_hours": 588,
       "estimate_hours_by_craft": {
         "millwright": 152,
-        "crane_rigging": 192,
-        "pipefitter": 252
+        "crane_rigging": 188,
+        "pipefitter": 248
       },
-      "estimate_cost_usd": 146740,
+      "estimate_cost_usd": 144740,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2205,13 +2205,13 @@
       "area": "200-G",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 756,
+      "estimate_hours": 748,
       "estimate_hours_by_craft": {
         "millwright": 256,
-        "crane_rigging": 200,
-        "pipefitter": 300
+        "crane_rigging": 196,
+        "pipefitter": 296
       },
-      "estimate_cost_usd": 185220,
+      "estimate_cost_usd": 183220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2231,13 +2231,13 @@
       "area": "200-G",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 792,
+      "estimate_hours": 780,
       "estimate_hours_by_craft": {
-        "millwright": 296,
-        "crane_rigging": 208,
-        "pipefitter": 288
+        "millwright": 292,
+        "crane_rigging": 204,
+        "pipefitter": 284
       },
-      "estimate_cost_usd": 194520,
+      "estimate_cost_usd": 191540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2257,13 +2257,13 @@
       "area": "200-G",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 576,
+      "estimate_hours": 568,
       "estimate_hours_by_craft": {
-        "millwright": 200,
+        "millwright": 192,
         "crane_rigging": 212,
         "pipefitter": 164
       },
-      "estimate_cost_usd": 144200,
+      "estimate_cost_usd": 142240,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2283,13 +2283,13 @@
       "area": "200-G",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 776,
+      "estimate_hours": 764,
       "estimate_hours_by_craft": {
-        "millwright": 320,
-        "crane_rigging": 252,
-        "pipefitter": 204
+        "millwright": 316,
+        "crane_rigging": 248,
+        "pipefitter": 200
       },
-      "estimate_cost_usd": 193600,
+      "estimate_cost_usd": 190620,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2309,13 +2309,13 @@
       "area": "200-E",
       "ript_score": 11,
       "mandatory": false,
-      "estimate_hours": 800,
+      "estimate_hours": 792,
       "estimate_hours_by_craft": {
-        "millwright": 264,
-        "crane_rigging": 264,
+        "millwright": 260,
+        "crane_rigging": 260,
         "pipefitter": 272
       },
-      "estimate_cost_usd": 198480,
+      "estimate_cost_usd": 196400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2335,13 +2335,13 @@
       "area": "200-E",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 608,
+      "estimate_hours": 604,
       "estimate_hours_by_craft": {
-        "millwright": 232,
+        "millwright": 228,
         "crane_rigging": 124,
         "pipefitter": 252
       },
-      "estimate_cost_usd": 147640,
+      "estimate_cost_usd": 146660,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2361,13 +2361,13 @@
       "area": "200-F",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 1112,
+      "estimate_hours": 1096,
       "estimate_hours_by_craft": {
-        "millwright": 452,
-        "crane_rigging": 380,
-        "pipefitter": 280
+        "millwright": 444,
+        "crane_rigging": 376,
+        "pipefitter": 276
       },
-      "estimate_cost_usd": 278240,
+      "estimate_cost_usd": 274280,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2387,13 +2387,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 596,
+      "estimate_hours": 592,
       "estimate_hours_by_craft": {
-        "millwright": 268,
+        "millwright": 264,
         "crane_rigging": 152,
         "pipefitter": 176
       },
-      "estimate_cost_usd": 147060,
+      "estimate_cost_usd": 146080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2413,13 +2413,13 @@
       "area": "200-A",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 776,
+      "estimate_hours": 764,
       "estimate_hours_by_craft": {
-        "millwright": 252,
-        "crane_rigging": 312,
-        "pipefitter": 212
+        "millwright": 248,
+        "crane_rigging": 308,
+        "pipefitter": 208
       },
-      "estimate_cost_usd": 195240,
+      "estimate_cost_usd": 192260,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2439,13 +2439,13 @@
       "area": "200-A",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 784,
+      "estimate_hours": 772,
       "estimate_hours_by_craft": {
-        "millwright": 232,
-        "crane_rigging": 260,
-        "pipefitter": 292
+        "millwright": 228,
+        "crane_rigging": 256,
+        "pipefitter": 288
       },
-      "estimate_cost_usd": 194040,
+      "estimate_cost_usd": 191060,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2465,13 +2465,13 @@
       "area": "200-F",
       "ript_score": 14,
       "mandatory": true,
-      "estimate_hours": 676,
+      "estimate_hours": 664,
       "estimate_hours_by_craft": {
-        "millwright": 256,
+        "millwright": 248,
         "crane_rigging": 192,
-        "pipefitter": 228
+        "pipefitter": 224
       },
-      "estimate_cost_usd": 166820,
+      "estimate_cost_usd": 163960,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2491,13 +2491,13 @@
       "area": "200-F",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 628,
+      "estimate_hours": 620,
       "estimate_hours_by_craft": {
-        "millwright": 160,
+        "millwright": 156,
         "crane_rigging": 180,
-        "pipefitter": 288
+        "pipefitter": 284
       },
-      "estimate_cost_usd": 153500,
+      "estimate_cost_usd": 151620,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2517,13 +2517,13 @@
       "area": "200-G",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 696,
+      "estimate_hours": 684,
       "estimate_hours_by_craft": {
-        "millwright": 248,
+        "millwright": 240,
         "crane_rigging": 180,
-        "pipefitter": 268
+        "pipefitter": 264
       },
-      "estimate_cost_usd": 170560,
+      "estimate_cost_usd": 167700,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2543,13 +2543,13 @@
       "area": "200-G",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 688,
+      "estimate_hours": 676,
       "estimate_hours_by_craft": {
-        "millwright": 284,
-        "crane_rigging": 212,
-        "pipefitter": 192
+        "millwright": 280,
+        "crane_rigging": 208,
+        "pipefitter": 188
       },
-      "estimate_cost_usd": 171080,
+      "estimate_cost_usd": 168100,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2569,13 +2569,13 @@
       "area": "200-A",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 204,
+      "estimate_hours": 200,
       "estimate_hours_by_craft": {
         "pipefitter": 56,
-        "scaffolder": 68,
+        "scaffolder": 64,
         "inspector_nde": 80
       },
-      "estimate_cost_usd": 46660,
+      "estimate_cost_usd": 45880,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2621,13 +2621,13 @@
       "area": "200-B",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 176,
+      "estimate_hours": 172,
       "estimate_hours_by_craft": {
         "pipefitter": 48,
         "scaffolder": 68,
-        "inspector_nde": 60
+        "inspector_nde": 56
       },
-      "estimate_cost_usd": 39660,
+      "estimate_cost_usd": 38620,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2647,13 +2647,13 @@
       "area": "200-E",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 180,
+      "estimate_hours": 176,
       "estimate_hours_by_craft": {
-        "pipefitter": 56,
+        "pipefitter": 52,
         "scaffolder": 84,
         "inspector_nde": 40
       },
-      "estimate_cost_usd": 39380,
+      "estimate_cost_usd": 38480,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2673,13 +2673,13 @@
       "area": "200-E",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 180,
+      "estimate_hours": 176,
       "estimate_hours_by_craft": {
-        "pipefitter": 68,
+        "pipefitter": 64,
         "scaffolder": 68,
         "inspector_nde": 44
       },
-      "estimate_cost_usd": 40000,
+      "estimate_cost_usd": 39100,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2725,13 +2725,13 @@
       "area": "200-C",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 204,
+      "estimate_hours": 200,
       "estimate_hours_by_craft": {
-        "pipefitter": 76,
+        "pipefitter": 72,
         "scaffolder": 76,
         "inspector_nde": 52
       },
-      "estimate_cost_usd": 45440,
+      "estimate_cost_usd": 44540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2777,13 +2777,13 @@
       "area": "200-C",
       "ript_score": 22,
       "mandatory": true,
-      "estimate_hours": 160,
+      "estimate_hours": 156,
       "estimate_hours_by_craft": {
         "pipefitter": 56,
-        "scaffolder": 52,
+        "scaffolder": 48,
         "inspector_nde": 52
       },
-      "estimate_cost_usd": 36260,
+      "estimate_cost_usd": 35480,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2829,13 +2829,13 @@
       "area": "200-E",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 192,
+      "estimate_hours": 188,
       "estimate_hours_by_craft": {
         "pipefitter": 68,
-        "scaffolder": 64,
+        "scaffolder": 60,
         "inspector_nde": 60
       },
-      "estimate_cost_usd": 43380,
+      "estimate_cost_usd": 42600,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2855,13 +2855,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 164,
+      "estimate_hours": 160,
       "estimate_hours_by_craft": {
         "pipefitter": 52,
         "scaffolder": 48,
-        "inspector_nde": 64
+        "inspector_nde": 60
       },
-      "estimate_cost_usd": 37700,
+      "estimate_cost_usd": 36660,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2881,13 +2881,13 @@
       "area": "200-F",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 176,
+      "estimate_hours": 172,
       "estimate_hours_by_craft": {
-        "pipefitter": 64,
+        "pipefitter": 60,
         "scaffolder": 52,
         "inspector_nde": 60
       },
-      "estimate_cost_usd": 40140,
+      "estimate_cost_usd": 39240,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -2985,13 +2985,13 @@
       "area": "200-G",
       "ript_score": 21,
       "mandatory": true,
-      "estimate_hours": 152,
+      "estimate_hours": 148,
       "estimate_hours_by_craft": {
-        "pipefitter": 36,
+        "pipefitter": 32,
         "scaffolder": 68,
         "inspector_nde": 48
       },
-      "estimate_cost_usd": 33840,
+      "estimate_cost_usd": 32940,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3037,13 +3037,13 @@
       "area": "200-D",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 172,
+      "estimate_hours": 168,
       "estimate_hours_by_craft": {
         "pipefitter": 48,
         "scaffolder": 40,
-        "inspector_nde": 84
+        "inspector_nde": 80
       },
-      "estimate_cost_usd": 40440,
+      "estimate_cost_usd": 39400,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3063,13 +3063,13 @@
       "area": "200-D",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 184,
+      "estimate_hours": 180,
       "estimate_hours_by_craft": {
-        "pipefitter": 76,
+        "pipefitter": 72,
         "scaffolder": 40,
         "inspector_nde": 68
       },
-      "estimate_cost_usd": 42580,
+      "estimate_cost_usd": 41680,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3115,13 +3115,13 @@
       "area": "200-F",
       "ript_score": 23,
       "mandatory": true,
-      "estimate_hours": 180,
+      "estimate_hours": 176,
       "estimate_hours_by_craft": {
         "pipefitter": 64,
-        "scaffolder": 72,
+        "scaffolder": 68,
         "inspector_nde": 44
       },
-      "estimate_cost_usd": 39880,
+      "estimate_cost_usd": 39100,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3141,13 +3141,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 176,
+      "estimate_hours": 172,
       "estimate_hours_by_craft": {
         "pipefitter": 72,
-        "scaffolder": 48,
+        "scaffolder": 44,
         "inspector_nde": 56
       },
-      "estimate_cost_usd": 40120,
+      "estimate_cost_usd": 39340,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3167,13 +3167,13 @@
       "area": "200-F",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 200,
+      "estimate_hours": 196,
       "estimate_hours_by_craft": {
         "pipefitter": 60,
         "scaffolder": 64,
-        "inspector_nde": 76
+        "inspector_nde": 72
       },
-      "estimate_cost_usd": 45740,
+      "estimate_cost_usd": 44700,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3193,13 +3193,13 @@
       "area": "200-A",
       "ript_score": 20,
       "mandatory": true,
-      "estimate_hours": 152,
+      "estimate_hours": 148,
       "estimate_hours_by_craft": {
         "pipefitter": 44,
-        "scaffolder": 64,
+        "scaffolder": 60,
         "inspector_nde": 44
       },
-      "estimate_cost_usd": 33820,
+      "estimate_cost_usd": 33040,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3219,13 +3219,13 @@
       "area": "200-A",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 204,
+      "estimate_hours": 200,
       "estimate_hours_by_craft": {
-        "pipefitter": 48,
+        "pipefitter": 44,
         "scaffolder": 76,
         "inspector_nde": 80
       },
-      "estimate_cost_usd": 46420,
+      "estimate_cost_usd": 45520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3271,13 +3271,13 @@
       "area": "200-A",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 172,
+      "estimate_hours": 168,
       "estimate_hours_by_craft": {
         "pipefitter": 44,
-        "scaffolder": 64,
+        "scaffolder": 60,
         "inspector_nde": 64
       },
-      "estimate_cost_usd": 39020,
+      "estimate_cost_usd": 38240,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3297,12 +3297,12 @@
       "area": "200-B",
       "ript_score": 19,
       "mandatory": true,
-      "estimate_hours": 224,
+      "estimate_hours": 220,
       "estimate_hours_by_craft": {
         "pipefitter": 104,
-        "scaffolder": 120
+        "scaffolder": 116
       },
-      "estimate_cost_usd": 46800,
+      "estimate_cost_usd": 46020,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3372,12 +3372,12 @@
       "area": "200-C",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 276,
+      "estimate_hours": 272,
       "estimate_hours_by_craft": {
-        "pipefitter": 136,
+        "pipefitter": 132,
         "scaffolder": 140
       },
-      "estimate_cost_usd": 57900,
+      "estimate_cost_usd": 57000,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3397,12 +3397,12 @@
       "area": "200-B",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 236,
+      "estimate_hours": 232,
       "estimate_hours_by_craft": {
         "pipefitter": 128,
-        "scaffolder": 108
+        "scaffolder": 104
       },
-      "estimate_cost_usd": 49860,
+      "estimate_cost_usd": 49080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3422,12 +3422,12 @@
       "area": "200-D",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 284,
+      "estimate_hours": 280,
       "estimate_hours_by_craft": {
-        "pipefitter": 152,
+        "pipefitter": 148,
         "scaffolder": 132
       },
-      "estimate_cost_usd": 59940,
+      "estimate_cost_usd": 59040,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3447,12 +3447,12 @@
       "area": "200-D",
       "ript_score": 11,
       "mandatory": false,
-      "estimate_hours": 236,
+      "estimate_hours": 232,
       "estimate_hours_by_craft": {
         "pipefitter": 92,
-        "scaffolder": 144
+        "scaffolder": 140
       },
-      "estimate_cost_usd": 48780,
+      "estimate_cost_usd": 48000,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3472,12 +3472,12 @@
       "area": "200-B",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 260,
+      "estimate_hours": 256,
       "estimate_hours_by_craft": {
-        "pipefitter": 164,
+        "pipefitter": 160,
         "scaffolder": 96
       },
-      "estimate_cost_usd": 55620,
+      "estimate_cost_usd": 54720,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3497,12 +3497,12 @@
       "area": "200-A",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 256,
+      "estimate_hours": 252,
       "estimate_hours_by_craft": {
         "pipefitter": 100,
-        "scaffolder": 156
+        "scaffolder": 152
       },
-      "estimate_cost_usd": 52920,
+      "estimate_cost_usd": 52140,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3522,12 +3522,12 @@
       "area": "200-A",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 288,
+      "estimate_hours": 284,
       "estimate_hours_by_craft": {
         "pipefitter": 132,
-        "scaffolder": 156
+        "scaffolder": 152
       },
-      "estimate_cost_usd": 60120,
+      "estimate_cost_usd": 59340,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3572,12 +3572,12 @@
       "area": "200-A",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 300,
+      "estimate_hours": 296,
       "estimate_hours_by_craft": {
         "pipefitter": 140,
-        "scaffolder": 160
+        "scaffolder": 156
       },
-      "estimate_cost_usd": 62700,
+      "estimate_cost_usd": 61920,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3597,12 +3597,12 @@
       "area": "200-A",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 308,
+      "estimate_hours": 304,
       "estimate_hours_by_craft": {
-        "pipefitter": 160,
+        "pipefitter": 156,
         "scaffolder": 148
       },
-      "estimate_cost_usd": 64860,
+      "estimate_cost_usd": 63960,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3622,12 +3622,12 @@
       "area": "200-A",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 272,
+      "estimate_hours": 268,
       "estimate_hours_by_craft": {
         "pipefitter": 128,
-        "scaffolder": 144
+        "scaffolder": 140
       },
-      "estimate_cost_usd": 56880,
+      "estimate_cost_usd": 56100,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3647,12 +3647,12 @@
       "area": "200-A",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 264,
+      "estimate_hours": 260,
       "estimate_hours_by_craft": {
-        "pipefitter": 148,
+        "pipefitter": 144,
         "scaffolder": 116
       },
-      "estimate_cost_usd": 55920,
+      "estimate_cost_usd": 55020,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3672,12 +3672,12 @@
       "area": "200-A",
       "ript_score": 11,
       "mandatory": false,
-      "estimate_hours": 224,
+      "estimate_hours": 220,
       "estimate_hours_by_craft": {
-        "pipefitter": 120,
+        "pipefitter": 116,
         "scaffolder": 104
       },
-      "estimate_cost_usd": 47280,
+      "estimate_cost_usd": 46380,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3697,12 +3697,12 @@
       "area": "200-A",
       "ript_score": 20,
       "mandatory": false,
-      "estimate_hours": 228,
+      "estimate_hours": 224,
       "estimate_hours_by_craft": {
         "pipefitter": 112,
-        "scaffolder": 116
+        "scaffolder": 112
       },
-      "estimate_cost_usd": 47820,
+      "estimate_cost_usd": 47040,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3722,12 +3722,12 @@
       "area": "200-A",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 304,
+      "estimate_hours": 300,
       "estimate_hours_by_craft": {
         "pipefitter": 156,
-        "scaffolder": 148
+        "scaffolder": 144
       },
-      "estimate_cost_usd": 63960,
+      "estimate_cost_usd": 63180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3797,12 +3797,12 @@
       "area": "200-A",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 292,
+      "estimate_hours": 288,
       "estimate_hours_by_craft": {
-        "pipefitter": 196,
+        "pipefitter": 192,
         "scaffolder": 96
       },
-      "estimate_cost_usd": 62820,
+      "estimate_cost_usd": 61920,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3822,12 +3822,12 @@
       "area": "200-A",
       "ript_score": 11,
       "mandatory": true,
-      "estimate_hours": 228,
+      "estimate_hours": 224,
       "estimate_hours_by_craft": {
         "pipefitter": 80,
-        "scaffolder": 148
+        "scaffolder": 144
       },
-      "estimate_cost_usd": 46860,
+      "estimate_cost_usd": 46080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3847,14 +3847,14 @@
       "area": "200-C",
       "ript_score": 21,
       "mandatory": true,
-      "estimate_hours": 1112,
+      "estimate_hours": 1096,
       "estimate_hours_by_craft": {
-        "boilermaker": 240,
+        "boilermaker": 236,
         "crane_rigging": 224,
-        "scaffolder": 272,
-        "inspector_nde": 376
+        "scaffolder": 268,
+        "inspector_nde": 368
       },
-      "estimate_cost_usd": 268800,
+      "estimate_cost_usd": 265000,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3874,12 +3874,12 @@
       "area": "200-A",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 260,
+      "estimate_hours": 256,
       "estimate_hours_by_craft": {
         "pipefitter": 120,
-        "scaffolder": 140
+        "scaffolder": 136
       },
-      "estimate_cost_usd": 54300,
+      "estimate_cost_usd": 53520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3899,12 +3899,12 @@
       "area": "200-A",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 304,
+      "estimate_hours": 300,
       "estimate_hours_by_craft": {
         "pipefitter": 156,
-        "scaffolder": 148
+        "scaffolder": 144
       },
-      "estimate_cost_usd": 63960,
+      "estimate_cost_usd": 63180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3924,12 +3924,12 @@
       "area": "200-C",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 304,
+      "estimate_hours": 300,
       "estimate_hours_by_craft": {
         "pipefitter": 156,
-        "scaffolder": 148
+        "scaffolder": 144
       },
-      "estimate_cost_usd": 63960,
+      "estimate_cost_usd": 63180,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3949,12 +3949,12 @@
       "area": "200-C",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 236,
+      "estimate_hours": 232,
       "estimate_hours_by_craft": {
         "pipefitter": 112,
-        "scaffolder": 124
+        "scaffolder": 120
       },
-      "estimate_cost_usd": 49380,
+      "estimate_cost_usd": 48600,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -3974,14 +3974,14 @@
       "area": "200-B",
       "ript_score": 24,
       "mandatory": true,
-      "estimate_hours": 1736,
+      "estimate_hours": 1712,
       "estimate_hours_by_craft": {
-        "catalyst_specialist": 356,
-        "boilermaker": 460,
-        "scaffolder": 480,
-        "crane_rigging": 440
+        "catalyst_specialist": 348,
+        "boilermaker": 456,
+        "scaffolder": 472,
+        "crane_rigging": 436
       },
-      "estimate_cost_usd": 427720,
+      "estimate_cost_usd": 421760,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4001,12 +4001,12 @@
       "area": "200-C",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 272,
+      "estimate_hours": 268,
       "estimate_hours_by_craft": {
-        "pipefitter": 144,
+        "pipefitter": 140,
         "scaffolder": 128
       },
-      "estimate_cost_usd": 57360,
+      "estimate_cost_usd": 56460,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4026,12 +4026,12 @@
       "area": "200-C",
       "ript_score": 21,
       "mandatory": false,
-      "estimate_hours": 256,
+      "estimate_hours": 252,
       "estimate_hours_by_craft": {
-        "pipefitter": 168,
+        "pipefitter": 164,
         "scaffolder": 88
       },
-      "estimate_cost_usd": 54960,
+      "estimate_cost_usd": 54060,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4051,12 +4051,12 @@
       "area": "200-C",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 288,
+      "estimate_hours": 284,
       "estimate_hours_by_craft": {
-        "pipefitter": 156,
+        "pipefitter": 152,
         "scaffolder": 132
       },
-      "estimate_cost_usd": 60840,
+      "estimate_cost_usd": 59940,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4076,12 +4076,12 @@
       "area": "200-C",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 268,
+      "estimate_hours": 264,
       "estimate_hours_by_craft": {
-        "pipefitter": 148,
+        "pipefitter": 144,
         "scaffolder": 120
       },
-      "estimate_cost_usd": 56700,
+      "estimate_cost_usd": 55800,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4101,13 +4101,13 @@
       "area": "200-C",
       "ript_score": 14,
       "mandatory": true,
-      "estimate_hours": 400,
+      "estimate_hours": 396,
       "estimate_hours_by_craft": {
-        "inspector_nde": 96,
+        "inspector_nde": 92,
         "scaffolder": 148,
         "pipefitter": 156
       },
-      "estimate_cost_usd": 88920,
+      "estimate_cost_usd": 87880,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4127,13 +4127,13 @@
       "area": "200-C",
       "ript_score": 8,
       "mandatory": true,
-      "estimate_hours": 352,
+      "estimate_hours": 348,
       "estimate_hours_by_craft": {
         "inspector_nde": 108,
-        "scaffolder": 132,
+        "scaffolder": 128,
         "pipefitter": 112
       },
-      "estimate_cost_usd": 79020,
+      "estimate_cost_usd": 78240,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4153,13 +4153,13 @@
       "area": "200-C",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 372,
+      "estimate_hours": 368,
       "estimate_hours_by_craft": {
-        "inspector_nde": 140,
-        "scaffolder": 144,
-        "pipefitter": 88
+        "inspector_nde": 144,
+        "scaffolder": 140,
+        "pipefitter": 84
       },
-      "estimate_cost_usd": 84280,
+      "estimate_cost_usd": 83640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4179,14 +4179,14 @@
       "area": "200-D",
       "ript_score": 22,
       "mandatory": true,
-      "estimate_hours": 972,
+      "estimate_hours": 960,
       "estimate_hours_by_craft": {
-        "boilermaker": 192,
-        "pipefitter": 316,
+        "boilermaker": 184,
+        "pipefitter": 312,
         "inspector_nde": 256,
         "scaffolder": 208
       },
-      "estimate_cost_usd": 223340,
+      "estimate_cost_usd": 220560,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4206,13 +4206,13 @@
       "area": "200-C",
       "ript_score": 12,
       "mandatory": true,
-      "estimate_hours": 332,
+      "estimate_hours": 328,
       "estimate_hours_by_craft": {
         "inspector_nde": 100,
-        "scaffolder": 112,
+        "scaffolder": 108,
         "pipefitter": 120
       },
-      "estimate_cost_usd": 74840,
+      "estimate_cost_usd": 74060,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4232,13 +4232,13 @@
       "area": "200-C",
       "ript_score": 15,
       "mandatory": true,
-      "estimate_hours": 308,
+      "estimate_hours": 304,
       "estimate_hours_by_craft": {
         "inspector_nde": 108,
         "scaffolder": 88,
-        "pipefitter": 112
+        "pipefitter": 108
       },
-      "estimate_cost_usd": 70440,
+      "estimate_cost_usd": 69540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4258,13 +4258,13 @@
       "area": "200-D",
       "ript_score": 9,
       "mandatory": true,
-      "estimate_hours": 344,
+      "estimate_hours": 336,
       "estimate_hours_by_craft": {
         "inspector_nde": 80,
-        "scaffolder": 96,
-        "pipefitter": 168
+        "scaffolder": 92,
+        "pipefitter": 164
       },
-      "estimate_cost_usd": 77320,
+      "estimate_cost_usd": 75640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4284,13 +4284,13 @@
       "area": "200-D",
       "ript_score": 11,
       "mandatory": true,
-      "estimate_hours": 344,
+      "estimate_hours": 340,
       "estimate_hours_by_craft": {
         "inspector_nde": 128,
         "scaffolder": 136,
-        "pipefitter": 80
+        "pipefitter": 76
       },
-      "estimate_cost_usd": 77800,
+      "estimate_cost_usd": 76900,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4310,13 +4310,13 @@
       "area": "200-B",
       "ript_score": 10,
       "mandatory": true,
-      "estimate_hours": 412,
+      "estimate_hours": 408,
       "estimate_hours_by_craft": {
-        "inspector_nde": 120,
+        "inspector_nde": 116,
         "scaffolder": 176,
         "pipefitter": 116
       },
-      "estimate_cost_usd": 91620,
+      "estimate_cost_usd": 90580,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4336,13 +4336,13 @@
       "area": "200-D",
       "ript_score": 11,
       "mandatory": false,
-      "estimate_hours": 348,
+      "estimate_hours": 344,
       "estimate_hours_by_craft": {
-        "inspector_nde": 124,
+        "inspector_nde": 120,
         "scaffolder": 132,
         "pipefitter": 92
       },
-      "estimate_cost_usd": 78680,
+      "estimate_cost_usd": 77640,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4362,13 +4362,13 @@
       "area": "200-B",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 348,
+      "estimate_hours": 344,
       "estimate_hours_by_craft": {
         "inspector_nde": 92,
-        "scaffolder": 124,
+        "scaffolder": 120,
         "pipefitter": 132
       },
-      "estimate_cost_usd": 77800,
+      "estimate_cost_usd": 77020,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4388,13 +4388,13 @@
       "area": "200-B",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 368,
+      "estimate_hours": 364,
       "estimate_hours_by_craft": {
         "inspector_nde": 116,
-        "scaffolder": 144,
+        "scaffolder": 140,
         "pipefitter": 108
       },
-      "estimate_cost_usd": 82540,
+      "estimate_cost_usd": 81760,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4414,13 +4414,13 @@
       "area": "200-C",
       "ript_score": 8,
       "mandatory": false,
-      "estimate_hours": 356,
+      "estimate_hours": 352,
       "estimate_hours_by_craft": {
-        "inspector_nde": 180,
+        "inspector_nde": 176,
         "scaffolder": 88,
         "pipefitter": 88
       },
-      "estimate_cost_usd": 83760,
+      "estimate_cost_usd": 82720,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4440,13 +4440,13 @@
       "area": "200-C",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 372,
+      "estimate_hours": 368,
       "estimate_hours_by_craft": {
         "inspector_nde": 128,
         "scaffolder": 132,
-        "pipefitter": 112
+        "pipefitter": 108
       },
-      "estimate_cost_usd": 84220,
+      "estimate_cost_usd": 83320,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4466,14 +4466,14 @@
       "area": "200-C",
       "ript_score": 19,
       "mandatory": false,
-      "estimate_hours": 1172,
+      "estimate_hours": 1156,
       "estimate_hours_by_craft": {
         "boilermaker": 244,
-        "crane_rigging": 284,
-        "scaffolder": 248,
-        "inspector_nde": 396
+        "crane_rigging": 280,
+        "scaffolder": 244,
+        "inspector_nde": 388
       },
-      "estimate_cost_usd": 286760,
+      "estimate_cost_usd": 282800,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4493,13 +4493,13 @@
       "area": "200-C",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 388,
+      "estimate_hours": 384,
       "estimate_hours_by_craft": {
         "inspector_nde": 140,
         "scaffolder": 164,
-        "pipefitter": 84
+        "pipefitter": 80
       },
-      "estimate_cost_usd": 87280,
+      "estimate_cost_usd": 86380,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4519,13 +4519,13 @@
       "area": "200-C",
       "ript_score": 10,
       "mandatory": false,
-      "estimate_hours": 352,
+      "estimate_hours": 348,
       "estimate_hours_by_craft": {
-        "inspector_nde": 112,
-        "scaffolder": 100,
-        "pipefitter": 140
+        "inspector_nde": 116,
+        "scaffolder": 96,
+        "pipefitter": 136
       },
-      "estimate_cost_usd": 80120,
+      "estimate_cost_usd": 79480,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4545,13 +4545,13 @@
       "area": "200-A",
       "ript_score": 10,
       "mandatory": false,
-      "estimate_hours": 328,
+      "estimate_hours": 324,
       "estimate_hours_by_craft": {
         "inspector_nde": 112,
-        "scaffolder": 124,
+        "scaffolder": 120,
         "pipefitter": 92
       },
-      "estimate_cost_usd": 74000,
+      "estimate_cost_usd": 73220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4571,13 +4571,13 @@
       "area": "200-A",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 412,
+      "estimate_hours": 404,
       "estimate_hours_by_craft": {
-        "inspector_nde": 172,
+        "inspector_nde": 168,
         "scaffolder": 96,
-        "pipefitter": 144
+        "pipefitter": 140
       },
-      "estimate_cost_usd": 95840,
+      "estimate_cost_usd": 93900,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4597,13 +4597,13 @@
       "area": "200-A",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 340,
+      "estimate_hours": 336,
       "estimate_hours_by_craft": {
-        "inspector_nde": 132,
+        "inspector_nde": 128,
         "scaffolder": 92,
         "pipefitter": 116
       },
-      "estimate_cost_usd": 78360,
+      "estimate_cost_usd": 77320,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4623,13 +4623,13 @@
       "area": "200-A",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 412,
+      "estimate_hours": 404,
       "estimate_hours_by_craft": {
-        "inspector_nde": 152,
+        "inspector_nde": 148,
         "scaffolder": 100,
-        "pipefitter": 160
+        "pipefitter": 156
       },
-      "estimate_cost_usd": 95020,
+      "estimate_cost_usd": 93080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4649,13 +4649,13 @@
       "area": "200-A",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 408,
+      "estimate_hours": 404,
       "estimate_hours_by_craft": {
         "inspector_nde": 128,
-        "scaffolder": 132,
+        "scaffolder": 128,
         "pipefitter": 148
       },
-      "estimate_cost_usd": 92320,
+      "estimate_cost_usd": 91540,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4675,13 +4675,13 @@
       "area": "200-B",
       "ript_score": 13,
       "mandatory": false,
-      "estimate_hours": 416,
+      "estimate_hours": 408,
       "estimate_hours_by_craft": {
-        "inspector_nde": 160,
-        "scaffolder": 136,
+        "inspector_nde": 156,
+        "scaffolder": 132,
         "pipefitter": 120
       },
-      "estimate_cost_usd": 95120,
+      "estimate_cost_usd": 93300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4701,13 +4701,13 @@
       "area": "200-B",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 340,
+      "estimate_hours": 332,
       "estimate_hours_by_craft": {
         "inspector_nde": 88,
-        "scaffolder": 136,
-        "pipefitter": 116
+        "scaffolder": 132,
+        "pipefitter": 112
       },
-      "estimate_cost_usd": 75500,
+      "estimate_cost_usd": 73820,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4727,13 +4727,13 @@
       "area": "200-B",
       "ript_score": 12,
       "mandatory": false,
-      "estimate_hours": 332,
+      "estimate_hours": 328,
       "estimate_hours_by_craft": {
         "inspector_nde": 88,
-        "scaffolder": 144,
+        "scaffolder": 140,
         "pipefitter": 100
       },
-      "estimate_cost_usd": 73460,
+      "estimate_cost_usd": 72680,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4753,13 +4753,13 @@
       "area": "200-B",
       "ript_score": 18,
       "mandatory": false,
-      "estimate_hours": 408,
+      "estimate_hours": 404,
       "estimate_hours_by_craft": {
         "inspector_nde": 132,
         "scaffolder": 160,
-        "pipefitter": 116
+        "pipefitter": 112
       },
-      "estimate_cost_usd": 91620,
+      "estimate_cost_usd": 90720,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4779,13 +4779,13 @@
       "area": "200-B",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 328,
+      "estimate_hours": 324,
       "estimate_hours_by_craft": {
         "inspector_nde": 128,
-        "scaffolder": 128,
+        "scaffolder": 124,
         "pipefitter": 72
       },
-      "estimate_cost_usd": 74440,
+      "estimate_cost_usd": 73660,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4805,12 +4805,12 @@
       "area": "200-E",
       "ript_score": 14,
       "mandatory": true,
-      "estimate_hours": 248,
+      "estimate_hours": 244,
       "estimate_hours_by_craft": {
-        "instrument_tech": 112,
+        "instrument_tech": 108,
         "scaffolder": 136
       },
-      "estimate_cost_usd": 53400,
+      "estimate_cost_usd": 52440,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4830,12 +4830,12 @@
       "area": "200-A",
       "ript_score": 15,
       "mandatory": true,
-      "estimate_hours": 212,
+      "estimate_hours": 208,
       "estimate_hours_by_craft": {
-        "instrument_tech": 124,
+        "instrument_tech": 120,
         "scaffolder": 88
       },
-      "estimate_cost_usd": 46920,
+      "estimate_cost_usd": 45960,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4855,12 +4855,12 @@
       "area": "200-A",
       "ript_score": 11,
       "mandatory": true,
-      "estimate_hours": 216,
+      "estimate_hours": 212,
       "estimate_hours_by_craft": {
         "instrument_tech": 96,
-        "scaffolder": 120
+        "scaffolder": 116
       },
-      "estimate_cost_usd": 46440,
+      "estimate_cost_usd": 45660,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4880,12 +4880,12 @@
       "area": "200-A",
       "ript_score": 10,
       "mandatory": false,
-      "estimate_hours": 224,
+      "estimate_hours": 220,
       "estimate_hours_by_craft": {
         "instrument_tech": 112,
-        "scaffolder": 112
+        "scaffolder": 108
       },
-      "estimate_cost_usd": 48720,
+      "estimate_cost_usd": 47940,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4905,13 +4905,13 @@
       "area": "200-B",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 360,
+      "estimate_hours": 356,
       "estimate_hours_by_craft": {
         "inspector_nde": 132,
         "scaffolder": 88,
-        "pipefitter": 140
+        "pipefitter": 136
       },
-      "estimate_cost_usd": 82980,
+      "estimate_cost_usd": 82080,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4931,12 +4931,12 @@
       "area": "200-A",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 248,
+      "estimate_hours": 244,
       "estimate_hours_by_craft": {
         "instrument_tech": 128,
-        "scaffolder": 120
+        "scaffolder": 116
       },
-      "estimate_cost_usd": 54120,
+      "estimate_cost_usd": 53340,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -4981,12 +4981,12 @@
       "area": "200-B",
       "ript_score": 9,
       "mandatory": false,
-      "estimate_hours": 192,
+      "estimate_hours": 188,
       "estimate_hours_by_craft": {
         "instrument_tech": 108,
-        "scaffolder": 84
+        "scaffolder": 80
       },
-      "estimate_cost_usd": 42300,
+      "estimate_cost_usd": 41520,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5056,12 +5056,12 @@
       "area": "200-C",
       "ript_score": 15,
       "mandatory": false,
-      "estimate_hours": 204,
+      "estimate_hours": 200,
       "estimate_hours_by_craft": {
         "instrument_tech": 116,
-        "scaffolder": 88
+        "scaffolder": 84
       },
-      "estimate_cost_usd": 45000,
+      "estimate_cost_usd": 44220,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5081,13 +5081,13 @@
       "area": "200-C",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 900,
+      "estimate_hours": 888,
       "estimate_hours_by_craft": {
-        "pipefitter": 248,
-        "boilermaker": 332,
-        "crane_rigging": 320
+        "pipefitter": 244,
+        "boilermaker": 328,
+        "crane_rigging": 316
       },
-      "estimate_cost_usd": 221820,
+      "estimate_cost_usd": 218880,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5107,13 +5107,13 @@
       "area": "200-B",
       "ript_score": 16,
       "mandatory": false,
-      "estimate_hours": 936,
+      "estimate_hours": 924,
       "estimate_hours_by_craft": {
-        "pipefitter": 316,
-        "boilermaker": 284,
-        "crane_rigging": 336
+        "pipefitter": 312,
+        "boilermaker": 280,
+        "crane_rigging": 332
       },
-      "estimate_cost_usd": 230240,
+      "estimate_cost_usd": 227300,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5133,13 +5133,13 @@
       "area": "200-G",
       "ript_score": 17,
       "mandatory": false,
-      "estimate_hours": 952,
+      "estimate_hours": 940,
       "estimate_hours_by_craft": {
-        "pipefitter": 236,
-        "boilermaker": 408,
-        "crane_rigging": 308
+        "pipefitter": 232,
+        "boilermaker": 404,
+        "crane_rigging": 304
       },
-      "estimate_cost_usd": 233680,
+      "estimate_cost_usd": 230740,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5149,7 +5149,7 @@
     {
       "request_id": "WR-200-0198",
       "event_id": "TAR-200-2028",
-      "title": "TIE-IN T-010 NEW PROCESS CONNECTION AT D-202",
+      "title": "TIE-IN T-10 NEW PROCESS CONNECTION AT D-202",
       "description": "Install new welded tie-in spool and block valve assembly at D-202, radiograph welds and hydrotest.",
       "equipment_text": "D-202",
       "category": "Capital tie-in",
@@ -5159,13 +5159,13 @@
       "area": "200-E",
       "ript_score": 14,
       "mandatory": false,
-      "estimate_hours": 1080,
+      "estimate_hours": 1068,
       "estimate_hours_by_craft": {
-        "pipefitter": 392,
-        "boilermaker": 292,
-        "crane_rigging": 396
+        "pipefitter": 388,
+        "boilermaker": 288,
+        "crane_rigging": 392
       },
-      "estimate_cost_usd": 265720,
+      "estimate_cost_usd": 262780,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5185,13 +5185,13 @@
       "area": "200-B",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 1628,
+      "estimate_hours": 1604,
       "estimate_hours_by_craft": {
-        "pipefitter": 472,
-        "boilermaker": 656,
-        "scaffolder": 500
+        "pipefitter": 460,
+        "boilermaker": 648,
+        "scaffolder": 496
       },
-      "estimate_cost_usd": 357860,
+      "estimate_cost_usd": 352500,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,
@@ -5211,13 +5211,13 @@
       "area": "200-A",
       "ript_score": 25,
       "mandatory": true,
-      "estimate_hours": 1548,
+      "estimate_hours": 1528,
       "estimate_hours_by_craft": {
-        "pipefitter": 600,
-        "boilermaker": 552,
-        "scaffolder": 396
+        "pipefitter": 596,
+        "boilermaker": 544,
+        "scaffolder": 388
       },
-      "estimate_cost_usd": 341940,
+      "estimate_cost_usd": 337600,
       "status": "candidate",
       "version": 1,
       "work_package_id": null,

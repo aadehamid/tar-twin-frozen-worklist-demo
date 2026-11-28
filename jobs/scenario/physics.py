@@ -67,9 +67,25 @@ def build_process_basis() -> ProcessBasis:
     m_sour_offgas_t_day = total_in_t_day - m_ulsd_t_day - m_wild_naphtha_t_day
 
     # Counter-current feed/effluent exchanger train E-201A -> E-201B -> E-201C (tube: feed, shell: effluent)
-    m_tube = 67.5  # kg/s (combined liquid feed + recycle gas)
+    # Closed recycle-gas loop: K-201 total discharge splits into combined-feed recycle + interbed quench
+    m_feed_kg_s = m_feed_t_day * 1000.0 / 86_400.0
+    m_comp = 4.85  # kg/s total recycle compressor K-201 discharge
+    proc_cp = 2.75
+    quench_cp = 11.4
+    quench_t = 52.0
+    b1_out = 368.0
+    b2_in = 352.0
+    # Solve quench_mass and combined-feed mass simultaneously:
+    # m_tube = m_feed_kg_s + (m_comp - quench_mass)
+    # m_tube * proc_cp * (b1_out - b2_in) = quench_mass * quench_cp * (b2_in - quench_t)
+    lhs_factor = proc_cp * (b1_out - b2_in)
+    rhs_factor = quench_cp * (b2_in - quench_t)
+    quench_mass = ((m_feed_kg_s + m_comp) * lhs_factor) / (rhs_factor + lhs_factor)
+    recycle_to_feed_kg_s = m_comp - quench_mass
+    m_tube = m_feed_kg_s + recycle_to_feed_kg_s
+    m_shell = m_tube + quench_mass  # exact reactor effluent mass flow (combined feed + interbed quench)
+
     cp_tube = 2.65  # kJ/(kg*K)
-    m_shell = 68.4  # kg/s (reactor effluent incl. quench gas)
     cp_shell = 2.75  # kJ/(kg*K)
 
     dt_tube = 72.0  # C per shell (62 -> 134 -> 206 -> 278 C)
@@ -84,11 +100,11 @@ def build_process_basis() -> ProcessBasis:
     exchangers = [
         ExchangerThermalBasis(
             tag="E-201A",
-            tube_mass_kg_s=m_tube,
+            tube_mass_kg_s=round(m_tube, 6),
             tube_cp_kj_kg_k=cp_tube,
             tube_in_c=62.0,
             tube_out_c=134.0,
-            shell_mass_kg_s=m_shell,
+            shell_mass_kg_s=round(m_shell, 6),
             shell_cp_kj_kg_k=cp_shell,
             shell_in_c=round(shell_mid_ab, 4),
             shell_out_c=round(shell_out_a, 4),
@@ -96,11 +112,11 @@ def build_process_basis() -> ProcessBasis:
         ),
         ExchangerThermalBasis(
             tag="E-201B",
-            tube_mass_kg_s=m_tube,
+            tube_mass_kg_s=round(m_tube, 6),
             tube_cp_kj_kg_k=cp_tube,
             tube_in_c=134.0,
             tube_out_c=206.0,
-            shell_mass_kg_s=m_shell,
+            shell_mass_kg_s=round(m_shell, 6),
             shell_cp_kj_kg_k=cp_shell,
             shell_in_c=round(shell_mid_bc, 4),
             shell_out_c=round(shell_mid_ab, 4),
@@ -108,11 +124,11 @@ def build_process_basis() -> ProcessBasis:
         ),
         ExchangerThermalBasis(
             tag="E-201C",
-            tube_mass_kg_s=m_tube,
+            tube_mass_kg_s=round(m_tube, 6),
             tube_cp_kj_kg_k=cp_tube,
             tube_in_c=206.0,
             tube_out_c=278.0,
-            shell_mass_kg_s=m_shell,
+            shell_mass_kg_s=round(m_shell, 6),
             shell_cp_kj_kg_k=cp_shell,
             shell_in_c=round(shell_in_c, 4),
             shell_out_c=round(shell_mid_bc, 4),
@@ -121,14 +137,6 @@ def build_process_basis() -> ProcessBasis:
     ]
 
     # Reactors R-201 (guard) and R-202 (two beds with recycle-gas quench between beds)
-    bed1_mass = 67.5
-    proc_cp = 2.75
-    quench_cp = 11.4
-    quench_t = 52.0
-    b1_out = 368.0
-    b2_in = 352.0
-    quench_mass = (bed1_mass * proc_cp * (b1_out - b2_in)) / (quench_cp * (b2_in - quench_t))
-
     reactors = ReactorThermalBasis(
         r201_in_c=332.0,
         r201_out_c=346.0,
@@ -136,7 +144,7 @@ def build_process_basis() -> ProcessBasis:
         r202_bed1_out_c=b1_out,
         r202_bed2_in_c=b2_in,
         r202_bed2_out_c=374.0,
-        bed1_out_mass_kg_s=bed1_mass,
+        bed1_out_mass_kg_s=round(m_tube, 6),
         process_cp_kj_kg_k=proc_cp,
         quench_mass_kg_s=round(quench_mass, 6),
         quench_cp_kj_kg_k=quench_cp,
@@ -204,6 +212,7 @@ def build_process_basis() -> ProcessBasis:
             sg_60_60=round(sg_feed, 6),
             rho_ref_kg_m3=round(rho_feed, 4),
             mass_rate_t_day=round(m_feed_t_day, 6),
+            mass_rate_kg_s=round(m_feed_kg_s, 6),
             sr_wt_fraction=sr_wt,
             lco_wt_fraction=lco_wt,
             sulfur_wt_fraction=s_feed_wt,
@@ -215,6 +224,8 @@ def build_process_basis() -> ProcessBasis:
             purge_and_dissolved_h2_t_day=round(purge_h2_t_day, 6),
             makeup_h2_t_day=round(makeup_h2_t_day, 6),
             recycle_gas_h2_mol_fraction=0.85,
+            recycle_to_feed_kg_s=round(recycle_to_feed_kg_s, 6),
+            recycle_to_quench_kg_s=round(quench_mass, 6),
         ),
         products=ProductsBasis(
             ulsd=UlsdProduct(

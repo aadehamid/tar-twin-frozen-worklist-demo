@@ -61,7 +61,7 @@
     <g id="D_201" class="representation-group">
       <g class="static">
         <g>
-          <g id="HORIZONTAL_DRUM" transform="translate(560.00,310.00)">
+          <g id="HORIZONTAL_DRUM" transform="translate(540.00,310.00)">
             <polyline points="-45.0,-24.0 45.0,-24.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="-45.0,24.0 45.0,24.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="-45.0,24.0 -47.3411,23.5388 -49.5922,22.1731 -51.6668,19.9553 -53.4853,16.9706 -54.9776,13.3337 -56.0866,9.1844 -56.7694,4.6822 -57.0,0.0 -56.7694,-4.6822 -56.0866,-9.1844 -54.9776,-13.3337 -53.4853,-16.9706 -51.6668,-19.9553 -49.5922,-22.1731 -47.3411,-23.5388 -45.0,-24.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
@@ -69,14 +69,15 @@
             <polyline points="-57.0,0.0 -67.0,0.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="57.0,0.0 67.0,0.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="0.0,-24.0 0.0,-34.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
+            <polyline points="0.0,24.0 0.0,34.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
       <g class="equipmenttagnamelabel">
-        <text x="560.0" y="255.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">D-201</text>
+        <text x="540.0" y="255.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">D-201</text>
       </g>
       <g class="label">
-        <text x="560.0" y="265.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">FEED SURGE DRUM</text>
+        <text x="540.0" y="265.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">FEED SURGE DRUM</text>
       </g>
       <g id="D_201_N1" class="representation-group">
         <g id="D_201_N1_node" class="representation-group"/>
@@ -91,7 +92,7 @@
     <g id="P_201A" class="representation-group">
       <g class="static">
         <g>
-          <g id="CENTRIFUGAL_PUMP" transform="translate(870.00,220.00)">
+          <g id="CENTRIFUGAL_PUMP" transform="translate(840.00,220.00)">
             <ellipse cx="0.0" cy="0.0" rx="16.0" ry="16.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polygon points="-6.0,-10.0 12.0,0.0 -6.0,10.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="-26.0,0.0 -16.0,0.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
@@ -100,10 +101,10 @@
         </g>
       </g>
       <g class="equipmenttagnamelabel">
-        <text x="870.0" y="180.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">P-201A</text>
+        <text x="840.0" y="180.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">P-201A</text>
       </g>
       <g class="label">
-        <text x="870.0" y="190.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE PUMP A</text>
+        <text x="840.0" y="190.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE PUMP A</text>
       </g>
       <g id="P_201A_N1" class="representation-group">
         <g id="P_201A_N1_node" class="representation-group"/>
@@ -115,7 +116,7 @@
     <g id="P_201B" class="representation-group">
       <g class="static">
         <g>
-          <g id="CENTRIFUGAL_PUMP" transform="translate(870.00,420.00)">
+          <g id="CENTRIFUGAL_PUMP" transform="translate(840.00,420.00)">
             <ellipse cx="0.0" cy="0.0" rx="16.0" ry="16.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polygon points="-6.0,-10.0 12.0,0.0 -6.0,10.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <polyline points="-26.0,0.0 -16.0,0.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
@@ -124,10 +125,10 @@
         </g>
       </g>
       <g class="equipmenttagnamelabel">
-        <text x="870.0" y="380.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">P-201B</text>
+        <text x="840.0" y="380.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">P-201B</text>
       </g>
       <g class="label">
-        <text x="870.0" y="390.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE PUMP B</text>
+        <text x="840.0" y="390.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE PUMP B</text>
       </g>
       <g id="P_201B_N1" class="representation-group">
         <g id="P_201B_N1_node" class="representation-group"/>
@@ -167,13 +168,13 @@
     <g id="HV_2017" class="representation-group">
       <g class="static">
         <g>
-          <g id="GATE_VALVE" transform="translate(760.00,220.00)">
+          <g id="GATE_VALVE" transform="translate(740.00,220.00)">
             <polygon points="-10.0,-6.0 10.0,6.0 10.0,-6.0 -10.0,6.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
       <g class="valvelabel">
-        <text x="760.0" y="206.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2017</text>
+        <text x="740.0" y="206.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2017</text>
       </g>
       <g id="HV_2017_in" class="representation-group"/>
       <g id="HV_2017_out" class="representation-group"/>
@@ -181,13 +182,13 @@
     <g id="HV_2018" class="representation-group">
       <g class="static">
         <g>
-          <g id="GATE_VALVE" transform="translate(760.00,420.00)">
+          <g id="GATE_VALVE" transform="translate(740.00,420.00)">
             <polygon points="-10.0,-6.0 10.0,6.0 10.0,-6.0 -10.0,6.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
       <g class="valvelabel">
-        <text x="760.0" y="406.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2018</text>
+        <text x="740.0" y="406.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2018</text>
       </g>
       <g id="HV_2018_in" class="representation-group"/>
       <g id="HV_2018_out" class="representation-group"/>
@@ -195,13 +196,13 @@
     <g id="HV_2021" class="representation-group">
       <g class="static">
         <g>
-          <g id="GATE_VALVE" transform="translate(990.00,220.00)">
+          <g id="GATE_VALVE" transform="translate(950.00,220.00)">
             <polygon points="-10.0,-6.0 10.0,6.0 10.0,-6.0 -10.0,6.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
       <g class="valvelabel">
-        <text x="990.0" y="206.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2021</text>
+        <text x="950.0" y="206.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2021</text>
       </g>
       <g id="HV_2021_in" class="representation-group"/>
       <g id="HV_2021_out" class="representation-group"/>
@@ -209,13 +210,13 @@
     <g id="HV_2022" class="representation-group">
       <g class="static">
         <g>
-          <g id="GATE_VALVE" transform="translate(990.00,420.00)">
+          <g id="GATE_VALVE" transform="translate(950.00,420.00)">
             <polygon points="-10.0,-6.0 10.0,6.0 10.0,-6.0 -10.0,6.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
       <g class="valvelabel">
-        <text x="990.0" y="406.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2022</text>
+        <text x="950.0" y="406.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">HV-2022</text>
       </g>
       <g id="HV_2022_in" class="representation-group"/>
       <g id="HV_2022_out" class="representation-group"/>
@@ -223,7 +224,7 @@
     <g id="LV_2021" class="representation-group">
       <g class="static">
         <g>
-          <g id="GLOBE_CONTROL_VALVE" transform="translate(420.00,200.00)">
+          <g id="GLOBE_CONTROL_VALVE" transform="translate(400.00,200.00)">
             <polygon points="-10.0,-6.0 10.0,6.0 10.0,-6.0 -10.0,6.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
             <ellipse cx="0.0" cy="0.0" rx="2.2" ry="2.2" fill="rgb(0,0,0)" stroke="rgb(0,0,0)" stroke-width="0.3" vector-effect="non-scaling-stroke"/>
             <polyline points="0.0,0.0 0.0,-12.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
@@ -233,7 +234,7 @@
         </g>
       </g>
       <g class="valvelabel">
-        <text x="420.0" y="176.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">LV-2021</text>
+        <text x="400.0" y="176.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">LV-2021</text>
       </g>
       <g id="LV_2021_in" class="representation-group"/>
       <g id="LV_2021_out" class="representation-group"/>
@@ -276,7 +277,7 @@
       </g>
       <g id="OPC_12_node" class="representation-group"/>
     </g>
-    <g id="OPC_13" class="representation-group">
+    <g id="OPC_21" class="representation-group">
       <g class="static">
         <g>
           <g id="PIPE_OFF_PAGE_CONNECTOR" transform="translate(1120.00,220.00)">
@@ -285,53 +286,39 @@
         </g>
       </g>
       <g class="offpageconnectornumberlabel">
-        <text x="1120.0" y="220.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">OPC-13</text>
+        <text x="1120.0" y="220.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">OPC-21</text>
       </g>
       <g class="offpageconnectordescriptionlabel">
-        <text x="1138.0" y="242.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE A TO E-201A</text>
+        <text x="1138.0" y="242.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">FEED FROM P-201A/B DISCHARGE</text>
       </g>
       <g class="label">
         <text x="1138.0" y="232.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">200-PID-002</text>
       </g>
-      <g id="OPC_13_node" class="representation-group"/>
+      <g id="OPC_21_node" class="representation-group"/>
     </g>
-    <g id="OPC_14" class="representation-group">
+    <g id="Tee_T101" class="representation-group">
       <g class="static">
         <g>
-          <g id="PIPE_OFF_PAGE_CONNECTOR" transform="translate(1120.00,420.00)">
-            <polygon points="-20.0,-8.0 10.0,-8.0 20.0,0.0 10.0,8.0 -20.0,8.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
+          <g id="PIPE_TEE_JUNCTION" transform="translate(660.00,310.00)">
+            <ellipse cx="0.0" cy="0.0" rx="2.0" ry="2.0" fill="rgb(0,0,0)" stroke="rgb(0,0,0)" stroke-width="0.3" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
-      <g class="offpageconnectornumberlabel">
-        <text x="1120.0" y="420.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">OPC-14</text>
-      </g>
-      <g class="offpageconnectordescriptionlabel">
-        <text x="1138.0" y="442.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">CHARGE B TO E-201A</text>
-      </g>
-      <g class="label">
-        <text x="1138.0" y="432.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">200-PID-002</text>
-      </g>
-      <g id="OPC_14_node" class="representation-group"/>
+      <g id="Tee_T101_n_0" class="representation-group"/>
+      <g id="Tee_T101_n_1" class="representation-group"/>
+      <g id="Tee_T101_n_2" class="representation-group"/>
     </g>
-    <g id="OPC_15" class="representation-group">
+    <g id="Tee_T102" class="representation-group">
       <g class="static">
         <g>
-          <g id="PIPE_OFF_PAGE_CONNECTOR" transform="translate(660.00,420.00)">
-            <polygon points="-20.0,-8.0 10.0,-8.0 20.0,0.0 10.0,8.0 -20.0,8.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.7" vector-effect="non-scaling-stroke"/>
+          <g id="PIPE_TEE_JUNCTION" transform="translate(1030.00,220.00)">
+            <ellipse cx="0.0" cy="0.0" rx="2.0" ry="2.0" fill="rgb(0,0,0)" stroke="rgb(0,0,0)" stroke-width="0.3" vector-effect="non-scaling-stroke"/>
           </g>
         </g>
       </g>
-      <g class="offpageconnectornumberlabel">
-        <text x="660.0" y="420.0" text-anchor="middle" dominant-baseline="middle" font-family="'Arial', Arial" font-size="8.0" fill="rgb(0,0,0)">OPC-15</text>
-      </g>
-      <g class="offpageconnectordescriptionlabel">
-        <text x="678.0" y="442.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">D-201 SUCTION B HDR</text>
-      </g>
-      <g class="label">
-        <text x="678.0" y="432.0" text-anchor="end" dominant-baseline="middle" font-family="'Arial', Arial" font-size="6.0" fill="rgb(0,0,0)">200-PID-001</text>
-      </g>
-      <g id="OPC_15_node" class="representation-group"/>
+      <g id="Tee_T102_n_0" class="representation-group"/>
+      <g id="Tee_T102_n_1" class="representation-group"/>
+      <g id="Tee_T102_n_2" class="representation-group"/>
     </g>
     <g id="L101_pipe_1" class="representation-group">
       <g class="static">
@@ -345,12 +332,12 @@
     </g>
     <g id="L102_pipe_1" class="representation-group">
       <g class="static">
-        <polyline points="292.0,200.0 410.0,200.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="292.0,200.0 390.0,200.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L102_pipe_2" class="representation-group">
       <g class="static">
-        <polyline points="430.0,200.0 460.0,200.0 460.0,310.0 493.0,310.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="410.0,200.0 440.0,200.0 440.0,310.0 473.0,310.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L103_pipe_1" class="representation-group">
@@ -365,47 +352,57 @@
     </g>
     <g id="L104_pipe_1" class="representation-group">
       <g class="static">
-        <polyline points="292.0,420.0 560.0,420.0 560.0,276.0 560.0,276.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="292.0,420.0 540.0,420.0 540.0,276.0 540.0,276.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L105_pipe_1" class="representation-group">
       <g class="static">
-        <polyline points="627.0,310.0 680.0,310.0 680.0,220.0 750.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="607.0,310.0 660.0,310.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L105_pipe_2" class="representation-group">
       <g class="static">
-        <polyline points="770.0,220.0 844.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="660.0,310.0 660.0,220.0 730.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
-    <g id="L106_pipe_1" class="representation-group">
+    <g id="L105_pipe_3" class="representation-group">
       <g class="static">
-        <polyline points="896.0,220.0 980.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
-      </g>
-    </g>
-    <g id="L106_pipe_2" class="representation-group">
-      <g class="static">
-        <polyline points="1000.0,220.0 1100.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="750.0,220.0 814.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L107_pipe_1" class="representation-group">
       <g class="static">
-        <polyline points="680.0,420.0 750.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="660.0,310.0 660.0,420.0 730.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L107_pipe_2" class="representation-group">
       <g class="static">
-        <polyline points="770.0,420.0 844.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="750.0,420.0 814.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+      </g>
+    </g>
+    <g id="L106_pipe_1" class="representation-group">
+      <g class="static">
+        <polyline points="866.0,220.0 940.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+      </g>
+    </g>
+    <g id="L106_pipe_2" class="representation-group">
+      <g class="static">
+        <polyline points="960.0,220.0 1030.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+      </g>
+    </g>
+    <g id="L106_pipe_3" class="representation-group">
+      <g class="static">
+        <polyline points="1030.0,220.0 1100.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L108_pipe_1" class="representation-group">
       <g class="static">
-        <polyline points="896.0,420.0 980.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="866.0,420.0 940.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
     <g id="L108_pipe_2" class="representation-group">
       <g class="static">
-        <polyline points="1000.0,420.0 1100.0,420.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
+        <polyline points="960.0,420.0 1030.0,420.0 1030.0,220.0" fill="none" stroke="rgb(0,0,0)" stroke-width="0.9" vector-effect="non-scaling-stroke"/>
       </g>
     </g>
   </g>

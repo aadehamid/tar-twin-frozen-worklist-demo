@@ -37,19 +37,19 @@
               <Object id="L301_seg_1" type="Plant/Piping.PipingNetworkSegment">
                 <Components property="Connections">
                   <Object id="L301_pipe_1" type="Plant/Piping.Pipe">
-                    <References objects="#OPC_31" property="SourceItem"/>
-                    <References objects="#OPC_31_node" property="SourceNode"/>
+                    <References objects="#OPC_24" property="SourceItem"/>
+                    <References objects="#OPC_24_node" property="SourceNode"/>
                     <References objects="#A_201_N1" property="TargetItem"/>
                     <References objects="#A_201_N1_node" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
-                  <Object id="OPC_31" type="Plant/Piping.FlowInPipeOffPageConnector">
+                  <Object id="OPC_24" type="Plant/Piping.FlowInPipeOffPageConnector">
                     <Components property="Nodes">
-                      <Object id="OPC_31_node" type="Plant/Piping.PipingNode"/>
+                      <Object id="OPC_24_node" type="Plant/Piping.PipingNode"/>
                     </Components>
                     <Components property="ConnectorReference">
-                      <Object id="OPC_31_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
+                      <Object id="OPC_24_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
                         <Data property="ReferencedDrawingNumber">
                           <String>200-PID-002</String>
                         </Data>
@@ -63,19 +63,19 @@
                               <String>en</String>
                             </Data>
                             <Data property="Value">
-                              <String>EFFLUENT FROM E-201A</String>
+                              <String>REACTOR EFFLUENT FROM E-201A</String>
                             </Data>
                           </AggregatedDataValue>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
                     <Data property="PipeConnectorNumber">
-                      <String>OPC-31</String>
+                      <String>OPC-24</String>
                     </Data>
                   </Object>
                 </Components>
-                <References objects="#OPC_31" property="SourceItem"/>
-                <References objects="#OPC_31_node" property="SourceNode"/>
+                <References objects="#OPC_24" property="SourceItem"/>
+                <References objects="#OPC_24_node" property="SourceNode"/>
                 <References objects="#A_201_N1" property="TargetItem"/>
                 <References objects="#A_201_N1_node" property="TargetNode"/>
                 <Data property="FluidCode">
@@ -118,8 +118,8 @@
                   <Object id="L302_pipe_2" type="Plant/Piping.Pipe">
                     <References objects="#HV_2041" property="SourceItem"/>
                     <References objects="#HV_2041_out" property="SourceNode"/>
-                    <References objects="#E_202_N1" property="TargetItem"/>
-                    <References objects="#E_202_N1_node" property="TargetNode"/>
+                    <References objects="#E_202_N3" property="TargetItem"/>
+                    <References objects="#E_202_N3_node" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
@@ -135,8 +135,8 @@
                 </Components>
                 <References objects="#A_201_N2" property="SourceItem"/>
                 <References objects="#A_201_N2_node" property="SourceNode"/>
-                <References objects="#E_202_N1" property="TargetItem"/>
-                <References objects="#E_202_N1_node" property="TargetNode"/>
+                <References objects="#E_202_N3" property="TargetItem"/>
+                <References objects="#E_202_N3_node" property="TargetNode"/>
                 <Data property="FluidCode">
                   <String>HC</String>
                 </Data>
@@ -169,14 +169,14 @@
               <Object id="L303_seg_1" type="Plant/Piping.PipingNetworkSegment">
                 <Components property="Connections">
                   <Object id="L303_pipe_1" type="Plant/Piping.Pipe">
-                    <References objects="#E_202_N2" property="SourceItem"/>
-                    <References objects="#E_202_N2_node" property="SourceNode"/>
+                    <References objects="#E_202_N4" property="SourceItem"/>
+                    <References objects="#E_202_N4_node" property="SourceNode"/>
                     <References objects="#D_202_N1" property="TargetItem"/>
                     <References objects="#D_202_N1_node" property="TargetNode"/>
                   </Object>
                 </Components>
-                <References objects="#E_202_N2" property="SourceItem"/>
-                <References objects="#E_202_N2_node" property="SourceNode"/>
+                <References objects="#E_202_N4" property="SourceItem"/>
+                <References objects="#E_202_N4_node" property="SourceNode"/>
                 <References objects="#D_202_N1" property="TargetItem"/>
                 <References objects="#D_202_N1_node" property="TargetNode"/>
                 <Data property="FluidCode">
@@ -204,6 +204,152 @@
             </Data>
             <Data property="PipingClassCode">
               <String>15A1</String>
+            </Data>
+          </Object>
+          <Object id="L311_sys" type="Plant/Piping.PipingNetworkSystem">
+            <Components property="Segments">
+              <Object id="L311_seg_1" type="Plant/Piping.PipingNetworkSegment">
+                <Components property="Connections">
+                  <Object id="L311_pipe_1" type="Plant/Piping.Pipe">
+                    <References objects="#OPC_37" property="SourceItem"/>
+                    <References objects="#OPC_37_node" property="SourceNode"/>
+                    <References objects="#E_202_N1" property="TargetItem"/>
+                    <References objects="#E_202_N1_node" property="TargetNode"/>
+                  </Object>
+                </Components>
+                <Components property="Items">
+                  <Object id="OPC_37" type="Plant/Piping.FlowInPipeOffPageConnector">
+                    <Components property="Nodes">
+                      <Object id="OPC_37_node" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Components property="ConnectorReference">
+                      <Object id="OPC_37_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
+                        <Data property="ReferencedDrawingNumber">
+                          <String>CW-SUPPLY</String>
+                        </Data>
+                      </Object>
+                    </Components>
+                    <Data property="PipeConnectorDescription">
+                      <AggregatedDataValue type="Core/DataTypes.MultiLanguageString">
+                        <Data property="SingleLanguageStrings">
+                          <AggregatedDataValue type="Core/DataTypes.SingleLanguageString">
+                            <Data property="Language">
+                              <String>en</String>
+                            </Data>
+                            <Data property="Value">
+                              <String>COOLING WATER TO E-202</String>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="PipeConnectorNumber">
+                      <String>OPC-37</String>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#OPC_37" property="SourceItem"/>
+                <References objects="#OPC_37_node" property="SourceNode"/>
+                <References objects="#E_202_N1" property="TargetItem"/>
+                <References objects="#E_202_N1_node" property="TargetNode"/>
+                <Data property="FluidCode">
+                  <String>CW</String>
+                </Data>
+                <Data property="NominalDiameterRepresentation">
+                  <String>6"</String>
+                </Data>
+                <Data property="PipingClassCode">
+                  <String>1A1</String>
+                </Data>
+                <Data property="SegmentNumber">
+                  <String>S1</String>
+                </Data>
+              </Object>
+            </Components>
+            <Data property="FluidCode">
+              <String>CW</String>
+            </Data>
+            <Data property="LineNumber">
+              <String>6"-W-3011-1A1</String>
+            </Data>
+            <Data property="NominalDiameterRepresentation">
+              <String>6"</String>
+            </Data>
+            <Data property="PipingClassCode">
+              <String>1A1</String>
+            </Data>
+          </Object>
+          <Object id="L312_sys" type="Plant/Piping.PipingNetworkSystem">
+            <Components property="Segments">
+              <Object id="L312_seg_1" type="Plant/Piping.PipingNetworkSegment">
+                <Components property="Connections">
+                  <Object id="L312_pipe_1" type="Plant/Piping.Pipe">
+                    <References objects="#E_202_N2" property="SourceItem"/>
+                    <References objects="#E_202_N2_node" property="SourceNode"/>
+                    <References objects="#OPC_38" property="TargetItem"/>
+                    <References objects="#OPC_38_node" property="TargetNode"/>
+                  </Object>
+                </Components>
+                <Components property="Items">
+                  <Object id="OPC_38" type="Plant/Piping.FlowOutPipeOffPageConnector">
+                    <Components property="Nodes">
+                      <Object id="OPC_38_node" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Components property="ConnectorReference">
+                      <Object id="OPC_38_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
+                        <Data property="ReferencedDrawingNumber">
+                          <String>CW-RETURN</String>
+                        </Data>
+                      </Object>
+                    </Components>
+                    <Data property="PipeConnectorDescription">
+                      <AggregatedDataValue type="Core/DataTypes.MultiLanguageString">
+                        <Data property="SingleLanguageStrings">
+                          <AggregatedDataValue type="Core/DataTypes.SingleLanguageString">
+                            <Data property="Language">
+                              <String>en</String>
+                            </Data>
+                            <Data property="Value">
+                              <String>COOLING WATER FROM E-202</String>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="PipeConnectorNumber">
+                      <String>OPC-38</String>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#E_202_N2" property="SourceItem"/>
+                <References objects="#E_202_N2_node" property="SourceNode"/>
+                <References objects="#OPC_38" property="TargetItem"/>
+                <References objects="#OPC_38_node" property="TargetNode"/>
+                <Data property="FluidCode">
+                  <String>CW</String>
+                </Data>
+                <Data property="NominalDiameterRepresentation">
+                  <String>6"</String>
+                </Data>
+                <Data property="PipingClassCode">
+                  <String>1A1</String>
+                </Data>
+                <Data property="SegmentNumber">
+                  <String>S1</String>
+                </Data>
+              </Object>
+            </Components>
+            <Data property="FluidCode">
+              <String>CW</String>
+            </Data>
+            <Data property="LineNumber">
+              <String>6"-W-3012-1A1</String>
+            </Data>
+            <Data property="NominalDiameterRepresentation">
+              <String>6"</String>
+            </Data>
+            <Data property="PipingClassCode">
+              <String>1A1</String>
             </Data>
           </Object>
           <Object id="L304_sys" type="Plant/Piping.PipingNetworkSystem">
@@ -301,17 +447,38 @@
                   <Object id="L305_pipe_1" type="Plant/Piping.Pipe">
                     <References objects="#D_202_N3" property="SourceItem"/>
                     <References objects="#D_202_N3_node" property="SourceNode"/>
+                    <References objects="#HV_2044" property="TargetItem"/>
+                    <References objects="#HV_2044_in" property="TargetNode"/>
+                  </Object>
+                  <Object id="L305_pipe_2" type="Plant/Piping.Pipe">
+                    <References objects="#HV_2044" property="SourceItem"/>
+                    <References objects="#HV_2044_out" property="SourceNode"/>
                     <References objects="#LV_2031" property="TargetItem"/>
                     <References objects="#LV_2031_in" property="TargetNode"/>
                   </Object>
-                  <Object id="L305_pipe_2" type="Plant/Piping.Pipe">
+                  <Object id="L305_pipe_3" type="Plant/Piping.Pipe">
                     <References objects="#LV_2031" property="SourceItem"/>
                     <References objects="#LV_2031_out" property="SourceNode"/>
+                    <References objects="#HV_2081" property="TargetItem"/>
+                    <References objects="#HV_2081_in" property="TargetNode"/>
+                  </Object>
+                  <Object id="L305_pipe_4" type="Plant/Piping.Pipe">
+                    <References objects="#HV_2081" property="SourceItem"/>
+                    <References objects="#HV_2081_out" property="SourceNode"/>
                     <References objects="#D_203_N1" property="TargetItem"/>
                     <References objects="#D_203_N1_node" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
+                  <Object id="HV_2044" type="Plant/Piping.GateValve">
+                    <Components property="Nodes">
+                      <Object id="HV_2044_in" type="Plant/Piping.PipingNode"/>
+                      <Object id="HV_2044_out" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Data property="PipingComponentName">
+                      <String>HV-2044</String>
+                    </Data>
+                  </Object>
                   <Object id="LV_2031" type="Plant/Piping.GlobeValve">
                     <Components property="Nodes">
                       <Object id="LV_2031_in" type="Plant/Piping.PipingNode"/>
@@ -319,6 +486,15 @@
                     </Components>
                     <Data property="PipingComponentName">
                       <String>LV-2031</String>
+                    </Data>
+                  </Object>
+                  <Object id="HV_2081" type="Plant/Piping.GateValve">
+                    <Components property="Nodes">
+                      <Object id="HV_2081_in" type="Plant/Piping.PipingNode"/>
+                      <Object id="HV_2081_out" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Data property="PipingComponentName">
+                      <String>HV-2081</String>
                     </Data>
                   </Object>
                 </Components>
@@ -360,11 +536,26 @@
                   <Object id="L306_pipe_1" type="Plant/Piping.Pipe">
                     <References objects="#D_203_N2" property="SourceItem"/>
                     <References objects="#D_203_N2_node" property="SourceNode"/>
+                    <References objects="#HV_2087" property="TargetItem"/>
+                    <References objects="#HV_2087_in" property="TargetNode"/>
+                  </Object>
+                  <Object id="L306_pipe_2" type="Plant/Piping.Pipe">
+                    <References objects="#HV_2087" property="SourceItem"/>
+                    <References objects="#HV_2087_out" property="SourceNode"/>
                     <References objects="#OPC_33" property="TargetItem"/>
                     <References objects="#OPC_33_node" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
+                  <Object id="HV_2087" type="Plant/Piping.GateValve">
+                    <Components property="Nodes">
+                      <Object id="HV_2087_in" type="Plant/Piping.PipingNode"/>
+                      <Object id="HV_2087_out" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Data property="PipingComponentName">
+                      <String>HV-2087</String>
+                    </Data>
+                  </Object>
                   <Object id="OPC_33" type="Plant/Piping.FlowOutPipeOffPageConnector">
                     <Components property="Nodes">
                       <Object id="OPC_33_node" type="Plant/Piping.PipingNode"/>
@@ -384,7 +575,7 @@
                               <String>en</String>
                             </Data>
                             <Data property="Value">
-                              <String>LIQUID TO C-201</String>
+                              <String>LP LIQUID TO C-201</String>
                             </Data>
                           </AggregatedDataValue>
                         </Data>
@@ -433,14 +624,8 @@
                   <Object id="L307_pipe_1" type="Plant/Piping.Pipe">
                     <References objects="#OPC_34" property="SourceItem"/>
                     <References objects="#OPC_34_node" property="SourceNode"/>
-                    <References objects="#HV_2083" property="TargetItem"/>
-                    <References objects="#HV_2083_in" property="TargetNode"/>
-                  </Object>
-                  <Object id="L307_pipe_2" type="Plant/Piping.Pipe">
-                    <References objects="#HV_2083" property="SourceItem"/>
-                    <References objects="#HV_2083_out" property="SourceNode"/>
-                    <References objects="#P_204A_N1" property="TargetItem"/>
-                    <References objects="#P_204A_N1_node" property="TargetNode"/>
+                    <References objects="#Tee_T301" property="TargetItem"/>
+                    <References objects="#Tee_T301_n_0" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
@@ -473,6 +658,47 @@
                       <String>OPC-34</String>
                     </Data>
                   </Object>
+                  <Object id="Tee_T301" type="Plant/Piping.PipeTee">
+                    <Components property="Nodes">
+                      <Object id="Tee_T301_n_0" type="Plant/Piping.PipingNode"/>
+                      <Object id="Tee_T301_n_1" type="Plant/Piping.PipingNode"/>
+                      <Object id="Tee_T301_n_2" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                  </Object>
+                </Components>
+                <References objects="#OPC_34" property="SourceItem"/>
+                <References objects="#OPC_34_node" property="SourceNode"/>
+                <References objects="#Tee_T301" property="TargetItem"/>
+                <References objects="#Tee_T301_n_0" property="TargetNode"/>
+                <Data property="FluidCode">
+                  <String>WW</String>
+                </Data>
+                <Data property="NominalDiameterRepresentation">
+                  <String>3"</String>
+                </Data>
+                <Data property="PipingClassCode">
+                  <String>15A1</String>
+                </Data>
+                <Data property="SegmentNumber">
+                  <String>S1</String>
+                </Data>
+              </Object>
+              <Object id="L307_seg_2" type="Plant/Piping.PipingNetworkSegment">
+                <Components property="Connections">
+                  <Object id="L307_pipe_2" type="Plant/Piping.Pipe">
+                    <References objects="#Tee_T301" property="SourceItem"/>
+                    <References objects="#Tee_T301_n_1" property="SourceNode"/>
+                    <References objects="#HV_2083" property="TargetItem"/>
+                    <References objects="#HV_2083_in" property="TargetNode"/>
+                  </Object>
+                  <Object id="L307_pipe_3" type="Plant/Piping.Pipe">
+                    <References objects="#HV_2083" property="SourceItem"/>
+                    <References objects="#HV_2083_out" property="SourceNode"/>
+                    <References objects="#P_204A_N1" property="TargetItem"/>
+                    <References objects="#P_204A_N1_node" property="TargetNode"/>
+                  </Object>
+                </Components>
+                <Components property="Items">
                   <Object id="HV_2083" type="Plant/Piping.GateValve">
                     <Components property="Nodes">
                       <Object id="HV_2083_in" type="Plant/Piping.PipingNode"/>
@@ -483,10 +709,69 @@
                     </Data>
                   </Object>
                 </Components>
-                <References objects="#OPC_34" property="SourceItem"/>
-                <References objects="#OPC_34_node" property="SourceNode"/>
+                <References objects="#Tee_T301" property="SourceItem"/>
+                <References objects="#Tee_T301_n_1" property="SourceNode"/>
                 <References objects="#P_204A_N1" property="TargetItem"/>
                 <References objects="#P_204A_N1_node" property="TargetNode"/>
+                <Data property="FluidCode">
+                  <String>WW</String>
+                </Data>
+                <Data property="NominalDiameterRepresentation">
+                  <String>3"</String>
+                </Data>
+                <Data property="PipingClassCode">
+                  <String>15A1</String>
+                </Data>
+                <Data property="SegmentNumber">
+                  <String>S2</String>
+                </Data>
+              </Object>
+            </Components>
+            <Data property="FluidCode">
+              <String>WW</String>
+            </Data>
+            <Data property="LineNumber">
+              <String>3"-W-3007-15A1</String>
+            </Data>
+            <Data property="NominalDiameterRepresentation">
+              <String>3"</String>
+            </Data>
+            <Data property="PipingClassCode">
+              <String>15A1</String>
+            </Data>
+          </Object>
+          <Object id="L309_sys" type="Plant/Piping.PipingNetworkSystem">
+            <Components property="Segments">
+              <Object id="L309_seg_1" type="Plant/Piping.PipingNetworkSegment">
+                <Components property="Connections">
+                  <Object id="L309_pipe_1" type="Plant/Piping.Pipe">
+                    <References objects="#Tee_T301" property="SourceItem"/>
+                    <References objects="#Tee_T301_n_2" property="SourceNode"/>
+                    <References objects="#HV_2085" property="TargetItem"/>
+                    <References objects="#HV_2085_in" property="TargetNode"/>
+                  </Object>
+                  <Object id="L309_pipe_2" type="Plant/Piping.Pipe">
+                    <References objects="#HV_2085" property="SourceItem"/>
+                    <References objects="#HV_2085_out" property="SourceNode"/>
+                    <References objects="#P_204B_N1" property="TargetItem"/>
+                    <References objects="#P_204B_N1_node" property="TargetNode"/>
+                  </Object>
+                </Components>
+                <Components property="Items">
+                  <Object id="HV_2085" type="Plant/Piping.GateValve">
+                    <Components property="Nodes">
+                      <Object id="HV_2085_in" type="Plant/Piping.PipingNode"/>
+                      <Object id="HV_2085_out" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Data property="PipingComponentName">
+                      <String>HV-2085</String>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T301" property="SourceItem"/>
+                <References objects="#Tee_T301_n_2" property="SourceNode"/>
+                <References objects="#P_204B_N1" property="TargetItem"/>
+                <References objects="#P_204B_N1_node" property="TargetNode"/>
                 <Data property="FluidCode">
                   <String>WW</String>
                 </Data>
@@ -505,7 +790,7 @@
               <String>WW</String>
             </Data>
             <Data property="LineNumber">
-              <String>3"-W-3007-15A1</String>
+              <String>3"-W-3009-15A1</String>
             </Data>
             <Data property="NominalDiameterRepresentation">
               <String>3"</String>
@@ -527,14 +812,8 @@
                   <Object id="L308_pipe_2" type="Plant/Piping.Pipe">
                     <References objects="#HV_2084" property="SourceItem"/>
                     <References objects="#HV_2084_out" property="SourceNode"/>
-                    <References objects="#HV_2085" property="TargetItem"/>
-                    <References objects="#HV_2085_in" property="TargetNode"/>
-                  </Object>
-                  <Object id="L308_pipe_3" type="Plant/Piping.Pipe">
-                    <References objects="#HV_2085" property="SourceItem"/>
-                    <References objects="#HV_2085_out" property="SourceNode"/>
-                    <References objects="#P_204B_N1" property="TargetItem"/>
-                    <References objects="#P_204B_N1_node" property="TargetNode"/>
+                    <References objects="#Tee_T302" property="TargetItem"/>
+                    <References objects="#Tee_T302_n_0" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
@@ -547,20 +826,18 @@
                       <String>HV-2084</String>
                     </Data>
                   </Object>
-                  <Object id="HV_2085" type="Plant/Piping.GateValve">
+                  <Object id="Tee_T302" type="Plant/Piping.PipeTee">
                     <Components property="Nodes">
-                      <Object id="HV_2085_in" type="Plant/Piping.PipingNode"/>
-                      <Object id="HV_2085_out" type="Plant/Piping.PipingNode"/>
+                      <Object id="Tee_T302_n_0" type="Plant/Piping.PipingNode"/>
+                      <Object id="Tee_T302_n_1" type="Plant/Piping.PipingNode"/>
+                      <Object id="Tee_T302_n_2" type="Plant/Piping.PipingNode"/>
                     </Components>
-                    <Data property="PipingComponentName">
-                      <String>HV-2085</String>
-                    </Data>
                   </Object>
                 </Components>
                 <References objects="#P_204A_N2" property="SourceItem"/>
                 <References objects="#P_204A_N2_node" property="SourceNode"/>
-                <References objects="#P_204B_N1" property="TargetItem"/>
-                <References objects="#P_204B_N1_node" property="TargetNode"/>
+                <References objects="#Tee_T302" property="TargetItem"/>
+                <References objects="#Tee_T302_n_0" property="TargetNode"/>
                 <Data property="FluidCode">
                   <String>WW</String>
                 </Data>
@@ -572,6 +849,63 @@
                 </Data>
                 <Data property="SegmentNumber">
                   <String>S1</String>
+                </Data>
+              </Object>
+              <Object id="L308_seg_2" type="Plant/Piping.PipingNetworkSegment">
+                <Components property="Connections">
+                  <Object id="L308_pipe_3" type="Plant/Piping.Pipe">
+                    <References objects="#Tee_T302" property="SourceItem"/>
+                    <References objects="#Tee_T302_n_1" property="SourceNode"/>
+                    <References objects="#OPC_36" property="TargetItem"/>
+                    <References objects="#OPC_36_node" property="TargetNode"/>
+                  </Object>
+                </Components>
+                <Components property="Items">
+                  <Object id="OPC_36" type="Plant/Piping.FlowOutPipeOffPageConnector">
+                    <Components property="Nodes">
+                      <Object id="OPC_36_node" type="Plant/Piping.PipingNode"/>
+                    </Components>
+                    <Components property="ConnectorReference">
+                      <Object id="OPC_36_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
+                        <Data property="ReferencedDrawingNumber">
+                          <String>WW-HEADER</String>
+                        </Data>
+                      </Object>
+                    </Components>
+                    <Data property="PipeConnectorDescription">
+                      <AggregatedDataValue type="Core/DataTypes.MultiLanguageString">
+                        <Data property="SingleLanguageStrings">
+                          <AggregatedDataValue type="Core/DataTypes.SingleLanguageString">
+                            <Data property="Language">
+                              <String>en</String>
+                            </Data>
+                            <Data property="Value">
+                              <String>WASH WATER INJECTION HDR</String>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="PipeConnectorNumber">
+                      <String>OPC-36</String>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T302" property="SourceItem"/>
+                <References objects="#Tee_T302_n_1" property="SourceNode"/>
+                <References objects="#OPC_36" property="TargetItem"/>
+                <References objects="#OPC_36_node" property="TargetNode"/>
+                <Data property="FluidCode">
+                  <String>WW</String>
+                </Data>
+                <Data property="NominalDiameterRepresentation">
+                  <String>3"</String>
+                </Data>
+                <Data property="PipingClassCode">
+                  <String>15A1</String>
+                </Data>
+                <Data property="SegmentNumber">
+                  <String>S2</String>
                 </Data>
               </Object>
             </Components>
@@ -588,21 +922,21 @@
               <String>15A1</String>
             </Data>
           </Object>
-          <Object id="L309_sys" type="Plant/Piping.PipingNetworkSystem">
+          <Object id="L310_sys" type="Plant/Piping.PipingNetworkSystem">
             <Components property="Segments">
-              <Object id="L309_seg_1" type="Plant/Piping.PipingNetworkSegment">
+              <Object id="L310_seg_1" type="Plant/Piping.PipingNetworkSegment">
                 <Components property="Connections">
-                  <Object id="L309_pipe_1" type="Plant/Piping.Pipe">
+                  <Object id="L310_pipe_1" type="Plant/Piping.Pipe">
                     <References objects="#P_204B_N2" property="SourceItem"/>
                     <References objects="#P_204B_N2_node" property="SourceNode"/>
                     <References objects="#HV_2086" property="TargetItem"/>
                     <References objects="#HV_2086_in" property="TargetNode"/>
                   </Object>
-                  <Object id="L309_pipe_2" type="Plant/Piping.Pipe">
+                  <Object id="L310_pipe_2" type="Plant/Piping.Pipe">
                     <References objects="#HV_2086" property="SourceItem"/>
                     <References objects="#HV_2086_out" property="SourceNode"/>
-                    <References objects="#OPC_35" property="TargetItem"/>
-                    <References objects="#OPC_35_node" property="TargetNode"/>
+                    <References objects="#Tee_T302" property="TargetItem"/>
+                    <References objects="#Tee_T302_n_2" property="TargetNode"/>
                   </Object>
                 </Components>
                 <Components property="Items">
@@ -615,40 +949,11 @@
                       <String>HV-2086</String>
                     </Data>
                   </Object>
-                  <Object id="OPC_35" type="Plant/Piping.FlowOutPipeOffPageConnector">
-                    <Components property="Nodes">
-                      <Object id="OPC_35_node" type="Plant/Piping.PipingNode"/>
-                    </Components>
-                    <Components property="ConnectorReference">
-                      <Object id="OPC_35_ref" type="Plant/Piping.PipeOffPageConnectorReferenceByNumber">
-                        <Data property="ReferencedDrawingNumber">
-                          <String>200-PID-003</String>
-                        </Data>
-                      </Object>
-                    </Components>
-                    <Data property="PipeConnectorDescription">
-                      <AggregatedDataValue type="Core/DataTypes.MultiLanguageString">
-                        <Data property="SingleLanguageStrings">
-                          <AggregatedDataValue type="Core/DataTypes.SingleLanguageString">
-                            <Data property="Language">
-                              <String>en</String>
-                            </Data>
-                            <Data property="Value">
-                              <String>WASH WATER TO A-201</String>
-                            </Data>
-                          </AggregatedDataValue>
-                        </Data>
-                      </AggregatedDataValue>
-                    </Data>
-                    <Data property="PipeConnectorNumber">
-                      <String>OPC-35</String>
-                    </Data>
-                  </Object>
                 </Components>
                 <References objects="#P_204B_N2" property="SourceItem"/>
                 <References objects="#P_204B_N2_node" property="SourceNode"/>
-                <References objects="#OPC_35" property="TargetItem"/>
-                <References objects="#OPC_35_node" property="TargetNode"/>
+                <References objects="#Tee_T302" property="TargetItem"/>
+                <References objects="#Tee_T302_n_2" property="TargetNode"/>
                 <Data property="FluidCode">
                   <String>WW</String>
                 </Data>
@@ -667,7 +972,7 @@
               <String>WW</String>
             </Data>
             <Data property="LineNumber">
-              <String>3"-W-3009-15A1</String>
+              <String>3"-W-3010-15A1</String>
             </Data>
             <Data property="NominalDiameterRepresentation">
               <String>3"</String>
@@ -759,7 +1064,7 @@
                 <Components property="Nodes">
                   <Object id="E_202_N1_node" type="Plant/Piping.PipingNode"/>
                 </Components>
-                <References objects="#E_202_CH_Main" property="Chamber"/>
+                <References objects="#E_202_CH_Tube_side" property="Chamber"/>
                 <Data property="SubTagName">
                   <String>N1</String>
                 </Data>
@@ -768,16 +1073,59 @@
                 <Components property="Nodes">
                   <Object id="E_202_N2_node" type="Plant/Piping.PipingNode"/>
                 </Components>
-                <References objects="#E_202_CH_Main" property="Chamber"/>
+                <References objects="#E_202_CH_Tube_side" property="Chamber"/>
                 <Data property="SubTagName">
                   <String>N2</String>
                 </Data>
               </Object>
+              <Object id="E_202_N3" type="Plant/ProcessEquipment.ProcessNozzle">
+                <Components property="Nodes">
+                  <Object id="E_202_N3_node" type="Plant/Piping.PipingNode"/>
+                </Components>
+                <References objects="#E_202_CH_Shell_side" property="Chamber"/>
+                <Data property="SubTagName">
+                  <String>N3</String>
+                </Data>
+              </Object>
+              <Object id="E_202_N4" type="Plant/ProcessEquipment.ProcessNozzle">
+                <Components property="Nodes">
+                  <Object id="E_202_N4_node" type="Plant/Piping.PipingNode"/>
+                </Components>
+                <References objects="#E_202_CH_Shell_side" property="Chamber"/>
+                <Data property="SubTagName">
+                  <String>N4</String>
+                </Data>
+              </Object>
             </Components>
             <Components property="Chambers">
-              <Object id="E_202_CH_Main" type="Plant/ProcessEquipment.Chamber">
+              <Object id="E_202_CH_Tube_side" type="Plant/ProcessEquipment.Chamber">
                 <Data property="SubTagName">
-                  <String>Main</String>
+                  <String>Tube side</String>
+                </Data>
+                <Data property="UpperLimitDesignPressure">
+                  <AggregatedDataValue type="Core/PhysicalQuantities.PhysicalQuantity">
+                    <Data property="Unit">
+                      <DataReference data="Core/PhysicalQuantities.PressureGaugeUnit.Bar"/>
+                    </Data>
+                    <Data property="Value">
+                      <Double>10.0</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+                <Data property="UpperLimitDesignTemperature">
+                  <AggregatedDataValue type="Core/PhysicalQuantities.PhysicalQuantity">
+                    <Data property="Unit">
+                      <DataReference data="Core/PhysicalQuantities.TemperatureUnit.DegreeCelsius"/>
+                    </Data>
+                    <Data property="Value">
+                      <Double>80.0</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+              </Object>
+              <Object id="E_202_CH_Shell_side" type="Plant/ProcessEquipment.Chamber">
+                <Data property="SubTagName">
+                  <String>Shell side</String>
                 </Data>
                 <Data property="UpperLimitDesignPressure">
                   <AggregatedDataValue type="Core/PhysicalQuantities.PhysicalQuantity">
@@ -803,7 +1151,7 @@
             </Components>
             <Components property="TubeBundle">
               <Object id="E_202_bundle" type="Plant/ProcessEquipment.TubeBundle">
-                <References objects="#E_202_CH_Main" property="Chamber"/>
+                <References objects="#E_202_CH_Tube_side" property="Chamber"/>
               </Object>
             </Components>
             <Data property="TagName">
@@ -1382,7 +1730,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>240.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
@@ -1441,7 +1789,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>240.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>175.0</Double>
@@ -1485,7 +1833,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>240.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>185.0</Double>
@@ -1513,7 +1861,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>195.0</Double>
+                              <Double>175.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>220.0</Double>
@@ -1536,7 +1884,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>325.0</Double>
+                              <Double>305.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>220.0</Double>
@@ -1565,7 +1913,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>480.0</Double>
+                          <Double>470.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
@@ -1624,10 +1972,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>480.0</Double>
+                          <Double>470.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>170.0</Double>
+                          <Double>165.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -1668,10 +2016,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>480.0</Double>
+                          <Double>470.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>180.0</Double>
+                          <Double>175.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -1696,7 +2044,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>436.0</Double>
+                              <Double>426.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>248.0</Double>
@@ -1719,7 +2067,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>436.0</Double>
+                              <Double>426.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>192.0</Double>
@@ -1732,6 +2080,52 @@
                   </Object>
                 </Components>
                 <References objects="#E_202_N2" property="Represents"/>
+              </Object>
+              <Object id="E_202_N3_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="Groups">
+                  <Object id="E_202_N3_node_rg" type="Core/Diagram.RepresentationGroup">
+                    <Components property="NodePositions">
+                      <Object id="E_202_N3_node_pos" type="Plant/Diagram.PipingNodePosition">
+                        <References objects="#E_202_N3_node" property="Node"/>
+                        <Data property="Position">
+                          <AggregatedDataValue type="Core/Diagram.Point">
+                            <Data property="X">
+                              <Double>500.0</Double>
+                            </Data>
+                            <Data property="Y">
+                              <Double>192.0</Double>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                      </Object>
+                    </Components>
+                    <References objects="#E_202_N3_node" property="Represents"/>
+                  </Object>
+                </Components>
+                <References objects="#E_202_N3" property="Represents"/>
+              </Object>
+              <Object id="E_202_N4_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="Groups">
+                  <Object id="E_202_N4_node_rg" type="Core/Diagram.RepresentationGroup">
+                    <Components property="NodePositions">
+                      <Object id="E_202_N4_node_pos" type="Plant/Diagram.PipingNodePosition">
+                        <References objects="#E_202_N4_node" property="Node"/>
+                        <Data property="Position">
+                          <AggregatedDataValue type="Core/Diagram.Point">
+                            <Data property="X">
+                              <Double>500.0</Double>
+                            </Data>
+                            <Data property="Y">
+                              <Double>248.0</Double>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                      </Object>
+                    </Components>
+                    <References objects="#E_202_N4_node" property="Represents"/>
+                  </Object>
+                </Components>
+                <References objects="#E_202_N4" property="Represents"/>
               </Object>
             </Components>
             <References objects="#E_202" property="Represents"/>
@@ -1954,7 +2348,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>940.0</Double>
+                          <Double>920.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>420.0</Double>
@@ -2013,7 +2407,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>940.0</Double>
+                          <Double>920.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>365.0</Double>
@@ -2057,7 +2451,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>940.0</Double>
+                          <Double>920.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>375.0</Double>
@@ -2085,7 +2479,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>873.0</Double>
+                              <Double>853.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>420.0</Double>
@@ -2108,7 +2502,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>1007.0</Double>
+                              <Double>987.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>420.0</Double>
@@ -2137,7 +2531,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -2196,7 +2590,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>480.0</Double>
@@ -2240,7 +2634,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>260.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>490.0</Double>
@@ -2268,7 +2662,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>234.0</Double>
+                              <Double>274.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>520.0</Double>
@@ -2291,7 +2685,7 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>286.0</Double>
+                              <Double>326.0</Double>
                             </Data>
                             <Data property="Y">
                               <Double>520.0</Double>
@@ -2320,10 +2714,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>520.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -2379,10 +2773,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>520.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>480.0</Double>
+                          <Double>580.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -2423,10 +2817,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>520.0</Double>
+                          <Double>300.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>490.0</Double>
+                          <Double>590.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -2451,10 +2845,10 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>494.0</Double>
+                              <Double>274.0</Double>
                             </Data>
                             <Data property="Y">
-                              <Double>520.0</Double>
+                              <Double>620.0</Double>
                             </Data>
                           </AggregatedDataValue>
                         </Data>
@@ -2474,10 +2868,10 @@
                         <Data property="Position">
                           <AggregatedDataValue type="Core/Diagram.Point">
                             <Data property="X">
-                              <Double>546.0</Double>
+                              <Double>326.0</Double>
                             </Data>
                             <Data property="Y">
-                              <Double>520.0</Double>
+                              <Double>620.0</Double>
                             </Data>
                           </AggregatedDataValue>
                         </Data>
@@ -2503,7 +2897,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>375.0</Double>
+                          <Double>360.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
@@ -2562,7 +2956,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>375.0</Double>
+                          <Double>360.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>206.0</Double>
@@ -2588,7 +2982,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>365.0</Double>
+                          <Double>350.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
@@ -2606,7 +3000,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>385.0</Double>
+                          <Double>370.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
@@ -2749,6 +3143,135 @@
             </Components>
             <References objects="#HV_2043" property="Represents"/>
           </Object>
+          <Object id="HV_2044_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="HV_2044_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="HV_2044_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_GATE_VALVE" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>700.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>370.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2044_lbl" type="Plant/Diagram.ValveLabel">
+                <Components property="Elements">
+                  <Object id="HV_2044_txt" type="Core/Diagram.Text">
+                    <Components property="Template">
+                      <Object id="HV_2044_txt_tmpl" type="Core/Diagram.TextTemplate">
+                        <Components property="Fragments">
+                          <Object id="HV_2044_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#HV_2044" property="Object"/>
+                            <Data property="AttributeName">
+                              <String>PipingComponentName</String>
+                            </Data>
+                            <Data property="Type">
+                              <DataReference data="Core/Diagram.AttributeRepresentationType.Value"/>
+                            </Data>
+                          </Object>
+                        </Components>
+                      </Object>
+                    </Components>
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.CenterCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>700.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>356.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>8.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>HV-2044</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2044_in_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2044_in_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2044_in" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>690.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>370.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2044_in" property="Represents"/>
+              </Object>
+              <Object id="HV_2044_out_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2044_out_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2044_out" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>710.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>370.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2044_out" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#HV_2044" property="Represents"/>
+          </Object>
           <Object id="LV_2031_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
               <Object id="LV_2031_sym" type="Core/Diagram.Static">
@@ -2761,7 +3284,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>780.0</Double>
+                          <Double>765.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>420.0</Double>
@@ -2820,7 +3343,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>780.0</Double>
+                          <Double>765.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>396.0</Double>
@@ -2846,7 +3369,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>770.0</Double>
+                          <Double>755.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>420.0</Double>
@@ -2864,7 +3387,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>790.0</Double>
+                          <Double>775.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>420.0</Double>
@@ -2878,6 +3401,264 @@
             </Components>
             <References objects="#LV_2031" property="Represents"/>
           </Object>
+          <Object id="HV_2081_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="HV_2081_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="HV_2081_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_GATE_VALVE" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>820.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2081_lbl" type="Plant/Diagram.ValveLabel">
+                <Components property="Elements">
+                  <Object id="HV_2081_txt" type="Core/Diagram.Text">
+                    <Components property="Template">
+                      <Object id="HV_2081_txt_tmpl" type="Core/Diagram.TextTemplate">
+                        <Components property="Fragments">
+                          <Object id="HV_2081_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#HV_2081" property="Object"/>
+                            <Data property="AttributeName">
+                              <String>PipingComponentName</String>
+                            </Data>
+                            <Data property="Type">
+                              <DataReference data="Core/Diagram.AttributeRepresentationType.Value"/>
+                            </Data>
+                          </Object>
+                        </Components>
+                      </Object>
+                    </Components>
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.CenterCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>820.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>406.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>8.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>HV-2081</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2081_in_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2081_in_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2081_in" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>810.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2081_in" property="Represents"/>
+              </Object>
+              <Object id="HV_2081_out_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2081_out_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2081_out" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>830.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2081_out" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#HV_2081" property="Represents"/>
+          </Object>
+          <Object id="HV_2087_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="HV_2087_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="HV_2087_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_GATE_VALVE" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>1035.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2087_lbl" type="Plant/Diagram.ValveLabel">
+                <Components property="Elements">
+                  <Object id="HV_2087_txt" type="Core/Diagram.Text">
+                    <Components property="Template">
+                      <Object id="HV_2087_txt_tmpl" type="Core/Diagram.TextTemplate">
+                        <Components property="Fragments">
+                          <Object id="HV_2087_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#HV_2087" property="Object"/>
+                            <Data property="AttributeName">
+                              <String>PipingComponentName</String>
+                            </Data>
+                            <Data property="Type">
+                              <DataReference data="Core/Diagram.AttributeRepresentationType.Value"/>
+                            </Data>
+                          </Object>
+                        </Components>
+                      </Object>
+                    </Components>
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.CenterCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>1035.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>406.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>8.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>HV-2087</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="HV_2087_in_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2087_in_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2087_in" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>1025.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2087_in" property="Represents"/>
+              </Object>
+              <Object id="HV_2087_out_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="HV_2087_out_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#HV_2087_out" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>1045.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#HV_2087_out" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#HV_2087" property="Represents"/>
+          </Object>
           <Object id="HV_2083_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
               <Object id="HV_2083_sym" type="Core/Diagram.Static">
@@ -2890,7 +3671,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>170.0</Double>
+                          <Double>210.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -2949,7 +3730,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>170.0</Double>
+                          <Double>210.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>506.0</Double>
@@ -2975,7 +3756,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>160.0</Double>
+                          <Double>200.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -2993,7 +3774,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>180.0</Double>
+                          <Double>220.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -3019,7 +3800,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>360.0</Double>
+                          <Double>400.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -3078,7 +3859,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>360.0</Double>
+                          <Double>400.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>506.0</Double>
@@ -3104,7 +3885,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>350.0</Double>
+                          <Double>390.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -3122,7 +3903,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>370.0</Double>
+                          <Double>410.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -3148,10 +3929,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>440.0</Double>
+                          <Double>210.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3207,10 +3988,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>440.0</Double>
+                          <Double>210.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>506.0</Double>
+                          <Double>606.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3233,10 +4014,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>430.0</Double>
+                          <Double>200.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3251,10 +4032,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>450.0</Double>
+                          <Double>220.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3277,10 +4058,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>610.0</Double>
+                          <Double>400.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3336,10 +4117,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>610.0</Double>
+                          <Double>400.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>506.0</Double>
+                          <Double>606.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3362,10 +4143,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>600.0</Double>
+                          <Double>390.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3380,10 +4161,10 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>620.0</Double>
+                          <Double>410.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>520.0</Double>
+                          <Double>620.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -3394,11 +4175,11 @@
             </Components>
             <References objects="#HV_2086" property="Represents"/>
           </Object>
-          <Object id="OPC_31_rg" type="Core/Diagram.RepresentationGroup">
+          <Object id="OPC_24_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
-              <Object id="OPC_31_sym" type="Core/Diagram.Static">
+              <Object id="OPC_24_sym" type="Core/Diagram.Static">
                 <Components property="Elements">
-                  <Object id="OPC_31_use" type="Core/Diagram.ShapeUsage">
+                  <Object id="OPC_24_use" type="Core/Diagram.ShapeUsage">
                     <References objects="#Shape_OPC_RIGHT" property="Shape"/>
                     <Data property="IsMirrored">
                       <Boolean>false</Boolean>
@@ -3425,14 +4206,14 @@
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_31_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
+              <Object id="OPC_24_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
                 <Components property="Elements">
-                  <Object id="OPC_31_num_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_24_num_txt" type="Core/Diagram.Text">
                     <Components property="Template">
-                      <Object id="OPC_31_num_txt_tmpl" type="Core/Diagram.TextTemplate">
+                      <Object id="OPC_24_num_txt_tmpl" type="Core/Diagram.TextTemplate">
                         <Components property="Fragments">
-                          <Object id="OPC_31_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
-                            <References objects="#OPC_31" property="Object"/>
+                          <Object id="OPC_24_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#OPC_24" property="Object"/>
                             <Data property="AttributeName">
                               <String>PipeConnectorNumber</String>
                             </Data>
@@ -3479,14 +4260,14 @@
                       <Double>8.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>OPC-31</String>
+                      <String>OPC-24</String>
                     </Data>
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_31_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
+              <Object id="OPC_24_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
                 <Components property="Elements">
-                  <Object id="OPC_31_desc_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_24_desc_txt" type="Core/Diagram.Text">
                     <Data property="Alignment">
                       <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
                     </Data>
@@ -3523,14 +4304,14 @@
                       <Double>6.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>EFFLUENT FROM E-201A</String>
+                      <String>REACTOR EFFLUENT FROM E-201A</String>
                     </Data>
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_31_dwg_lbl" type="Core/Diagram.Label">
+              <Object id="OPC_24_dwg_lbl" type="Core/Diagram.Label">
                 <Components property="Elements">
-                  <Object id="OPC_31_dwg_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_24_dwg_txt" type="Core/Diagram.Text">
                     <Data property="Alignment">
                       <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
                     </Data>
@@ -3572,10 +4353,10 @@
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_31_node_rg" type="Core/Diagram.RepresentationGroup">
+              <Object id="OPC_24_node_rg" type="Core/Diagram.RepresentationGroup">
                 <Components property="NodePositions">
-                  <Object id="OPC_31_node_pos" type="Plant/Diagram.PipingNodePosition">
-                    <References objects="#OPC_31_node" property="Node"/>
+                  <Object id="OPC_24_node_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#OPC_24_node" property="Node"/>
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
@@ -3588,10 +4369,10 @@
                     </Data>
                   </Object>
                 </Components>
-                <References objects="#OPC_31_node" property="Represents"/>
+                <References objects="#OPC_24_node" property="Represents"/>
               </Object>
             </Components>
-            <References objects="#OPC_31" property="Represents"/>
+            <References objects="#OPC_24" property="Represents"/>
           </Object>
           <Object id="OPC_32_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
@@ -3921,7 +4702,7 @@
                       <Double>6.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>LIQUID TO C-201</String>
+                      <String>LP LIQUID TO C-201</String>
                     </Data>
                   </Object>
                 </Components>
@@ -4190,11 +4971,11 @@
             </Components>
             <References objects="#OPC_34" property="Represents"/>
           </Object>
-          <Object id="OPC_35_rg" type="Core/Diagram.RepresentationGroup">
+          <Object id="OPC_36_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
-              <Object id="OPC_35_sym" type="Core/Diagram.Static">
+              <Object id="OPC_36_sym" type="Core/Diagram.Static">
                 <Components property="Elements">
-                  <Object id="OPC_35_use" type="Core/Diagram.ShapeUsage">
+                  <Object id="OPC_36_use" type="Core/Diagram.ShapeUsage">
                     <References objects="#Shape_OPC_RIGHT" property="Shape"/>
                     <Data property="IsMirrored">
                       <Boolean>false</Boolean>
@@ -4202,7 +4983,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>710.0</Double>
+                          <Double>560.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -4221,14 +5002,14 @@
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_35_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
+              <Object id="OPC_36_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
                 <Components property="Elements">
-                  <Object id="OPC_35_num_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_36_num_txt" type="Core/Diagram.Text">
                     <Components property="Template">
-                      <Object id="OPC_35_num_txt_tmpl" type="Core/Diagram.TextTemplate">
+                      <Object id="OPC_36_num_txt_tmpl" type="Core/Diagram.TextTemplate">
                         <Components property="Fragments">
-                          <Object id="OPC_35_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
-                            <References objects="#OPC_35" property="Object"/>
+                          <Object id="OPC_36_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#OPC_36" property="Object"/>
                             <Data property="AttributeName">
                               <String>PipeConnectorNumber</String>
                             </Data>
@@ -4261,7 +5042,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>710.0</Double>
+                          <Double>560.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -4275,16 +5056,16 @@
                       <Double>8.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>OPC-35</String>
+                      <String>OPC-36</String>
                     </Data>
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_35_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
+              <Object id="OPC_36_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
                 <Components property="Elements">
-                  <Object id="OPC_35_desc_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_36_desc_txt" type="Core/Diagram.Text">
                     <Data property="Alignment">
-                      <DataReference data="Core/Diagram.TextAlignment.RightCenter"/>
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
                     </Data>
                     <Data property="Color">
                       <AggregatedDataValue type="Core/Diagram.Color">
@@ -4305,7 +5086,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>728.0</Double>
+                          <Double>542.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>542.0</Double>
@@ -4319,16 +5100,16 @@
                       <Double>6.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>WASH WATER TO A-201</String>
+                      <String>WASH WATER INJECTION HDR</String>
                     </Data>
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_35_dwg_lbl" type="Core/Diagram.Label">
+              <Object id="OPC_36_dwg_lbl" type="Core/Diagram.Label">
                 <Components property="Elements">
-                  <Object id="OPC_35_dwg_txt" type="Core/Diagram.Text">
+                  <Object id="OPC_36_dwg_txt" type="Core/Diagram.Text">
                     <Data property="Alignment">
-                      <DataReference data="Core/Diagram.TextAlignment.RightCenter"/>
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
                     </Data>
                     <Data property="Color">
                       <AggregatedDataValue type="Core/Diagram.Color">
@@ -4349,7 +5130,7 @@
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>728.0</Double>
+                          <Double>542.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>532.0</Double>
@@ -4363,19 +5144,19 @@
                       <Double>6.0</Double>
                     </Data>
                     <Data property="Text">
-                      <String>200-PID-003</String>
+                      <String>WW-HEADER</String>
                     </Data>
                   </Object>
                 </Components>
               </Object>
-              <Object id="OPC_35_node_rg" type="Core/Diagram.RepresentationGroup">
+              <Object id="OPC_36_node_rg" type="Core/Diagram.RepresentationGroup">
                 <Components property="NodePositions">
-                  <Object id="OPC_35_node_pos" type="Plant/Diagram.PipingNodePosition">
-                    <References objects="#OPC_35_node" property="Node"/>
+                  <Object id="OPC_36_node_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#OPC_36_node" property="Node"/>
                     <Data property="Position">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>690.0</Double>
+                          <Double>540.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>520.0</Double>
@@ -4384,17 +5165,591 @@
                     </Data>
                   </Object>
                 </Components>
-                <References objects="#OPC_35_node" property="Represents"/>
+                <References objects="#OPC_36_node" property="Represents"/>
               </Object>
             </Components>
-            <References objects="#OPC_35" property="Represents"/>
+            <References objects="#OPC_36" property="Represents"/>
+          </Object>
+          <Object id="OPC_37_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="OPC_37_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="OPC_37_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_OPC_RIGHT" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>360.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>310.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_37_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
+                <Components property="Elements">
+                  <Object id="OPC_37_num_txt" type="Core/Diagram.Text">
+                    <Components property="Template">
+                      <Object id="OPC_37_num_txt_tmpl" type="Core/Diagram.TextTemplate">
+                        <Components property="Fragments">
+                          <Object id="OPC_37_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#OPC_37" property="Object"/>
+                            <Data property="AttributeName">
+                              <String>PipeConnectorNumber</String>
+                            </Data>
+                            <Data property="Type">
+                              <DataReference data="Core/Diagram.AttributeRepresentationType.Value"/>
+                            </Data>
+                          </Object>
+                        </Components>
+                      </Object>
+                    </Components>
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.CenterCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>360.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>310.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>8.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>OPC-37</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_37_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
+                <Components property="Elements">
+                  <Object id="OPC_37_desc_txt" type="Core/Diagram.Text">
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>342.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>332.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>6.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>COOLING WATER TO E-202</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_37_dwg_lbl" type="Core/Diagram.Label">
+                <Components property="Elements">
+                  <Object id="OPC_37_dwg_txt" type="Core/Diagram.Text">
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>342.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>322.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>6.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>CW-SUPPLY</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_37_node_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="OPC_37_node_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#OPC_37_node" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>380.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>310.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#OPC_37_node" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#OPC_37" property="Represents"/>
+          </Object>
+          <Object id="OPC_38_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="OPC_38_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="OPC_38_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_OPC_RIGHT" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>360.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>120.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_38_num_lbl" type="Plant/Diagram.OffPageConnectorNumberLabel">
+                <Components property="Elements">
+                  <Object id="OPC_38_num_txt" type="Core/Diagram.Text">
+                    <Components property="Template">
+                      <Object id="OPC_38_num_txt_tmpl" type="Core/Diagram.TextTemplate">
+                        <Components property="Fragments">
+                          <Object id="OPC_38_num_txt_attr" type="Core/Diagram.AttributeRepresentation">
+                            <References objects="#OPC_38" property="Object"/>
+                            <Data property="AttributeName">
+                              <String>PipeConnectorNumber</String>
+                            </Data>
+                            <Data property="Type">
+                              <DataReference data="Core/Diagram.AttributeRepresentationType.Value"/>
+                            </Data>
+                          </Object>
+                        </Components>
+                      </Object>
+                    </Components>
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.CenterCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>360.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>120.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>8.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>OPC-38</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_38_desc_lbl" type="Plant/Diagram.OffPageConnectorDescriptionLabel">
+                <Components property="Elements">
+                  <Object id="OPC_38_desc_txt" type="Core/Diagram.Text">
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>342.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>142.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>6.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>COOLING WATER FROM E-202</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_38_dwg_lbl" type="Core/Diagram.Label">
+                <Components property="Elements">
+                  <Object id="OPC_38_dwg_txt" type="Core/Diagram.Text">
+                    <Data property="Alignment">
+                      <DataReference data="Core/Diagram.TextAlignment.LeftCenter"/>
+                    </Data>
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Font">
+                      <String>Arial</String>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>342.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>132.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Size">
+                      <Double>6.0</Double>
+                    </Data>
+                    <Data property="Text">
+                      <String>CW-RETURN</String>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="OPC_38_node_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="OPC_38_node_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#OPC_38_node" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>340.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>120.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#OPC_38_node" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#OPC_38" property="Represents"/>
+          </Object>
+          <Object id="Tee_T301_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="Tee_T301_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="Tee_T301_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_TEE" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>140.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="Tee_T301_n_0_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T301_n_0_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T301_n_0" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>140.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T301_n_0" property="Represents"/>
+              </Object>
+              <Object id="Tee_T301_n_1_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T301_n_1_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T301_n_1" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>140.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T301_n_1" property="Represents"/>
+              </Object>
+              <Object id="Tee_T301_n_2_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T301_n_2_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T301_n_2" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>140.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T301_n_2" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#Tee_T301" property="Represents"/>
+          </Object>
+          <Object id="Tee_T302_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="Tee_T302_sym" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="Tee_T302_use" type="Core/Diagram.ShapeUsage">
+                    <References objects="#Shape_TEE" property="Shape"/>
+                    <Data property="IsMirrored">
+                      <Boolean>false</Boolean>
+                    </Data>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>480.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Rotation">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="ScaleX">
+                      <Double>1.0</Double>
+                    </Data>
+                    <Data property="ScaleY">
+                      <Double>1.0</Double>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+              <Object id="Tee_T302_n_0_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T302_n_0_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T302_n_0" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>480.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T302_n_0" property="Represents"/>
+              </Object>
+              <Object id="Tee_T302_n_1_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T302_n_1_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T302_n_1" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>480.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T302_n_1" property="Represents"/>
+              </Object>
+              <Object id="Tee_T302_n_2_rg" type="Core/Diagram.RepresentationGroup">
+                <Components property="NodePositions">
+                  <Object id="Tee_T302_n_2_pos" type="Plant/Diagram.PipingNodePosition">
+                    <References objects="#Tee_T302_n_2" property="Node"/>
+                    <Data property="Position">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>480.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>520.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+                <References objects="#Tee_T302_n_2" property="Represents"/>
+              </Object>
+            </Components>
+            <References objects="#Tee_T302" property="Represents"/>
           </Object>
           <Object id="L301_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
               <Object id="L301_pipe_1_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L301_pipe_1_line" type="Core/Diagram.ConnectorLine">
-                    <References objects="#OPC_31_node_pos" property="Source"/>
+                    <References objects="#OPC_24_node_pos" property="Source"/>
                     <References objects="#A_201_N1_node_pos" property="Target"/>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
@@ -4467,14 +5822,30 @@
                 <Components property="Elements">
                   <Object id="L302_pipe_2_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#HV_2041_out_pos" property="Source"/>
-                    <References objects="#E_202_N1_node_pos" property="Target"/>
+                    <References objects="#E_202_N3_node_pos" property="Target"/>
                     <Data property="InnerPoints">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>436.0</Double>
+                          <Double>400.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>220.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>400.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>150.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>500.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>150.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -4512,28 +5883,28 @@
               <Object id="L303_pipe_1_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L303_pipe_1_line" type="Core/Diagram.ConnectorLine">
-                    <References objects="#E_202_N2_node_pos" property="Source"/>
+                    <References objects="#E_202_N4_node_pos" property="Source"/>
                     <References objects="#D_202_N1_node_pos" property="Target"/>
                     <Data property="InnerPoints">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>436.0</Double>
+                          <Double>500.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>140.0</Double>
+                          <Double>270.0</Double>
                         </Data>
                       </AggregatedDataValue>
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>620.0</Double>
+                          <Double>610.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>140.0</Double>
+                          <Double>270.0</Double>
                         </Data>
                       </AggregatedDataValue>
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>620.0</Double>
+                          <Double>610.0</Double>
                         </Data>
                         <Data property="Y">
                           <Double>250.0</Double>
@@ -4568,6 +5939,98 @@
               </Object>
             </Components>
             <References objects="#L303_pipe_1" property="Represents"/>
+          </Object>
+          <Object id="L311_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L311_pipe_1_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L311_pipe_1_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#OPC_37_node_pos" property="Source"/>
+                    <References objects="#E_202_N1_node_pos" property="Target"/>
+                    <Data property="InnerPoints">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>426.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>310.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L311_pipe_1" property="Represents"/>
+          </Object>
+          <Object id="L312_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L312_pipe_1_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L312_pipe_1_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#E_202_N2_node_pos" property="Source"/>
+                    <References objects="#OPC_38_node_pos" property="Target"/>
+                    <Data property="InnerPoints">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>426.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>120.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L312_pipe_1" property="Represents"/>
           </Object>
           <Object id="L304_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
@@ -4657,14 +6120,22 @@
                 <Components property="Elements">
                   <Object id="L305_pipe_1_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#D_202_N3_node_pos" property="Source"/>
-                    <References objects="#LV_2031_in_pos" property="Target"/>
+                    <References objects="#HV_2044_in_pos" property="Target"/>
                     <Data property="InnerPoints">
                       <AggregatedDataValue type="Core/Diagram.Point">
                         <Data property="X">
-                          <Double>700.0</Double>
+                          <Double>675.0</Double>
                         </Data>
                         <Data property="Y">
-                          <Double>420.0</Double>
+                          <Double>317.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>675.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>370.0</Double>
                         </Data>
                       </AggregatedDataValue>
                     </Data>
@@ -4702,8 +6173,26 @@
               <Object id="L305_pipe_2_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L305_pipe_2_line" type="Core/Diagram.ConnectorLine">
-                    <References objects="#LV_2031_out_pos" property="Source"/>
-                    <References objects="#D_203_N1_node_pos" property="Target"/>
+                    <References objects="#HV_2044_out_pos" property="Source"/>
+                    <References objects="#LV_2031_in_pos" property="Target"/>
+                    <Data property="InnerPoints">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>730.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>370.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>730.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>420.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -4733,13 +6222,85 @@
             </Components>
             <References objects="#L305_pipe_2" property="Represents"/>
           </Object>
+          <Object id="L305_pipe_3_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L305_pipe_3_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L305_pipe_3_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#LV_2031_out_pos" property="Source"/>
+                    <References objects="#HV_2081_in_pos" property="Target"/>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L305_pipe_3" property="Represents"/>
+          </Object>
+          <Object id="L305_pipe_4_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L305_pipe_4_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L305_pipe_4_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#HV_2081_out_pos" property="Source"/>
+                    <References objects="#D_203_N1_node_pos" property="Target"/>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L305_pipe_4" property="Represents"/>
+          </Object>
           <Object id="L306_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
               <Object id="L306_pipe_1_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L306_pipe_1_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#D_203_N2_node_pos" property="Source"/>
-                    <References objects="#OPC_33_node_pos" property="Target"/>
+                    <References objects="#HV_2087_in_pos" property="Target"/>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -4769,13 +6330,49 @@
             </Components>
             <References objects="#L306_pipe_1" property="Represents"/>
           </Object>
+          <Object id="L306_pipe_2_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L306_pipe_2_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L306_pipe_2_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#HV_2087_out_pos" property="Source"/>
+                    <References objects="#OPC_33_node_pos" property="Target"/>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L306_pipe_2" property="Represents"/>
+          </Object>
           <Object id="L307_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
               <Object id="L307_pipe_1_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L307_pipe_1_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#OPC_34_node_pos" property="Source"/>
-                    <References objects="#HV_2083_in_pos" property="Target"/>
+                    <References objects="#Tee_T301_n_0_pos" property="Target"/>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -4810,6 +6407,42 @@
               <Object id="L307_pipe_2_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L307_pipe_2_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#Tee_T301_n_1_pos" property="Source"/>
+                    <References objects="#HV_2083_in_pos" property="Target"/>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L307_pipe_2" property="Represents"/>
+          </Object>
+          <Object id="L307_pipe_3_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L307_pipe_3_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L307_pipe_3_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#HV_2083_out_pos" property="Source"/>
                     <References objects="#P_204A_N1_node_pos" property="Target"/>
                     <Data property="Stroke">
@@ -4839,7 +6472,89 @@
                 </Components>
               </Object>
             </Components>
-            <References objects="#L307_pipe_2" property="Represents"/>
+            <References objects="#L307_pipe_3" property="Represents"/>
+          </Object>
+          <Object id="L309_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L309_pipe_1_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L309_pipe_1_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#Tee_T301_n_2_pos" property="Source"/>
+                    <References objects="#HV_2085_in_pos" property="Target"/>
+                    <Data property="InnerPoints">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>140.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>620.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L309_pipe_1" property="Represents"/>
+          </Object>
+          <Object id="L309_pipe_2_rg" type="Core/Diagram.RepresentationGroup">
+            <Components property="Groups">
+              <Object id="L309_pipe_2_st" type="Core/Diagram.Static">
+                <Components property="Elements">
+                  <Object id="L309_pipe_2_line" type="Core/Diagram.ConnectorLine">
+                    <References objects="#HV_2085_out_pos" property="Source"/>
+                    <References objects="#P_204B_N1_node_pos" property="Target"/>
+                    <Data property="Stroke">
+                      <AggregatedDataValue type="Core/Diagram.Stroke">
+                        <Data property="Color">
+                          <AggregatedDataValue type="Core/Diagram.Color">
+                            <Data property="B">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="G">
+                              <Integer>0</Integer>
+                            </Data>
+                            <Data property="R">
+                              <Integer>0</Integer>
+                            </Data>
+                          </AggregatedDataValue>
+                        </Data>
+                        <Data property="DashStyle">
+                          <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                        </Data>
+                        <Data property="Width">
+                          <Double>0.9</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                  </Object>
+                </Components>
+              </Object>
+            </Components>
+            <References objects="#L309_pipe_2" property="Represents"/>
           </Object>
           <Object id="L308_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
@@ -4883,7 +6598,7 @@
                 <Components property="Elements">
                   <Object id="L308_pipe_2_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#HV_2084_out_pos" property="Source"/>
-                    <References objects="#HV_2085_in_pos" property="Target"/>
+                    <References objects="#Tee_T302_n_0_pos" property="Target"/>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -4918,8 +6633,8 @@
               <Object id="L308_pipe_3_st" type="Core/Diagram.Static">
                 <Components property="Elements">
                   <Object id="L308_pipe_3_line" type="Core/Diagram.ConnectorLine">
-                    <References objects="#HV_2085_out_pos" property="Source"/>
-                    <References objects="#P_204B_N1_node_pos" property="Target"/>
+                    <References objects="#Tee_T302_n_1_pos" property="Source"/>
+                    <References objects="#OPC_36_node_pos" property="Target"/>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -4949,11 +6664,11 @@
             </Components>
             <References objects="#L308_pipe_3" property="Represents"/>
           </Object>
-          <Object id="L309_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
+          <Object id="L310_pipe_1_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
-              <Object id="L309_pipe_1_st" type="Core/Diagram.Static">
+              <Object id="L310_pipe_1_st" type="Core/Diagram.Static">
                 <Components property="Elements">
-                  <Object id="L309_pipe_1_line" type="Core/Diagram.ConnectorLine">
+                  <Object id="L310_pipe_1_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#P_204B_N2_node_pos" property="Source"/>
                     <References objects="#HV_2086_in_pos" property="Target"/>
                     <Data property="Stroke">
@@ -4983,15 +6698,25 @@
                 </Components>
               </Object>
             </Components>
-            <References objects="#L309_pipe_1" property="Represents"/>
+            <References objects="#L310_pipe_1" property="Represents"/>
           </Object>
-          <Object id="L309_pipe_2_rg" type="Core/Diagram.RepresentationGroup">
+          <Object id="L310_pipe_2_rg" type="Core/Diagram.RepresentationGroup">
             <Components property="Groups">
-              <Object id="L309_pipe_2_st" type="Core/Diagram.Static">
+              <Object id="L310_pipe_2_st" type="Core/Diagram.Static">
                 <Components property="Elements">
-                  <Object id="L309_pipe_2_line" type="Core/Diagram.ConnectorLine">
+                  <Object id="L310_pipe_2_line" type="Core/Diagram.ConnectorLine">
                     <References objects="#HV_2086_out_pos" property="Source"/>
-                    <References objects="#OPC_35_node_pos" property="Target"/>
+                    <References objects="#Tee_T302_n_2_pos" property="Target"/>
+                    <Data property="InnerPoints">
+                      <AggregatedDataValue type="Core/Diagram.Point">
+                        <Data property="X">
+                          <Double>480.0</Double>
+                        </Data>
+                        <Data property="Y">
+                          <Double>620.0</Double>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
                     <Data property="Stroke">
                       <AggregatedDataValue type="Core/Diagram.Stroke">
                         <Data property="Color">
@@ -5019,7 +6744,7 @@
                 </Components>
               </Object>
             </Components>
-            <References objects="#L309_pipe_2" property="Represents"/>
+            <References objects="#L310_pipe_2" property="Represents"/>
           </Object>
         </Components>
         <References objects="#PlantModel" property="Represents"/>
@@ -6944,6 +8669,49 @@
                   </AggregatedDataValue>
                 </Data>
               </Object>
+              <Object id="PolyLine_30" type="Core/Diagram.PolyLine">
+                <Data property="Points">
+                  <AggregatedDataValue type="Core/Diagram.Point">
+                    <Data property="X">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Y">
+                      <Double>24.0</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                  <AggregatedDataValue type="Core/Diagram.Point">
+                    <Data property="X">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Y">
+                      <Double>34.0</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+                <Data property="Stroke">
+                  <AggregatedDataValue type="Core/Diagram.Stroke">
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="DashStyle">
+                      <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                    </Data>
+                    <Data property="Width">
+                      <Double>0.7</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+              </Object>
             </Components>
             <Data property="Name">
               <String>HORIZONTAL_DRUM</String>
@@ -7055,7 +8823,7 @@
                   </AggregatedDataValue>
                 </Data>
               </Object>
-              <Object id="PolyLine_30" type="Core/Diagram.PolyLine">
+              <Object id="PolyLine_31" type="Core/Diagram.PolyLine">
                 <Data property="Points">
                   <AggregatedDataValue type="Core/Diagram.Point">
                     <Data property="X">
@@ -7098,7 +8866,7 @@
                   </AggregatedDataValue>
                 </Data>
               </Object>
-              <Object id="PolyLine_31" type="Core/Diagram.PolyLine">
+              <Object id="PolyLine_32" type="Core/Diagram.PolyLine">
                 <Data property="Points">
                   <AggregatedDataValue type="Core/Diagram.Point">
                     <Data property="X">
@@ -7332,7 +9100,7 @@
                   <Double>2.2</Double>
                 </Data>
               </Object>
-              <Object id="PolyLine_32" type="Core/Diagram.PolyLine">
+              <Object id="PolyLine_33" type="Core/Diagram.PolyLine">
                 <Data property="Points">
                   <AggregatedDataValue type="Core/Diagram.Point">
                     <Data property="X">
@@ -7375,7 +9143,7 @@
                   </AggregatedDataValue>
                 </Data>
               </Object>
-              <Object id="PolyLine_33" type="Core/Diagram.PolyLine">
+              <Object id="PolyLine_34" type="Core/Diagram.PolyLine">
                 <Data property="Points">
                   <AggregatedDataValue type="Core/Diagram.Point">
                     <Data property="X">
@@ -7418,7 +9186,7 @@
                   </AggregatedDataValue>
                 </Data>
               </Object>
-              <Object id="PolyLine_34" type="Core/Diagram.PolyLine">
+              <Object id="PolyLine_35" type="Core/Diagram.PolyLine">
                 <Data property="Points">
                   <AggregatedDataValue type="Core/Diagram.Point">
                     <Data property="X">
@@ -7664,6 +9432,63 @@
             </Components>
             <Data property="Name">
               <String>PIPE_OFF_PAGE_CONNECTOR</String>
+            </Data>
+            <Data property="SymbolRegistrationNumber">
+              <String>TAR-TWIN-DEMO</String>
+            </Data>
+          </Object>
+          <Object id="Shape_TEE" type="Core/Diagram.Shape">
+            <Components property="Primitives">
+              <Object id="Ellipse_4" type="Core/Diagram.Ellipse">
+                <Data property="Center">
+                  <AggregatedDataValue type="Core/Diagram.Point">
+                    <Data property="X">
+                      <Double>0.0</Double>
+                    </Data>
+                    <Data property="Y">
+                      <Double>0.0</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+                <Data property="FillStyle">
+                  <DataReference data="Core/Diagram.FillStyle.Solid"/>
+                </Data>
+                <Data property="HorizontalSemiAxis">
+                  <Double>2.0</Double>
+                </Data>
+                <Data property="Rotation">
+                  <Double>0.0</Double>
+                </Data>
+                <Data property="Stroke">
+                  <AggregatedDataValue type="Core/Diagram.Stroke">
+                    <Data property="Color">
+                      <AggregatedDataValue type="Core/Diagram.Color">
+                        <Data property="B">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="G">
+                          <Integer>0</Integer>
+                        </Data>
+                        <Data property="R">
+                          <Integer>0</Integer>
+                        </Data>
+                      </AggregatedDataValue>
+                    </Data>
+                    <Data property="DashStyle">
+                      <DataReference data="Core/Diagram.DashStyle.Solid"/>
+                    </Data>
+                    <Data property="Width">
+                      <Double>0.3</Double>
+                    </Data>
+                  </AggregatedDataValue>
+                </Data>
+                <Data property="VerticalSemiAxis">
+                  <Double>2.0</Double>
+                </Data>
+              </Object>
+            </Components>
+            <Data property="Name">
+              <String>PIPE_TEE_JUNCTION</String>
             </Data>
             <Data property="SymbolRegistrationNumber">
               <String>TAR-TWIN-DEMO</String>

@@ -404,7 +404,9 @@ def extract_model(repo: Path, mode: str = "auto") -> dict[str, object]:
     _wr_h, wr_body = repo_facts._section_lines(spec_text, "### 4.1 Work request mix")
     wr_rows = repo_facts._parse_first_table(wr_body)
     valid_categories = [row[0] for row in wr_rows if len(row) >= 2]
+    expected_category_counts = {row[0]: int(row[1]) for row in wr_rows if len(row) >= 2}
     valid_difficulty_classes = list(facts["matching"]["classes"].keys())
+    expected_difficulty_counts = dict(facts["matching"]["classes"])
 
     _pp_h, pp_body = repo_facts._section_lines(spec_text, "## 5. Problems planted in the data")
     pp_rows = repo_facts._parse_first_table(pp_body)
@@ -673,7 +675,9 @@ def extract_model(repo: Path, mode: str = "auto") -> dict[str, object]:
         "mode": effective_mode,
         "repo_facts": facts,
         "valid_categories": valid_categories,
+        "expected_category_counts": expected_category_counts,
         "valid_difficulty_classes": valid_difficulty_classes,
+        "expected_difficulty_counts": expected_difficulty_counts,
         "pending_phase_1": pending_phase_1,
         "extra_errors": extra_errors,
         "payload": {
@@ -802,11 +806,32 @@ def run_check(repo: Path, mode: str = "auto", neo4j_snapshot: Path | None = None
 
         valid_cats = set(model["valid_categories"])
         valid_dcls = set(model["valid_difficulty_classes"])
+        actual_cat_counts: dict[str, int] = {}
+        actual_dcls_counts: dict[str, int] = {}
         for row in wr_rows:
-            if row["cat"] not in valid_cats:
-                errors.append(f"work request {row['id']} has unknown category {row['cat']!r}")
-            if row["dcls"] not in valid_dcls:
-                errors.append(f"work request {row['id']} has difficulty class {row['dcls']!r} not in docs/matching-showcase.md")
+            cat = row["cat"]
+            dcls = row["dcls"]
+            if cat not in valid_cats:
+                errors.append(f"work request {row['id']} has unknown category {cat!r}")
+            else:
+                actual_cat_counts[cat] = actual_cat_counts.get(cat, 0) + 1
+            if dcls not in valid_dcls:
+                errors.append(f"work request {row['id']} has difficulty class {dcls!r} not in docs/matching-showcase.md")
+            else:
+                actual_dcls_counts[dcls] = actual_dcls_counts.get(dcls, 0) + 1
+
+        for cat, want in model["expected_category_counts"].items():
+            got = actual_cat_counts.get(cat, 0)
+            if got != want:
+                errors.append(
+                    f"work request category {cat!r} count {got} disagrees with docs/scenario-spec.md ({want})"
+                )
+        for dcls, want in model["expected_difficulty_counts"].items():
+            got = actual_dcls_counts.get(dcls, 0)
+            if got != want:
+                errors.append(
+                    f"matching difficulty class {dcls!r} count {got} disagrees with docs/matching-showcase.md ({want})"
+                )
 
     if neo4j_snapshot is not None:
         snap_data = json.loads(neo4j_snapshot.read_text(encoding="utf-8"))
