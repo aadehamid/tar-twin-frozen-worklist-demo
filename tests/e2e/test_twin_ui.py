@@ -128,7 +128,8 @@ def test_twin_all_frontend_interactions(tmp_path: Path):
             explore_input = page.get_by_label("Explore Unit 200 in plain English")
             explore_input.fill("What shares isolation envelope ENV-200-02 with E-201B?")
             page.get_by_role("button", name="Explore", exact=True).click()
-            page.get_by_text("ENV-200-02", exact=False).first.wait_for(timeout=10_000)
+            page.locator(".explore-cypher").wait_for(timeout=10_000)
+            assert page.get_by_text("ENV-200-02", exact=False).first.is_visible()
             assert page.locator(".explore-cypher").is_visible()
             page.screenshot(path=str(screenshot_dir / "twin-explore-active.png"))
 

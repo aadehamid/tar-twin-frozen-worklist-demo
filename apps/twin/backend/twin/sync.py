@@ -32,6 +32,7 @@ class ExerciseSyncState:
         self.change_events: dict[str, dict[str, Any]] = {}  # keyed by change_request_id (unique!)
         self.all_change_requests: list[dict[str, Any]] = []
         self.saved_cut_line_runs: list[dict[str, Any]] = []
+        self.match_rate_history: list[dict[str, Any]] = []
         self.last_synced_at: str | None = None
 
 
@@ -121,6 +122,7 @@ class SyncEngine:
             "change_events": state.change_events,
             "all_change_requests": state.all_change_requests,
             "saved_cut_line_runs": state.saved_cut_line_runs,
+            "match_rate_history": state.match_rate_history,
             "last_synced_at": state.last_synced_at,
         }
 
@@ -139,6 +141,7 @@ class SyncEngine:
         st.change_events = dict(snap.get("change_events", {}))
         st.all_change_requests = list(snap.get("all_change_requests", []))
         st.saved_cut_line_runs = list(snap.get("saved_cut_line_runs", []))
+        st.match_rate_history = list(snap.get("match_rate_history", []))
         st.last_synced_at = snap.get("last_synced_at")
         return st
 
@@ -226,7 +229,14 @@ class SyncEngine:
             return f"pipe:{tag}"
         return f"eq:{tag}"
 
-    def sync_exercise(self, exercise_id: str = "EX-DEMO", *, use_ai: bool = False, live_ai: bool = False) -> dict[str, Any]:
+    def sync_exercise(
+        self,
+        exercise_id: str = "EX-DEMO",
+        *,
+        use_ai: bool = False,
+        live_ai: bool = False,
+        expected_epoch: int | None = None,
+    ) -> dict[str, Any]:
         """Pull latest IMPACT Web state + change feed for exercise_id in one serialized step."""
         with self._locks[exercise_id]:
             pipeline = self._ensure_pipeline()
@@ -234,10 +244,15 @@ class SyncEngine:
 
             if self.impactweb_client is not None:
                 ex_meta = self.impactweb_client.get_exercise(exercise_id)
-                if ex_meta.get("epoch", 1) != state.epoch:
+                current_epoch = int(ex_meta.get("epoch", 1))
+                if expected_epoch is not None and int(expected_epoch) != current_epoch:
+                    raise RuntimeError(
+                        f"Stale sync epoch {expected_epoch}; exercise {exercise_id} is now at epoch {current_epoch}"
+                    )
+                if current_epoch != state.epoch:
                     # Exercise was reset in IMPACT Web -> wipe stale state cleanly
                     state = ExerciseSyncState(exercise_id)
-                    state.epoch = int(ex_meta.get("epoch", 1))
+                    state.epoch = current_epoch
                     self._states[exercise_id] = state
                 state.exercise_meta = ex_meta
                 wrs = self.impactweb_client.list_work_requests(exercise_id)
@@ -250,6 +265,10 @@ class SyncEngine:
                     state.baseline_frozen_at = datetime.now(timezone.utc).isoformat()
                     state.baseline_list_version = 1
             else:
+                if expected_epoch is not None and int(expected_epoch) != state.epoch:
+                    raise RuntimeError(
+                        f"Stale sync epoch {expected_epoch}; exercise {exercise_id} is now at epoch {state.epoch}"
+                    )
                 wl = json.loads((self.scenario_dir / "work-requests.json").read_text(encoding="utf-8"))
                 wrs = [
                     {
@@ -281,11 +300,20 @@ class SyncEngine:
                     "id": exercise_id,
                     "name": "TAR-200-2028 Scripted Demo",
                     "mode": "demo",
+                    "starting_fixture": "seeded",
+                    "clock_step": "candidate_list",
                     "twin_write_through": True,
+                    "allow_external_ai": True,
                     "frozen": False,
                     "freeze_id": None,
                     "epoch": 1,
                 }
+
+            # Planning mode enforces rules-only matching by default unless facilitator turns allow_external_ai on.
+            is_planning = state.exercise_meta.get("mode") == "planning"
+            allow_ai = bool(state.exercise_meta.get("allow_external_ai", not is_planning))
+            effective_use_ai = bool(use_ai and allow_ai)
+            effective_live_ai = bool(live_ai and allow_ai)
 
             # Upsert scope items + preserve human review decisions while equipment_text is unchanged
             new_scope: dict[str, dict[str, Any]] = {}
@@ -303,7 +331,7 @@ class SyncEngine:
                     new_scope[rid] = existing
                     continue
 
-                matched = pipeline.match_work_request(wr, use_ai=use_ai, live_ai=live_ai)
+                matched = pipeline.match_work_request(wr, use_ai=effective_use_ai, live_ai=effective_live_ai)
                 item = {
                     "request_id": rid,
                     "exercise_id": exercise_id,
@@ -358,8 +386,8 @@ class SyncEngine:
                                 "work_type_label": bi.get("work_type_label", "GeneralCleanup"),
                                 "updated_at": "",
                             },
-                            use_ai=use_ai,
-                            live_ai=live_ai,
+                            use_ai=effective_use_ai,
+                            live_ai=effective_live_ai,
                         )
                         state.match_by_version[bkey] = {
                             "match_status": frozen_match["match_status"],
@@ -394,10 +422,33 @@ class SyncEngine:
             if feed:
                 state.cursor_seq = max(state.cursor_seq, max(int(e["seq"]) for e in feed))
             state.last_synced_at = datetime.now(timezone.utc).isoformat()
+
+            # Sample match rate at the current clock step (display "n/a" when 0 active items)
+            active_now = [
+                it for it in state.scope_items.values() if it["status"] not in {"deleted", "rejected", "screened_out", "deferred"}
+            ]
+            tot_now = len(active_now)
+            acc_now = sum(1 for it in active_now if it["match_status"] == "accepted")
+            rate_now = round(acc_now / tot_now, 4) if tot_now > 0 else None
+            step_now = str(state.exercise_meta.get("clock_step", "candidate_list"))
+            sample = {
+                "clock_step": step_now,
+                "at": state.last_synced_at,
+                "total_active": tot_now,
+                "accepted_count": acc_now,
+                "match_rate": rate_now,
+                "display": f"{round(rate_now * 100, 1)}%" if rate_now is not None else "n/a",
+            }
+            if state.match_rate_history and state.match_rate_history[-1]["clock_step"] == step_now:
+                state.match_rate_history[-1] = sample
+            else:
+                state.match_rate_history.append(sample)
+
             self._push_scope_to_graph_store(state)
 
             return {
                 "exercise_id": exercise_id,
+                "epoch": state.epoch,
                 "cursor_seq": state.cursor_seq,
                 "synced_count": len(state.scope_items),
                 "feed_events_applied": len(feed),
@@ -405,6 +456,7 @@ class SyncEngine:
                 "baseline_item_count": len(state.baseline_items),
                 "change_event_count": len(state.change_events),
                 "growth_hours": sum(ev["hours_delta"] for ev in state.change_events.values()),
+                "ai_used": effective_use_ai,
                 "last_synced_at": state.last_synced_at,
             }
 
@@ -583,26 +635,297 @@ class SyncEngine:
         )
 
     def evaluate_cut_line(self, exercise_id: str, budget_usd: int, save_name: str | None = None, saved_by: str = "") -> dict[str, Any]:
+        with self._locks[exercise_id]:
+            state = self._get_state(exercise_id)
+            clusters = self.clusters_and_duplicates(exercise_id)
+            result = evaluate_cut_line(
+                scope_items=list(state.scope_items.values()),
+                clusters_payload=clusters,
+                budget_usd=budget_usd,
+            )
+            if save_name:
+                run_rec = {
+                    "id": f"CLR-{len(state.saved_cut_line_runs) + 1:03d}",
+                    "name": save_name,
+                    "budget_usd": budget_usd,
+                    "saved_by": saved_by or "planner",
+                    "at": datetime.now(timezone.utc).isoformat(),
+                    "feasible": result["feasible"],
+                    "shortfall_usd": result["shortfall_usd"],
+                    "above_count": result["above_count"],
+                    "below_count": result["below_count"],
+                    "above_request_ids": [r["request_id"] for r in result.get("above_line", [])],
+                    "below_request_ids": [r["request_id"] for r in result.get("below_line", [])],
+                    "shared_cost_saved_usd": result.get("shared_cost_saved_usd", 0),
+                }
+                state.saved_cut_line_runs.append(run_rec)
+                self._push_scope_to_graph_store(state)
+            return result
+
+    def list_cut_line_runs(self, exercise_id: str) -> list[dict[str, Any]]:
         state = self._get_state(exercise_id)
+        return copy.deepcopy(state.saved_cut_line_runs)
+
+    def debrief_report(self, exercise_id: str) -> dict[str, Any]:
+        """Build complete Phase 8 debrief report (docs/interactive-planning.md section 3.8)."""
+        state = self._get_state(exercise_id)
+        baseline = self.baseline_summary(exercise_id)
+        kpis = self.kpis_summary(exercise_id)
+        matching = self.matching_summary(exercise_id)
         clusters = self.clusters_and_duplicates(exercise_id)
-        result = evaluate_cut_line(
-            scope_items=list(state.scope_items.values()),
-            clusters_payload=clusters,
-            budget_usd=budget_usd,
-        )
-        if save_name:
-            run_rec = {
-                "name": save_name,
-                "budget_usd": budget_usd,
-                "saved_by": saved_by or "planner",
-                "at": datetime.now(timezone.utc).isoformat(),
-                "feasible": result["feasible"],
-                "shortfall_usd": result["shortfall_usd"],
-                "above_count": result["above_count"],
-                "below_count": result["below_count"],
-            }
-            state.saved_cut_line_runs.append(run_rec)
-        return result
+        val_panel = self.value_panel(exercise_id)
+
+        history: dict[str, Any] = {}
+        if self.impactweb_client is not None:
+            try:
+                history = self.impactweb_client.get_exercise_history(exercise_id)
+            except Exception:
+                history = {}
+
+        # 1. Match rate over time (ensure current snapshot is represented; 0 active items -> "n/a")
+        rate_series = copy.deepcopy(state.match_rate_history)
+        cur_step = str(history.get("clock_step") or state.exercise_meta.get("clock_step") or "candidate_list")
+        active_now = [
+            it for it in state.scope_items.values() if it["status"] not in {"deleted", "rejected", "screened_out", "deferred"}
+        ]
+        tot_now = len(active_now)
+        acc_now = sum(1 for it in active_now if it["match_status"] == "accepted")
+        rate_now = round(acc_now / tot_now, 4) if tot_now > 0 else None
+        cur_point = {
+            "clock_step": cur_step,
+            "at": state.last_synced_at or datetime.now(timezone.utc).isoformat(),
+            "total_active": tot_now,
+            "accepted_count": acc_now,
+            "match_rate": rate_now,
+            "display": f"{round(rate_now * 100, 1)}%" if rate_now is not None else "n/a",
+        }
+        if not rate_series:
+            rate_series.append(cur_point)
+        elif rate_series[-1]["clock_step"] == cur_step:
+            rate_series[-1] = cur_point
+        else:
+            rate_series.append(cur_point)
+
+        # 2. Shared costs: bundled vs missed against planted key (seeded/partial) or final-list reference (blank)
+        starting_fixture = str(history.get("starting_fixture") or state.exercise_meta.get("starting_fixture") or "seeded")
+        all_detected = clusters["isolation_clusters"] + clusters["scaffold_clusters"] + clusters["access_clusters"]
+        active_accepted_ids = {
+            it["request_id"]
+            for it in state.scope_items.values()
+            if it["status"] in {"candidate", "accepted"}
+        }
+        bundled_clusters: list[dict[str, Any]] = []
+        missed_clusters: list[dict[str, Any]] = []
+        if starting_fixture in {"seeded", "partial"}:
+            cd_path = self.scenario_dir / "clusters-and-duplicates.json"
+            planted = json.loads(cd_path.read_text(encoding="utf-8")) if cd_path.is_file() else {}
+            answer_clusters = (
+                planted.get("isolation_clusters", [])
+                + planted.get("scaffold_clusters", [])
+                + planted.get("access_clusters", [])
+            )
+            detected_by_id = {c["id"]: c for c in all_detected}
+            for ac in answer_clusters:
+                det = detected_by_id.get(ac["id"])
+                if det and len(det.get("request_ids", [])) >= 2:
+                    bundled_clusters.append(det)
+                else:
+                    missed_clusters.append(
+                        {
+                            "id": ac["id"],
+                            "name": ac.get("name", ac["id"]),
+                            "shared_hours": int(ac.get("shared_hours", 0)),
+                            "shared_cost_usd": int(ac.get("shared_cost_usd", 0)),
+                            "reason": "Fewer than 2 active matched jobs remained bundled in this cluster",
+                        }
+                    )
+            key_source = "planted_answer_key"
+        else:
+            for det in all_detected:
+                kept = [rid for rid in det.get("request_ids", []) if rid in active_accepted_ids]
+                if len(kept) >= 2:
+                    bundled_clusters.append(det)
+                else:
+                    missed_clusters.append(
+                        {
+                            "id": det["id"],
+                            "name": det.get("name", det["id"]),
+                            "shared_hours": int(det.get("shared_hours", 0)),
+                            "shared_cost_usd": int(det.get("shared_cost_usd", 0)),
+                            "reason": "Co-located cluster not retained with 2+ jobs",
+                        }
+                    )
+            key_source = "computed_final_list_reference"
+
+        # 3. Cut line options vs actual DRB decisions
+        drb_final_by_req: dict[str, str] = {}
+        for d in history.get("decisions", []):
+            if d.get("stage") == "drb" and d.get("kind") == "final":
+                drb_final_by_req[str(d["request_id"])] = str(d["decision"])
+        cut_line_vs_drb: list[dict[str, Any]] = []
+        for run in state.saved_cut_line_runs:
+            above_set = set(run.get("above_request_ids", []))
+            below_set = set(run.get("below_request_ids", []))
+            drb_accepted = {rid for rid, dec in drb_final_by_req.items() if dec == "accept"}
+            drb_cut = {rid for rid, dec in drb_final_by_req.items() if dec in {"reject", "defer", "screen_out", "remove"}}
+            cut_line_vs_drb.append(
+                {
+                    "id": run.get("id", run["name"]),
+                    "name": run["name"],
+                    "budget_usd": run["budget_usd"],
+                    "saved_by": run.get("saved_by", ""),
+                    "at": run.get("at", ""),
+                    "feasible": run.get("feasible", True),
+                    "shortfall_usd": run.get("shortfall_usd", 0),
+                    "above_count": run.get("above_count", len(above_set)),
+                    "below_count": run.get("below_count", len(below_set)),
+                    "drb_accepted_total": len(drb_accepted),
+                    "matched_above_and_accepted": len(above_set & drb_accepted),
+                    "accepted_from_below_line": sorted(below_set & drb_accepted),
+                    "cut_from_above_line": sorted(above_set & drb_cut),
+                }
+            )
+
+        # 4. Growth after freeze (mandatory vs discretionary, pending/rejected, material >= 10%)
+        frozen_hours_by_req = {bi["request_id"]: int(bi.get("estimate_hours", 0)) for bi in state.baseline_items}
+        cum_delta_by_req: dict[str, int] = defaultdict(int)
+        for ev in state.change_events.values():
+            rid = ev.get("request_id")
+            if rid:
+                cum_delta_by_req[str(rid)] += int(ev.get("hours_delta", 0))
+        material_changes: list[dict[str, Any]] = []
+        for rid, delta in sorted(cum_delta_by_req.items()):
+            base_h = frozen_hours_by_req.get(rid, 0)
+            if base_h > 0 and abs(delta) * 10 >= base_h:
+                material_changes.append(
+                    {
+                        "request_id": rid,
+                        "frozen_hours": base_h,
+                        "cumulative_hours_delta": delta,
+                        "pct_of_frozen_hours": round((abs(delta) / base_h) * 100.0, 1),
+                    }
+                )
+            elif base_h == 0 and delta > 0:
+                material_changes.append(
+                    {
+                        "request_id": rid,
+                        "frozen_hours": 0,
+                        "cumulative_hours_delta": delta,
+                        "pct_of_frozen_hours": 100.0,
+                    }
+                )
+
+        # 5. Chronological decision timeline with actor and timestamp
+        timeline: list[dict[str, Any]] = []
+        user_names = history.get("user_names", {})
+        for ev in history.get("feed", []):
+            et = ev.get("entity_type")
+            act = ev.get("action")
+            pl = ev.get("payload") or {}
+            if et == "clock":
+                by_id = str(pl.get("by", "facilitator"))
+                timeline.append(
+                    {
+                        "at": ev["created_at"],
+                        "kind": "clock",
+                        "actor": user_names.get(by_id, by_id),
+                        "summary": f"Clock moved from {pl.get('from_step')} to {pl.get('to_step')}",
+                    }
+                )
+            elif et == "inject":
+                by_id = str(pl.get("by", "facilitator"))
+                timeline.append(
+                    {
+                        "at": ev["created_at"],
+                        "kind": "inject",
+                        "actor": user_names.get(by_id, by_id),
+                        "summary": f"Inject {pl.get('inject_id')} applied in {pl.get('phase')}: {pl.get('title', '')}",
+                    }
+                )
+            elif et == "freeze":
+                frz_meta = history.get("freeze") or {}
+                timeline.append(
+                    {
+                        "at": ev["created_at"],
+                        "kind": "freeze",
+                        "actor": frz_meta.get("frozen_by", "TA manager"),
+                        "summary": f"Frozen list {pl.get('freeze_id')} captured {pl.get('item_count', 0)} DRB-accepted items",
+                    }
+                )
+        for d in history.get("decisions", []):
+            timeline.append(
+                {
+                    "at": d["decided_at"],
+                    "kind": f"{d['stage']}_{d['kind']}",
+                    "actor": d["decided_by"],
+                    "summary": f"{d['request_id']} (v{d['request_version']}): {d['stage']} {d['kind']} = {d['decision']}",
+                }
+            )
+        for cr in state.all_change_requests:
+            if cr.get("status") in {"approved", "rejected"}:
+                dec_by = str(cr.get("decided_by") or "TA manager")
+                timeline.append(
+                    {
+                        "at": cr.get("decided_at") or cr.get("created_at") or "",
+                        "kind": f"change_request_{cr['status']}",
+                        "actor": user_names.get(dec_by, dec_by),
+                        "summary": f"{cr['id']} ({cr['change_type']}, {cr['hours_delta']:+d} h) {cr['status']} by {user_names.get(dec_by, dec_by)}",
+                    }
+                )
+        timeline.sort(key=lambda row: row.get("at", ""))
+
+        # 6. Facilitator talking points grounded in actual exercise data
+        talking_points: list[str] = [
+            "Which duplicate or overlapping work requests got past the challenge review, and why?",
+            "Which post-freeze additions could have been caught during inspection or operations scoping before freeze?",
+        ]
+        if baseline["frozen"] and not baseline["ready_for_use"]:
+            talking_points.append(
+                f"The list froze below the {int(self.match_rate_gate * 100)}% equipment match gate "
+                f"({round((baseline['frozen_match_rate'] or 0.0) * 100, 1)}%). Which unresolved tags need field verification?"
+            )
+        if missed_clusters:
+            talking_points.append(
+                f"{len(missed_clusters)} shared-setup cluster(s) were not bundled cleanly. What stopped teams from combining scaffold or isolation boundaries?"
+            )
+        if kpis["discretionary_growth_hours"] > 0:
+            talking_points.append(
+                f"{kpis['discretionary_growth_hours']} discretionary hours were approved after freeze. Could those have waited for the next turnaround?"
+            )
+
+        return {
+            "exercise_id": exercise_id,
+            "mode": history.get("mode") or state.exercise_meta.get("mode", "demo"),
+            "starting_fixture": starting_fixture,
+            "clock_step": cur_step,
+            "epoch": state.epoch,
+            "frozen": baseline["frozen"],
+            "ready_for_use": baseline["ready_for_use"],
+            "match_rate_over_time": rate_series,
+            "current_match_rate": matching["match_rate"],
+            "shared_costs": {
+                "answer_key_source": key_source,
+                "bundled_clusters": bundled_clusters,
+                "missed_clusters": missed_clusters,
+                "bundled_hours": sum(int(c.get("shared_hours", 0)) for c in bundled_clusters),
+                "missed_hours": sum(int(c.get("shared_hours", 0)) for c in missed_clusters),
+                "shared_cost_saved_usd": sum(int(c.get("shared_cost_usd", 0)) for c in bundled_clusters),
+            },
+            "cut_line_vs_drb": cut_line_vs_drb,
+            "growth_after_freeze": {
+                "baseline_hours": baseline["baseline_hours"],
+                "approved_growth_hours": kpis["growth_hours"],
+                "approved_growth_cost_usd": kpis["growth_cost_usd"],
+                "mandatory_growth_hours": kpis["mandatory_growth_hours"],
+                "discretionary_growth_hours": kpis["discretionary_growth_hours"],
+                "pending_count": kpis["pending_count"],
+                "rejected_count": kpis["rejected_count"],
+                "material_changes": material_changes,
+            },
+            "decision_timeline": timeline,
+            "talking_points": talking_points,
+            "value_assumptions": val_panel,
+        }
 
     def _classify_frozen_outcome(self, match_snap: dict[str, Any] | None) -> str:
         """One of four frozen outcomes (docs/verification.md section 2): matched, unresolved, unit_general, incompatible."""

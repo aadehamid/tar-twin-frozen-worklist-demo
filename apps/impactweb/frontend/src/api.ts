@@ -17,7 +17,9 @@ export interface ExerciseDetail {
   mode: string;
   starting_fixture: string;
   clock_step: string;
+  clock_steps?: string[];
   twin_write_through: boolean;
+  allow_external_ai?: boolean;
   epoch: number;
   frozen: boolean;
   freeze_id: string | null;
@@ -31,6 +33,55 @@ export interface ExerciseDetail {
     freeze_date: string;
     budget_target_usd: number;
   } | null;
+}
+
+export interface ExerciseListItem {
+  id: string;
+  name: string;
+  mode: string;
+  starting_fixture: string;
+  clock_step: string;
+  twin_write_through: boolean;
+  allow_external_ai?: boolean;
+  epoch: number;
+  frozen: boolean;
+  freeze_id: string | null;
+}
+
+export interface MembershipDetail {
+  exercise_id: string;
+  user_id: string;
+  email: string;
+  full_name: string;
+  role: string;
+  source_group: string | null;
+}
+
+export interface LibraryInject {
+  inject_id: string;
+  title: string;
+  description: string;
+  allowed_phases: string[];
+  requires_frozen: boolean;
+  action_kind: string;
+}
+
+export interface AppliedInject {
+  id: number;
+  exercise_id: string;
+  inject_id: string;
+  phase: string;
+  actor: string;
+  payload: Record<string, unknown>;
+  applied_at: string;
+}
+
+export interface ArchiveRecord {
+  id: number;
+  exercise_id: string;
+  epoch: number;
+  archived_at: string;
+  summary: Record<string, unknown>;
 }
 
 export interface ReviewDecisionItem {

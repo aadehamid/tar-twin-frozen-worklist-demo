@@ -6,7 +6,99 @@ export type TwinView =
   | "review"
   | "lab"
   | "clusters"
-  | "kpis";
+  | "kpis"
+  | "debrief";
+
+export interface ExerciseSummary {
+  id: string;
+  name: string;
+  mode: "demo" | "planning" | string;
+  starting_fixture: "seeded" | "partial" | "blank" | string;
+  clock_step: string;
+  twin_write_through: boolean;
+  allow_external_ai?: boolean;
+  epoch: number;
+  frozen: boolean;
+  freeze_id: string | null;
+}
+
+export interface CutLineRunRecord {
+  id: string;
+  name: string;
+  budget_usd: number;
+  saved_by: string;
+  at: string;
+  feasible: boolean;
+  shortfall_usd: number;
+  above_count: number;
+  below_count: number;
+  shared_cost_saved_usd?: number;
+}
+
+export interface DebriefReport {
+  exercise_id: string;
+  mode: string;
+  starting_fixture: string;
+  clock_step: string;
+  epoch: number;
+  frozen: boolean;
+  ready_for_use: boolean;
+  match_rate_over_time: {
+    clock_step: string;
+    at: string;
+    total_active: number;
+    accepted_count: number;
+    match_rate: number | null;
+    display: string;
+  }[];
+  current_match_rate: number | null;
+  shared_costs: {
+    answer_key_source: string;
+    bundled_clusters: { id: string; name: string; shared_hours: number; shared_cost_usd: number }[];
+    missed_clusters: { id: string; name: string; shared_hours: number; shared_cost_usd: number; reason: string }[];
+    bundled_hours: number;
+    missed_hours: number;
+    shared_cost_saved_usd: number;
+  };
+  cut_line_vs_drb: {
+    id: string;
+    name: string;
+    budget_usd: number;
+    saved_by: string;
+    at: string;
+    feasible: boolean;
+    shortfall_usd: number;
+    above_count: number;
+    below_count: number;
+    drb_accepted_total: number;
+    matched_above_and_accepted: number;
+    accepted_from_below_line: string[];
+    cut_from_above_line: string[];
+  }[];
+  growth_after_freeze: {
+    baseline_hours: number;
+    approved_growth_hours: number;
+    approved_growth_cost_usd: number;
+    mandatory_growth_hours: number;
+    discretionary_growth_hours: number;
+    pending_count: number;
+    rejected_count: number;
+    material_changes: {
+      request_id: string;
+      frozen_hours: number;
+      cumulative_hours_delta: number;
+      pct_of_frozen_hours: number;
+    }[];
+  };
+  decision_timeline: {
+    at: string;
+    kind: string;
+    actor: string;
+    summary: string;
+  }[];
+  talking_points: string[];
+  value_assumptions: ValuePanelData;
+}
 
 export type PlotLayer = "match_status" | "clusters" | "cut_line" | "changes";
 

@@ -169,23 +169,23 @@ button:focus-visible {
 .twin-header-inner {
   max-width: 1520px;
   margin: 0 auto;
-  padding: 0.65rem 1.25rem;
+  padding: 0.55rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 1rem;
+  gap: 0.65rem;
   flex-wrap: wrap;
 }
 
 .brand-block {
   display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
+  align-items: center;
+  gap: 0.55rem;
   min-width: 0;
 }
 
 .brand-wordmark {
-  font-size: 1.15rem;
+  font-size: 1.08rem;
   font-weight: 700;
   letter-spacing: -0.025em;
   color: var(--ink-primary);
@@ -195,6 +195,18 @@ button:focus-visible {
 .brand-sub {
   font-size: var(--text-sm);
   color: var(--ink-secondary);
+  white-space: nowrap;
+}
+
+.exercise-select {
+  padding: 0.28rem 1.45rem 0.28rem 0.5rem;
+  font-size: var(--text-sm);
+  max-width: 155px;
+}
+
+.sync-stamp {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
   white-space: nowrap;
 }
 
@@ -213,7 +225,7 @@ button:focus-visible {
   border-radius: 0;
   background: transparent;
   color: var(--ink-secondary);
-  padding: 0.48rem 0.85rem;
+  padding: 0.42rem 0.56rem;
   font-size: var(--text-sm);
   font-weight: 500;
   white-space: nowrap;

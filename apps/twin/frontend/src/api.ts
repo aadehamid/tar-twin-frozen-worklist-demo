@@ -6,7 +6,10 @@ import type {
   ChangeRequestRecord,
   ClustersPayload,
   CutLineResult,
+  CutLineRunRecord,
+  DebriefReport,
   EquipmentDetail,
+  ExerciseSummary,
   ExploreResponse,
   ExploreSuggestion,
   IsolationEnvelope,
@@ -80,6 +83,7 @@ export const twinApi = {
   sheets: () => apiFetch<PidSheet[]>("/api/v1/plant/sheets"),
   envelopes: () => apiFetch<IsolationEnvelope[]>("/api/v1/plant/envelopes"),
 
+  exercises: () => apiFetch<ExerciseSummary[]>("/api/v1/exercises"),
   sync: (exerciseId = "EX-DEMO", useAi = true) =>
     apiFetch<Record<string, unknown>>(
       `/api/v1/sync?exercise_id=${encodeURIComponent(exerciseId)}&use_ai=${useAi ? "true" : "false"}`,
@@ -111,11 +115,25 @@ export const twinApi = {
 
   clusters: (exerciseId = "EX-DEMO") =>
     apiFetch<ClustersPayload>(`/api/v1/clusters?exercise_id=${encodeURIComponent(exerciseId)}`),
-  evaluateCutLine: (budgetUsd: number, exerciseId = "EX-DEMO") =>
+  cutLineRuns: (exerciseId = "EX-DEMO") =>
+    apiFetch<CutLineRunRecord[]>(`/api/v1/cut-line/runs?exercise_id=${encodeURIComponent(exerciseId)}`),
+  evaluateCutLine: (
+    budgetUsd: number,
+    exerciseId = "EX-DEMO",
+    saveName?: string,
+    token?: string | null
+  ) =>
     apiFetch<CutLineResult>("/api/v1/cut-line/evaluate", {
       method: "POST",
-      body: { exercise_id: exerciseId, budget_usd: budgetUsd },
+      body: {
+        exercise_id: exerciseId,
+        budget_usd: budgetUsd,
+        ...(saveName ? { save_name: saveName } : {}),
+      },
+      token,
     }),
+  debrief: (exerciseId = "EX-DEMO") =>
+    apiFetch<DebriefReport>(`/api/v1/debrief?exercise_id=${encodeURIComponent(exerciseId)}`),
 
   exploreSuggestions: () => apiFetch<ExploreSuggestion[]>("/api/v1/explore/suggestions"),
   exploreQuery: (query: string, exerciseId = "EX-DEMO") =>

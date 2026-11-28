@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from "react";
 import { twinApi } from "./api";
 import { BaselineKpisView } from "./components/BaselineKpisView";
 import { ClustersCutLineView } from "./components/ClustersCutLineView";
+import { DebriefView } from "./components/DebriefView";
 import { ExploreBar } from "./components/ExploreBar";
 import { GraphPanel } from "./components/GraphPanel";
 import { MappingTraceView } from "./components/MappingTraceView";
@@ -17,7 +18,10 @@ import type {
   BaselineSummary,
   ClustersPayload,
   CutLineResult,
+  CutLineRunRecord,
+  DebriefReport,
   EquipmentDetail,
+  ExerciseSummary,
   ExploreFollowUp,
   ExploreResponse,
   ExploreSuggestion,
@@ -32,7 +36,7 @@ import type {
   ValuePanelData,
 } from "./types";
 
-const EXERCISE_ID = "EX-DEMO";
+const DEFAULT_EXERCISE_ID = "EX-DEMO";
 const TOKEN_KEY = "tar_twin_local_token";
 
 const DEMO_ACCOUNTS = [
@@ -42,6 +46,11 @@ const DEMO_ACCOUNTS = [
 ];
 
 export default function App() {
+  const [exercises, setExercises] = useState<ExerciseSummary[]>([]);
+  const [exerciseId, setExerciseId] = useState<string>(() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get("exercise") || DEFAULT_EXERCISE_ID;
+  });
   const [view, setView] = useState<TwinView>("plot");
   const [plotPlan, setPlotPlan] = useState<PlotPlanData | null>(null);
   const [equipment, setEquipment] = useState<EquipmentDetail[]>([]);
@@ -53,9 +62,11 @@ export default function App() {
   const [reviewQueue, setReviewQueue] = useState<ScopeItem[]>([]);
   const [clusters, setClusters] = useState<ClustersPayload | null>(null);
   const [cutLine, setCutLine] = useState<CutLineResult | null>(null);
+  const [savedCutLineRuns, setSavedCutLineRuns] = useState<CutLineRunRecord[]>([]);
   const [baseline, setBaseline] = useState<BaselineSummary | null>(null);
   const [kpis, setKpis] = useState<KpisSummary | null>(null);
   const [valuePanel, setValuePanel] = useState<ValuePanelData | null>(null);
+  const [debrief, setDebrief] = useState<DebriefReport | null>(null);
   const [raiseModalTag, setRaiseModalTag] = useState<string | null>(null);
   const [budgetUsd, setBudgetUsd] = useState<number>(22_000_000);
 
@@ -88,30 +99,34 @@ export default function App() {
   const [bootError, setBootError] = useState<string | null>(null);
 
   const refreshScopeData = useCallback(
-    async (targetBudget: number) => {
-      const [items, summary, queue, cl, clEval, bl, kp, vp] = await Promise.all([
-        twinApi.scopeItems(EXERCISE_ID),
-        twinApi.matchingSummary(EXERCISE_ID),
-        twinApi.reviewQueue(EXERCISE_ID),
-        twinApi.clusters(EXERCISE_ID),
-        twinApi.evaluateCutLine(targetBudget, EXERCISE_ID),
-        twinApi.baseline(EXERCISE_ID),
-        twinApi.kpis(EXERCISE_ID),
-        twinApi.valuePanel(EXERCISE_ID),
+    async (targetBudget: number, targetExerciseId: string) => {
+      const [items, summary, queue, cl, clEval, runs, bl, kp, vp, deb] = await Promise.all([
+        twinApi.scopeItems(targetExerciseId),
+        twinApi.matchingSummary(targetExerciseId),
+        twinApi.reviewQueue(targetExerciseId),
+        twinApi.clusters(targetExerciseId),
+        twinApi.evaluateCutLine(targetBudget, targetExerciseId),
+        twinApi.cutLineRuns(targetExerciseId),
+        twinApi.baseline(targetExerciseId),
+        twinApi.kpis(targetExerciseId),
+        twinApi.valuePanel(targetExerciseId),
+        twinApi.debrief(targetExerciseId),
       ]);
       setScopeItems(items);
       setMatchingSummary(summary);
       setReviewQueue(queue);
       setClusters(cl);
       setCutLine(clEval);
+      setSavedCutLineRuns(runs);
       setBaseline(bl);
       setKpis(kp);
       setValuePanel(vp);
+      setDebrief(deb);
     },
     []
   );
 
-  // Initial load + handle deep-link ?request=WR-200-0147 from IMPACT Web
+  // Initial load of shared read-only plant graph + exercise list + handle deep-link ?request=WR-200-0147
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const reqParam = params.get("request");
@@ -123,8 +138,9 @@ export default function App() {
     let cancelled = false;
     (async () => {
       try {
-        const [modeInfo, pp, eq, tags, sh, envs, sug] = await Promise.all([
+        const [modeInfo, exList, pp, eq, tags, sh, envs, sug] = await Promise.all([
           twinApi.authMode(),
+          twinApi.exercises().catch(() => [] as ExerciseSummary[]),
           twinApi.plotPlan(),
           twinApi.equipment(),
           twinApi.activeTags(),
@@ -134,41 +150,13 @@ export default function App() {
         ]);
         if (cancelled) return;
         setAuthMode(modeInfo.auth_mode);
+        setExercises(exList);
         setPlotPlan(pp);
         setEquipment(eq);
         setActiveTags(tags);
         setSheets(sh);
         setEnvelopes(envs);
         setExploreSuggestions(sug);
-
-        const savedToken = window.sessionStorage.getItem(TOKEN_KEY);
-        if (modeInfo.auth_mode === "exe") {
-          twinApi
-            .authMe(null, EXERCISE_ID)
-            .then((m) => {
-              if (!cancelled) setAuthMember(m);
-            })
-            .catch(() => {});
-        } else if (savedToken) {
-          twinApi
-            .authMe(savedToken, EXERCISE_ID)
-            .then((m) => {
-              if (!cancelled) setAuthMember(m);
-            })
-            .catch(() => {
-              window.sessionStorage.removeItem(TOKEN_KEY);
-              if (!cancelled) setToken(null);
-            });
-        }
-
-        let items = await twinApi.scopeItems(EXERCISE_ID);
-        if (items.length === 0) {
-          await twinApi.sync(EXERCISE_ID, true);
-          items = await twinApi.scopeItems(EXERCISE_ID);
-        }
-        if (cancelled) return;
-        setScopeItems(items);
-        await refreshScopeData(22_000_000);
       } catch (err) {
         if (!cancelled) setBootError(err instanceof Error ? err.message : String(err));
       }
@@ -177,23 +165,77 @@ export default function App() {
     return () => {
       cancelled = true;
     };
-  }, [refreshScopeData]);
+  }, []);
+
+  // Reload exercise-scoped data and membership cleanly whenever exerciseId changes
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const savedToken = window.sessionStorage.getItem(TOKEN_KEY);
+        if (authMode === "exe") {
+          twinApi
+            .authMe(null, exerciseId)
+            .then((m) => {
+              if (!cancelled) setAuthMember(m);
+            })
+            .catch(() => {
+              if (!cancelled) setAuthMember(null);
+            });
+        } else if (savedToken) {
+          twinApi
+            .authMe(savedToken, exerciseId)
+            .then((m) => {
+              if (!cancelled) setAuthMember(m);
+            })
+            .catch(() => {
+              if (!cancelled) setAuthMember(null);
+            });
+        }
+
+        let items = await twinApi.scopeItems(exerciseId);
+        if (items.length === 0) {
+          await twinApi.sync(exerciseId, true);
+          items = await twinApi.scopeItems(exerciseId);
+        }
+        if (cancelled) return;
+        setScopeItems(items);
+        await refreshScopeData(budgetUsd, exerciseId);
+      } catch (err) {
+        if (!cancelled) setBootError(err instanceof Error ? err.message : String(err));
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [exerciseId, authMode, refreshScopeData]);
 
   const handleBudgetChange = async (newBudget: number) => {
     setBudgetUsd(newBudget);
     try {
-      const res = await twinApi.evaluateCutLine(newBudget, EXERCISE_ID);
+      const res = await twinApi.evaluateCutLine(newBudget, exerciseId);
       setCutLine(res);
     } catch {
       // ignore transient eval error
     }
   };
 
+  const handleSaveCutLineOption = async (saveName: string) => {
+    const res = await twinApi.evaluateCutLine(budgetUsd, exerciseId, saveName, token);
+    setCutLine(res);
+    const [runs, deb] = await Promise.all([twinApi.cutLineRuns(exerciseId), twinApi.debrief(exerciseId)]);
+    setSavedCutLineRuns(runs);
+    setDebrief(deb);
+  };
+
   const handleSyncNow = async () => {
     setSyncing(true);
     try {
-      await twinApi.sync(EXERCISE_ID, true);
-      await refreshScopeData(budgetUsd);
+      await twinApi.sync(exerciseId, true);
+      const exList = await twinApi.exercises().catch(() => exercises);
+      setExercises(exList);
+      await refreshScopeData(budgetUsd, exerciseId);
     } finally {
       setSyncing(false);
     }
@@ -204,7 +246,7 @@ export default function App() {
     const res = await twinApi.authLogin(email, password);
     window.sessionStorage.setItem(TOKEN_KEY, res.access_token);
     setToken(res.access_token);
-    const member = await twinApi.authMe(res.access_token, EXERCISE_ID);
+    const member = await twinApi.authMe(res.access_token, exerciseId);
     setAuthMember(member);
     setLoginModalOpen(false);
   };
@@ -228,7 +270,7 @@ export default function App() {
     setExploreLoading(true);
     setExploreError(null);
     try {
-      const res = await twinApi.exploreQuery(q, EXERCISE_ID);
+      const res = await twinApi.exploreQuery(q, exerciseId);
       setExploreResult(res);
       setExploreCollapsed(false);
 
@@ -313,8 +355,8 @@ export default function App() {
     requestId: string,
     payload: { action: "accept" | "reject" | "pick_another"; tag?: string; reason?: string }
   ) => {
-    await twinApi.decideReview(requestId, payload, token, EXERCISE_ID);
-    await refreshScopeData(budgetUsd);
+    await twinApi.decideReview(requestId, payload, token, exerciseId);
+    await refreshScopeData(budgetUsd, exerciseId);
   };
 
   const navItems: { id: TwinView; label: string }[] = [
@@ -326,7 +368,13 @@ export default function App() {
     { id: "lab", label: "Matching lab" },
     { id: "clusters", label: "Clusters & cut line" },
     { id: "kpis", label: "Baseline & KPIs" },
+    { id: "debrief", label: "Debrief" },
   ];
+
+  const activeExMeta = exercises.find((e) => e.id === exerciseId);
+  const lastSyncShort = kpis?.last_synced_at
+    ? new Date(kpis.last_synced_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+    : null;
 
   return (
     <>
@@ -334,7 +382,28 @@ export default function App() {
         <div className="twin-header-inner">
           <div className="brand-block">
             <span className="brand-wordmark">Unit 200 Twin</span>
-            <span className="brand-sub">TAR-200-2028</span>
+            {exercises.length > 0 ? (
+              <select
+                aria-label="Active exercise"
+                className="exercise-select"
+                value={exerciseId}
+                onChange={(e) => {
+                  const next = e.target.value;
+                  setExerciseId(next);
+                  setExploreResult(null);
+                  setHighlightedTags([]);
+                  setBootError(null);
+                }}
+              >
+                {exercises.map((ex) => (
+                  <option key={ex.id} value={ex.id}>
+                    {ex.id}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span className="brand-sub">{activeExMeta?.id ?? exerciseId}</span>
+            )}
           </div>
 
           <nav className="primary-nav" role="tablist" aria-label="Digital twin views">
@@ -355,6 +424,11 @@ export default function App() {
           </nav>
 
           <div className="header-actions">
+            {lastSyncShort && (
+              <span className="sync-stamp" title={`Last synced at ${kpis?.last_synced_at}`}>
+                Synced {lastSyncShort}
+              </span>
+            )}
             <button type="button" className="btn-subtle" onClick={handleSyncNow} disabled={syncing}>
               {syncing ? "Syncing..." : "Sync now"}
             </button>
@@ -460,7 +534,7 @@ export default function App() {
 
         {view === "graph" && (
           <GraphPanel
-            exerciseId={EXERCISE_ID}
+            exerciseId={exerciseId}
             equipment={equipment}
             envelopes={envelopes}
             scopeItems={scopeItems}
@@ -527,7 +601,7 @@ export default function App() {
 
         {view === "lab" && (
           <MatchingLabView
-            exerciseId={EXERCISE_ID}
+            exerciseId={exerciseId}
             scopeItems={scopeItems}
             initialRequestId={selectedRequestId}
           />
@@ -537,9 +611,11 @@ export default function App() {
           <ClustersCutLineView
             clusters={clusters}
             cutLine={cutLine}
+            savedRuns={savedCutLineRuns}
             scopeItems={scopeItems}
             budgetUsd={budgetUsd}
             onBudgetChange={handleBudgetChange}
+            onSaveCutLineOption={handleSaveCutLineOption}
             onColorCutLineOnPlot={() => {
               setPlotLayer("cut_line");
               setView("plot");
@@ -565,19 +641,29 @@ export default function App() {
             onOpenRaiseModal={(tag) => setRaiseModalTag(tag)}
           />
         )}
+
+        {view === "debrief" && (
+          <DebriefView
+            debrief={debrief}
+            onRefresh={async () => {
+              await twinApi.sync(exerciseId, true);
+              await refreshScopeData(budgetUsd, exerciseId);
+            }}
+          />
+        )}
       </main>
 
       {raiseModalTag && (
         <RaiseChangeRequestModal
-          exerciseId={EXERCISE_ID}
+          exerciseId={exerciseId}
           tag={raiseModalTag}
           authMember={authMember}
           authMode={authMode}
           token={token}
           onQuickPlannerLogin={handleQuickPlannerLogin}
           onRaised={async () => {
-            await twinApi.sync(EXERCISE_ID, true);
-            await refreshScopeData(budgetUsd);
+            await twinApi.sync(exerciseId, true);
+            await refreshScopeData(budgetUsd, exerciseId);
           }}
           onClose={() => setRaiseModalTag(null)}
         />

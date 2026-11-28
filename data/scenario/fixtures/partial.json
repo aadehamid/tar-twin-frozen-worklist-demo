@@ -1,0 +1,460 @@
+{
+  "fixture_version": 1,
+  "kind": "partial",
+  "event_id": "TAR-200-2028",
+  "site": "Demo Refinery (fictional)",
+  "unit": "Unit 200 Diesel Hydrotreater",
+  "budget_target_usd": 22000000,
+  "expected_request_count": 100,
+  "request_ids": [
+    "WR-200-0001",
+    "WR-200-0002",
+    "WR-200-0003",
+    "WR-200-0004",
+    "WR-200-0005",
+    "WR-200-0006",
+    "WR-200-0007",
+    "WR-200-0008",
+    "WR-200-0009",
+    "WR-200-0010",
+    "WR-200-0011",
+    "WR-200-0012",
+    "WR-200-0013",
+    "WR-200-0014",
+    "WR-200-0015",
+    "WR-200-0016",
+    "WR-200-0017",
+    "WR-200-0018",
+    "WR-200-0019",
+    "WR-200-0020",
+    "WR-200-0021",
+    "WR-200-0022",
+    "WR-200-0023",
+    "WR-200-0024",
+    "WR-200-0025",
+    "WR-200-0026",
+    "WR-200-0027",
+    "WR-200-0028",
+    "WR-200-0029",
+    "WR-200-0030",
+    "WR-200-0031",
+    "WR-200-0032",
+    "WR-200-0033",
+    "WR-200-0034",
+    "WR-200-0035",
+    "WR-200-0036",
+    "WR-200-0037",
+    "WR-200-0038",
+    "WR-200-0039",
+    "WR-200-0040",
+    "WR-200-0041",
+    "WR-200-0042",
+    "WR-200-0043",
+    "WR-200-0044",
+    "WR-200-0045",
+    "WR-200-0046",
+    "WR-200-0047",
+    "WR-200-0048",
+    "WR-200-0049",
+    "WR-200-0050",
+    "WR-200-0051",
+    "WR-200-0052",
+    "WR-200-0053",
+    "WR-200-0054",
+    "WR-200-0055",
+    "WR-200-0056",
+    "WR-200-0057",
+    "WR-200-0058",
+    "WR-200-0059",
+    "WR-200-0060",
+    "WR-200-0061",
+    "WR-200-0062",
+    "WR-200-0063",
+    "WR-200-0064",
+    "WR-200-0065",
+    "WR-200-0066",
+    "WR-200-0067",
+    "WR-200-0068",
+    "WR-200-0069",
+    "WR-200-0070",
+    "WR-200-0071",
+    "WR-200-0072",
+    "WR-200-0073",
+    "WR-200-0074",
+    "WR-200-0075",
+    "WR-200-0076",
+    "WR-200-0077",
+    "WR-200-0078",
+    "WR-200-0079",
+    "WR-200-0080",
+    "WR-200-0081",
+    "WR-200-0082",
+    "WR-200-0083",
+    "WR-200-0084",
+    "WR-200-0085",
+    "WR-200-0086",
+    "WR-200-0087",
+    "WR-200-0088",
+    "WR-200-0089",
+    "WR-200-0090",
+    "WR-200-0091",
+    "WR-200-0092",
+    "WR-200-0093",
+    "WR-200-0094",
+    "WR-200-0095",
+    "WR-200-0096",
+    "WR-200-0097",
+    "WR-200-0098",
+    "WR-200-0099",
+    "WR-200-0100"
+  ],
+  "uses_planted_answer_key": true,
+  "planted_cluster_ids": [
+    "ENV-200-01",
+    "ENV-200-02",
+    "ENV-200-03",
+    "ENV-200-04",
+    "ENV-200-05",
+    "ENV-200-06",
+    "CL-SCAF-01",
+    "CL-SCAF-02",
+    "CL-SCAF-03",
+    "CL-SCAF-04",
+    "CL-SCAF-05",
+    "CL-SCAF-06",
+    "CL-SCAF-07",
+    "CL-ACC-01",
+    "CL-ACC-02",
+    "CL-ACC-03"
+  ],
+  "briefing_packs": {
+    "fixed_equipment": {
+      "source_group": "fixed_equipment",
+      "unsubmitted_need_count": 35,
+      "mandatory_need_count": 10,
+      "areas": [
+        "200-A",
+        "200-B",
+        "200-C",
+        "200-D"
+      ],
+      "total_estimated_hours": 13112,
+      "sample_needs": [
+        {
+          "reference_id": "WR-200-0103",
+          "title": "PSV-2107 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 200
+        },
+        {
+          "reference_id": "WR-200-0125",
+          "title": "XV-2210 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-B",
+          "driver": "reliability",
+          "mandatory": true,
+          "estimate_hours": 220
+        },
+        {
+          "reference_id": "WR-200-0126",
+          "title": "HV-2001 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": false,
+          "estimate_hours": 260
+        },
+        {
+          "reference_id": "WR-200-0127",
+          "title": "HV-2002 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-C",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 276
+        },
+        {
+          "reference_id": "WR-200-0129",
+          "title": "HV-2015 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-B",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 232
+        },
+        {
+          "reference_id": "WR-200-0130",
+          "title": "FV-2011 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-D",
+          "driver": "regulatory",
+          "mandatory": false,
+          "estimate_hours": 280
+        },
+        {
+          "reference_id": "WR-200-0131",
+          "title": "FV-2012 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-D",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 232
+        },
+        {
+          "reference_id": "WR-200-0132",
+          "title": "FV-2015 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-B",
+          "driver": "regulatory",
+          "mandatory": false,
+          "estimate_hours": 256
+        }
+      ]
+    },
+    "rotating": {
+      "source_group": "rotating",
+      "unsubmitted_need_count": 0,
+      "mandatory_need_count": 0,
+      "areas": [],
+      "total_estimated_hours": 0,
+      "sample_needs": []
+    },
+    "inspection": {
+      "source_group": "inspection",
+      "unsubmitted_need_count": 48,
+      "mandatory_need_count": 30,
+      "areas": [
+        "200-A",
+        "200-B",
+        "200-C",
+        "200-D",
+        "200-E",
+        "200-F",
+        "200-G"
+      ],
+      "total_estimated_hours": 13072,
+      "sample_needs": [
+        {
+          "reference_id": "WR-200-0101",
+          "title": "PSV-2105 ON D-202 B SIDE: REMOVE, BENCH TEST, RECERTIFY",
+          "area": "200-E",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 176
+        },
+        {
+          "reference_id": "WR-200-0102",
+          "title": "PSV-2106 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 204
+        },
+        {
+          "reference_id": "WR-200-0104",
+          "title": "PSV-2108 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 176
+        },
+        {
+          "reference_id": "WR-200-0105",
+          "title": "PSV-2109 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 156
+        },
+        {
+          "reference_id": "WR-200-0106",
+          "title": "PSV-2110 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 180
+        },
+        {
+          "reference_id": "WR-200-0107",
+          "title": "PSV-2111 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-E",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 188
+        },
+        {
+          "reference_id": "WR-200-0108",
+          "title": "PSV-2112 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-F",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 160
+        },
+        {
+          "reference_id": "WR-200-0109",
+          "title": "PSV-2113 RELIEF VALVE: REMOVE, BENCH TEST, RECERTIFY, REINSTALL",
+          "area": "200-F",
+          "driver": "regulatory",
+          "mandatory": true,
+          "estimate_hours": 172
+        }
+      ]
+    },
+    "operations": {
+      "source_group": "operations",
+      "unsubmitted_need_count": 3,
+      "mandatory_need_count": 2,
+      "areas": [
+        "200-A",
+        "200-B",
+        "200-C"
+      ],
+      "total_estimated_hours": 3404,
+      "sample_needs": [
+        {
+          "reference_id": "WR-200-0128",
+          "title": "HV-2003 ISOLATION/CONTROL VALVE: OVERHAUL AND LEAK TEST",
+          "area": "200-C",
+          "driver": "regulatory",
+          "mandatory": false,
+          "estimate_hours": 272
+        },
+        {
+          "reference_id": "WR-200-0199",
+          "title": "UNIT 200: STEAM OUT AND CHEMICAL CLEAN HP LOOP",
+          "area": "200-B",
+          "driver": "operations",
+          "mandatory": true,
+          "estimate_hours": 1604
+        },
+        {
+          "reference_id": "WR-200-0200",
+          "title": "UNIT 200: SITE-WIDE TURNAROUND BLIND LIST EXECUTION AND DE-BLINDING",
+          "area": "200-A",
+          "driver": "operations",
+          "mandatory": true,
+          "estimate_hours": 1528
+        }
+      ]
+    },
+    "projects": {
+      "source_group": "projects",
+      "unsubmitted_need_count": 4,
+      "mandatory_need_count": 0,
+      "areas": [
+        "200-B",
+        "200-C",
+        "200-E",
+        "200-G"
+      ],
+      "total_estimated_hours": 3820,
+      "sample_needs": [
+        {
+          "reference_id": "WR-200-0195",
+          "title": "TIE-IN T-07 NEW PROCESS CONNECTION AT E-201A",
+          "area": "200-C",
+          "driver": "capital",
+          "mandatory": false,
+          "estimate_hours": 888
+        },
+        {
+          "reference_id": "WR-200-0196",
+          "title": "TIE-IN T-08 NEW PROCESS CONNECTION AT R-202",
+          "area": "200-B",
+          "driver": "capital",
+          "mandatory": false,
+          "estimate_hours": 924
+        },
+        {
+          "reference_id": "WR-200-0197",
+          "title": "TIE-IN T-09 NEW PROCESS CONNECTION AT C-201",
+          "area": "200-G",
+          "driver": "capital",
+          "mandatory": false,
+          "estimate_hours": 940
+        },
+        {
+          "reference_id": "WR-200-0198",
+          "title": "TIE-IN T-10 NEW PROCESS CONNECTION AT D-202",
+          "area": "200-E",
+          "driver": "capital",
+          "mandatory": false,
+          "estimate_hours": 1068
+        }
+      ]
+    },
+    "instrumentation": {
+      "source_group": "instrumentation",
+      "unsubmitted_need_count": 10,
+      "mandatory_need_count": 3,
+      "areas": [
+        "200-A",
+        "200-B",
+        "200-C",
+        "200-E"
+      ],
+      "total_estimated_hours": 2188,
+      "sample_needs": [
+        {
+          "reference_id": "WR-200-0184",
+          "title": "LT-2302 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-E",
+          "driver": "reliability",
+          "mandatory": true,
+          "estimate_hours": 244
+        },
+        {
+          "reference_id": "WR-200-0185",
+          "title": "PT-2101 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-A",
+          "driver": "reliability",
+          "mandatory": true,
+          "estimate_hours": 208
+        },
+        {
+          "reference_id": "WR-200-0186",
+          "title": "TT-2201 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-A",
+          "driver": "reliability",
+          "mandatory": true,
+          "estimate_hours": 212
+        },
+        {
+          "reference_id": "WR-200-0187",
+          "title": "FT-2401 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-A",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 220
+        },
+        {
+          "reference_id": "WR-200-0189",
+          "title": "LT-2303 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-A",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 244
+        },
+        {
+          "reference_id": "WR-200-0190",
+          "title": "AT-2501 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-A",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 240
+        },
+        {
+          "reference_id": "WR-200-0191",
+          "title": "PT-2102 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-B",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 188
+        },
+        {
+          "reference_id": "WR-200-0192",
+          "title": "TT-2202 FIELD INSTRUMENT: REPLACE TRANSMITTER AND LOOP CALIBRATE",
+          "area": "200-B",
+          "driver": "reliability",
+          "mandatory": false,
+          "estimate_hours": 212
+        }
+      ]
+    }
+  }
+}

@@ -272,16 +272,48 @@ def create_app(
             raise HTTPException(status_code=404, detail=f"Unknown exercise_id {exercise_id}")
         return store.export_cypher(exercise_id=exercise_id)
 
-    # --- Sync, Matching, Clusters, and Cut Line Endpoints (Phase 4) ---
+    # --- Sync, Matching, Clusters, and Cut Line Endpoints (Phase 4 & Phase 8) ---
+
+    @api.get("/api/v1/exercises")
+    def list_exercises() -> list[dict]:
+        if iw_cli is not None:
+            try:
+                return iw_cli.list_exercises()
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"Failed to list exercises from IMPACT Web: {exc}") from exc
+        return [
+            {
+                "id": "EX-DEMO",
+                "name": "TAR-200-2028 Scripted Demo",
+                "mode": "demo",
+                "starting_fixture": "seeded",
+                "clock_step": "candidate_list",
+                "twin_write_through": True,
+                "allow_external_ai": True,
+                "epoch": 1,
+                "frozen": False,
+                "freeze_id": None,
+            }
+        ]
 
     @api.post("/api/v1/sync")
     def trigger_sync(
         exercise_id: str = Query(default="EX-DEMO"),
         use_ai: bool = Query(default=False),
         live_ai: bool = Query(default=False),
+        expected_epoch: int | None = Query(default=None),
     ) -> dict:
         try:
-            return sync_engine.sync_exercise(exercise_id=exercise_id, use_ai=use_ai, live_ai=live_ai)
+            return sync_engine.sync_exercise(
+                exercise_id=exercise_id,
+                use_ai=use_ai,
+                live_ai=live_ai,
+                expected_epoch=expected_epoch,
+            )
+        except RuntimeError as exc:
+            if "stale sync epoch" in str(exc).lower():
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
+            raise HTTPException(status_code=502, detail=f"Sync failed: {exc}") from exc
         except Exception as exc:
             raise HTTPException(status_code=502, detail=f"Sync failed: {exc}") from exc
 
@@ -356,14 +388,45 @@ def create_app(
     def get_clusters(exercise_id: str = Query(default="EX-DEMO")) -> dict:
         return sync_engine.clusters_and_duplicates(exercise_id)
 
+    @api.get("/api/v1/cut-line/runs")
+    def list_cut_line_runs(exercise_id: str = Query(default="EX-DEMO")) -> list[dict]:
+        return sync_engine.list_cut_line_runs(exercise_id)
+
     @api.post("/api/v1/cut-line/evaluate")
-    def post_cut_line(body: CutLineEvaluatePayload) -> dict:
+    def post_cut_line(body: CutLineEvaluatePayload, request: Request) -> dict:
+        saved_by = body.saved_by
+        if body.save_name and iw_cli is not None:
+            ex_meta = sync_engine._get_state(body.exercise_id).exercise_meta
+            if ex_meta.get("mode") == "planning":
+                member = resolve_authenticated_member(
+                    request,
+                    exercise_id=body.exercise_id,
+                    auth_mode=mode,
+                    jwt_secret=j_secret,
+                    edge_auth_secret=e_secret,
+                    impactweb_client=iw_cli,
+                )
+                if member.role not in {"planner", "ta_manager"}:
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Only planner or TA manager may save cut-line options",
+                    )
+                if ex_meta.get("clock_step") not in {"candidate_list", "fit_to_frame", "challenge", "drb"}:
+                    raise HTTPException(
+                        status_code=409,
+                        detail=f"Saving cut-line options is closed in phase '{ex_meta.get('clock_step')}'",
+                    )
+                saved_by = member.full_name
         return sync_engine.evaluate_cut_line(
             exercise_id=body.exercise_id,
             budget_usd=body.budget_usd,
             save_name=body.save_name,
-            saved_by=body.saved_by,
+            saved_by=saved_by,
         )
+
+    @api.get("/api/v1/debrief")
+    def get_debrief(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.debrief_report(exercise_id)
 
     @api.get("/api/v1/explore/suggestions")
     def explore_suggestions() -> list[dict]:
@@ -433,8 +496,9 @@ def create_app(
             **body.model_dump(),
             "on_behalf_of": member.user_id,
         }
+        cur_epoch = sync_engine._get_state(body.exercise_id).epoch
         try:
-            return iw_cli.raise_twin_change_request(delegate_payload)
+            return iw_cli.raise_twin_change_request(delegate_payload, epoch=cur_epoch)
         except httpx.HTTPStatusError as exc:
             detail = f"IMPACT Web refused delegated change request ({exc.response.status_code})"
             try:
