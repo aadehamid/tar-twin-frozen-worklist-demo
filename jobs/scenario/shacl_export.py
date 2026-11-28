@@ -210,7 +210,17 @@ def build_scenario_graph(scenario_dir: Path) -> dict:
 
     for env in envs["envelopes"]:
         ekey = f"env:{env['id']}"
-        add_node({"key": ekey, "labels": ["IsolationEnvelope"], "props": {"id": env["id"], "name": env["name"]}})
+        add_node(
+            {
+                "key": ekey,
+                "labels": ["IsolationEnvelope"],
+                "props": {
+                    "id": env["id"],
+                    "name": env["name"],
+                    "boundary_sides_json": json.dumps(env.get("boundary_sides", {}), sort_keys=True),
+                },
+            }
+        )
         for eq_tag in env["equipment_tags"]:
             rels.append({"type": "CONTAINS", "from": ekey, "to": tag_to_key[eq_tag]})
         for v_tag in env["boundary_valves"]:
@@ -308,16 +318,34 @@ def verify_engineering_rules(scenario_dir: Path, graph_override: dict | None = N
             env_bv[rel["from"]].add(rel["to"])
 
     all_env_eq = set().union(*env_eq.values()) if env_eq else set()
-    # Split-boundary equipment (P-201A/B) appear in both ENV-200-01 (suction) and ENV-200-02 (discharge)
+    # Split-boundary equipment (P-201A/B) span ENV-200-01 (suction) and ENV-200-02 (discharge)
     shared_eq = {ek for ek in all_env_eq if sum(1 for eqs in env_eq.values() if ek in eqs) > 1}
+    suct_of: dict[str, set[str]] = defaultdict(set)
+    disch_of: dict[str, set[str]] = defaultdict(set)
+    for rel in graph["rels"]:
+        if rel["type"] == "SUCTION_VALVE":
+            suct_of[rel["from"]].add(rel["to"])
+        elif rel["type"] == "DISCHARGE_VALVE":
+            disch_of[rel["from"]].add(rel["to"])
 
     for ekey, contained in sorted(env_eq.items()):
+        env_id = by_key[ekey]["props"]["id"]
         stop_valves = {
             vk for vk in env_bv[ekey] if vk in by_key and by_key[vk]["props"].get("role") == "block"
         }
-        # Also stop at other envelopes' listed boundary valves that sit directly on the external side
-        # ONLY if our own envelope's boundary valve already closed our side — so check strictly with
-        # stop_valves of THIS envelope!
+        sides = json.loads(by_key[ekey]["props"].get("boundary_sides_json", "{}"))
+        for eq_tag, side in sides.items():
+            eq_key = f"eq:{eq_tag}"
+            if side == "suction" and not (suct_of.get(eq_key, set()) & stop_valves):
+                errors.append(
+                    f"isolation envelope {env_id} is not closed: missing suction boundary valve for {eq_tag}"
+                )
+            elif side == "discharge" and not (disch_of.get(eq_key, set()) & stop_valves):
+                errors.append(
+                    f"isolation envelope {env_id} is not closed: missing discharge boundary valve for {eq_tag}"
+                )
+
+        # Walk full piping graph (without stopping on shared equipment!) from non-split equipment
         starts = [ek for ek in contained if ek not in shared_eq]
         seen = set(starts)
         stack = list(starts)
@@ -327,12 +355,7 @@ def verify_engineering_rules(scenario_dir: Path, graph_override: dict | None = N
             for nxt in adj.get(curr, ()):
                 if nxt in seen:
                     continue
-                # Stop at this envelope's own block boundary valves
                 if nxt in stop_valves:
-                    seen.add(nxt)
-                    continue
-                # Stop traversing THROUGH split-boundary pumps into the opposite side
-                if nxt in shared_eq:
                     seen.add(nxt)
                     continue
                 seen.add(nxt)
@@ -341,7 +364,7 @@ def verify_engineering_rules(scenario_dir: Path, graph_override: dict | None = N
                 stack.append(nxt)
         if leaked:
             errors.append(
-                f"isolation envelope {by_key[ekey]['props']['id']} is not closed: piping leaks to {sorted(leaked)}"
+                f"isolation envelope {env_id} is not closed: piping leaks to {sorted(leaked)}"
             )
 
     return errors

@@ -725,3 +725,19 @@ class TestShaclValidation:
         m_opc["nodes"].append(dup_opc)
         errs_opc = verify_engineering_rules(SCENARIO_DIR, m_opc)
         assert any("duplicate off-page connector" in e and "OPC-21" in e for e in errs_opc), errs_opc
+
+        # Mutant D: removing suction block valve HV-2017 from ENV-200-01 walks through P-201A into ENV-200-02
+        m_suct = json.loads(json.dumps(clean_graph))
+        m_suct["rels"] = [
+            r for r in m_suct["rels"] if not (r["type"] == "BOUNDED_BY" and r["from"] == "env:ENV-200-01" and r["to"] == "valve:HV-2017")
+        ]
+        errs_suct = verify_engineering_rules(SCENARIO_DIR, m_suct)
+        assert any("ENV-200-01" in e and "not closed" in e and "E-201A" in e for e in errs_suct), errs_suct
+
+        # Mutant E: removing discharge block valve HV-2021 from ENV-200-02 fails split-boundary closure
+        m_disch = json.loads(json.dumps(clean_graph))
+        m_disch["rels"] = [
+            r for r in m_disch["rels"] if not (r["type"] == "BOUNDED_BY" and r["from"] == "env:ENV-200-02" and r["to"] == "valve:HV-2021")
+        ]
+        errs_disch = verify_engineering_rules(SCENARIO_DIR, m_disch)
+        assert any("ENV-200-02" in e and "not closed" in e and "P-201A" in e for e in errs_disch), errs_disch
