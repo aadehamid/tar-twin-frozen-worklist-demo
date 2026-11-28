@@ -27,6 +27,8 @@ STANDALONE_DEMO_USERS: dict[str, dict[str, Any]] = {
 
 
 def decode_jwt(token: str, secret: str) -> dict[str, Any] | None:
+    if not secret:
+        return None
     parts = token.split(".")
     if len(parts) != 3:
         return None
@@ -64,57 +66,103 @@ def resolve_authenticated_member(
     edge_auth_secret: str,
     impactweb_client: ImpactWebClient | None,
 ) -> AuthenticatedMember:
-    """Authenticate caller (JWT in local mode or X-Edge-Auth + X-ExeDev-Email in exe mode) and resolve exercise role."""
-    user_id: str | None = None
-    email: str | None = None
-
-    auth_hdr = request.headers.get("Authorization", "")
+    """Authenticate caller and resolve exercise membership strictly bound to verified principal identity."""
     if auth_mode == "local":
+        auth_hdr = request.headers.get("Authorization", "")
         if not auth_hdr.startswith("Bearer "):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
         token = auth_hdr[len("Bearer ") :].strip()
+
+        # When IMPACT Web is wired and no separate local JWT secret override is required, delegate token
+        # validation to IMPACT Web /api/v1/auth/me so IMPACT Web remains the single identity authority.
+        if impactweb_client is not None and not jwt_secret:
+            profile = impactweb_client.verify_user_token(token)
+            if profile is None:
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+            uid = str(profile.get("id", ""))
+            email = str(profile.get("email", "")).strip().lower()
+            full_name = str(profile.get("full_name") or email)
+            for m in profile.get("memberships", []):
+                if str(m.get("exercise_id")) == exercise_id:
+                    return AuthenticatedMember(
+                        user_id=uid,
+                        email=email,
+                        full_name=full_name,
+                        role=str(m.get("role", "viewer")),
+                        exercise_id=exercise_id,
+                    )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
+
+        # Explicit JWT secret path: fail closed if secret is unset
         claims = decode_jwt(token, jwt_secret)
         if not claims or not claims.get("sub"):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
         user_id = str(claims["sub"])
-        email = str(claims.get("email", "")).strip().lower()
-    elif auth_mode == "exe":
+        claim_email = str(claims.get("email", "")).strip().lower()
+
+        if impactweb_client is not None:
+            try:
+                mems = impactweb_client.list_memberships(exercise_id)
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"Membership lookup failed: {exc}") from exc
+            for m in mems:
+                if str(m.get("user_id", "")) == user_id:
+                    m_email = str(m.get("email", "")).strip().lower()
+                    if claim_email and m_email and claim_email != m_email:
+                        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token subject/email mismatch")
+                    return AuthenticatedMember(
+                        user_id=user_id,
+                        email=m_email,
+                        full_name=str(m.get("full_name") or m_email),
+                        role=str(m.get("role", "viewer")),
+                        exercise_id=exercise_id,
+                    )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
+
+        row = STANDALONE_DEMO_USERS.get(user_id)
+        if row is None:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
+        if claim_email and claim_email != row["email"]:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Token subject/email mismatch")
+        return AuthenticatedMember(
+            user_id=row["id"],
+            email=row["email"],
+            full_name=row["full_name"],
+            role=row["role"],
+            exercise_id=exercise_id,
+        )
+
+    if auth_mode == "exe":
         edge_secret = request.headers.get("X-Edge-Auth", "")
-        raw_email = request.headers.get("X-ExeDev-Email", "").strip().lower()
+        email = request.headers.get("X-ExeDev-Email", "").strip().lower()
         if not edge_secret or not edge_auth_secret or not hmac.compare_digest(edge_secret, edge_auth_secret):
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing or invalid edge auth header")
-        if not raw_email:
+        if not email:
             raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Missing X-ExeDev-Email header")
-        email = raw_email
-    else:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unsupported auth mode")
-
-    if impactweb_client is not None:
-        try:
-            mems = impactweb_client.list_memberships(exercise_id)
-        except Exception as exc:
-            raise HTTPException(status_code=502, detail=f"Membership lookup failed: {exc}") from exc
-        for m in mems:
-            m_uid = str(m.get("user_id", ""))
-            m_email = str(m.get("email", "")).strip().lower()
-            if (user_id and m_uid == user_id) or (email and m_email == email):
+        if impactweb_client is not None:
+            try:
+                mems = impactweb_client.list_memberships(exercise_id)
+            except Exception as exc:
+                raise HTTPException(status_code=502, detail=f"Membership lookup failed: {exc}") from exc
+            for m in mems:
+                if str(m.get("email", "")).strip().lower() == email:
+                    return AuthenticatedMember(
+                        user_id=str(m.get("user_id", "")),
+                        email=email,
+                        full_name=str(m.get("full_name") or email),
+                        role=str(m.get("role", "viewer")),
+                        exercise_id=exercise_id,
+                    )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
+        for row in STANDALONE_DEMO_USERS.values():
+            if row["email"] == email:
                 return AuthenticatedMember(
-                    user_id=m_uid,
-                    email=m_email,
-                    full_name=str(m.get("full_name") or m_email),
-                    role=str(m.get("role", "viewer")),
+                    user_id=row["id"],
+                    email=row["email"],
+                    full_name=row["full_name"],
+                    role=row["role"],
                     exercise_id=exercise_id,
                 )
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
 
-    # Standalone mode fallback (no IMPACT Web client wired)
-    for row in STANDALONE_DEMO_USERS.values():
-        if (user_id and row["id"] == user_id) or (email and row["email"] == email):
-            return AuthenticatedMember(
-                user_id=row["id"],
-                email=row["email"],
-                full_name=row["full_name"],
-                role=row["role"],
-                exercise_id=exercise_id,
-            )
-    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=f"Not a member of exercise {exercise_id}")
+    raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Unsupported auth mode")

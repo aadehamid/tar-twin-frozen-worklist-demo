@@ -120,6 +120,49 @@ def test_deterministic_matching_exact_146_and_193_post_review(tmp_path: Path):
     assert twin.post("/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO", json={"action": "reject", "reason": "Viewer"}, headers=viewer_hdr).status_code == 403
     # 3) Caller-supplied reviewer field rejected with 422
     assert twin.post("/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO", json={"action": "reject", "reviewer": "Forged Name", "reason": "Spoof"}, headers=planner_hdr).status_code == 422
+    # 4) Forged token signed with hardcoded dev secret rejected when JWT secret differs
+    from impactweb.auth import issue_jwt
+
+    forged_tok = issue_jwt("usr-planner", "j.planner@demo.local", "wrong-forged-secret")
+    assert (
+        twin.post(
+            "/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO",
+            json={"action": "reject", "reason": "Forged"},
+            headers={"Authorization": f"Bearer {forged_tok}"},
+        ).status_code
+        == 401
+    )
+    # 5) Mismatched subject/email claims (viewer sub + planner email) rejected with 403 on explicit secret path
+    from twin.app import create_app as create_twin_app
+    from fastapi.testclient import TestClient
+
+    twin_secret_app = create_twin_app(
+        scenario_dir=SCENARIO_DIR,
+        shapes_path=SHAPES_PATH,
+        jwt_secret="explicit-test-secret",
+    )
+    twin_secret_client = TestClient(twin_secret_app)
+    twin_secret_client.post("/api/v1/sync?exercise_id=EX-DEMO")
+    mismatched_tok = issue_jwt("usr-viewer", "j.planner@demo.local", "explicit-test-secret")
+    assert (
+        twin_secret_client.post(
+            "/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO",
+            json={"action": "reject", "reason": "Mismatched email claim"},
+            headers={"Authorization": f"Bearer {mismatched_tok}"},
+        ).status_code
+        == 403
+    )
+    # 6) Standalone twin without JWT_SECRET configured fails closed on forged default-secret token
+    twin_nosecret = TestClient(create_twin_app(scenario_dir=SCENARIO_DIR, shapes_path=SHAPES_PATH))
+    default_forged = issue_jwt("usr-planner", "j.planner@demo.local", "tar-twin-local-dev-jwt-secret")
+    assert (
+        twin_nosecret.post(
+            "/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO",
+            json={"action": "reject", "reason": "Default secret forge"},
+            headers={"Authorization": f"Bearer {default_forged}"},
+        ).status_code
+        == 401
+    )
 
     # Scripted planner review following answer key reaches EXACTLY 193 of 200 (96.5% >= 95% gate)
     queue = twin.get("/api/v1/matching/review-queue?exercise_id=EX-DEMO").json()

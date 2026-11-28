@@ -72,6 +72,13 @@ class ImpactWebClient:
         r.raise_for_status()
         return r.json()
 
+    def verify_user_token(self, bearer_token: str) -> dict[str, Any] | None:
+        """Ask IMPACT Web to verify a caller's user bearer token via GET /api/v1/auth/me."""
+        r = self._client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {bearer_token}"})
+        if r.status_code != 200:
+            return None
+        return r.json()
+
     def raise_twin_change_request(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Delegated write-through call (design.md section 5.8). Uses ONLY TWIN_RAISE_TOKEN."""
         if not self._raise_token:

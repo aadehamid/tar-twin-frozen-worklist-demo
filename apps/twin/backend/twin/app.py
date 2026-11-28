@@ -73,7 +73,7 @@ def create_app(
     sync_tok = twin_sync_token or os.environ.get("TWIN_SYNC_TOKEN", "demo-twin-sync-token")
     raise_tok = twin_raise_token or os.environ.get("TWIN_RAISE_TOKEN", "")
     mode = auth_mode or os.environ.get("AUTH_MODE", "local")
-    j_secret = jwt_secret or os.environ.get("JWT_SECRET", "tar-twin-local-dev-jwt-secret")
+    j_secret = jwt_secret if jwt_secret is not None else os.environ.get("JWT_SECRET", "")
     e_secret = edge_auth_secret or os.environ.get("EDGE_AUTH_SECRET", "")
     dist_dir = frontend_dist_dir or (Path(__file__).resolve().parent / "frontend")
 
