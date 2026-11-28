@@ -713,7 +713,7 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
     assert iw.post("/api/v1/admin/maintenance", json={"enabled": False}, headers=sso_hdr).status_code == 200
     assert iw.get("/api/v1/admin/watermarks", headers=sso_hdr).status_code == 200
 
-    # Create a pre-existing account via the membership API on another exercise (not EX-DEMO)
+    # Create a pre-existing viewer account on another exercise AND a non-seeded account with a persisted EX-DEMO facilitator membership
     assert (
         iw.post(
             f"/api/v1/exercises/{other_ex_id}/memberships",
@@ -722,14 +722,22 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
         ).status_code
         == 201
     )
+    assert (
+        iw.post(
+            "/api/v1/exercises/EX-DEMO/memberships",
+            json={"email": "persisted.fac@demo.local", "full_name": "P. PersistedFac", "role": "facilitator"},
+            headers=sso_hdr,
+        ).status_code
+        == 201
+    )
 
     # Unlisted email is still refused with 403
     assert iw.get("/api/v1/auth/me", headers=unknown_hdr).status_code == 403
 
-    # Adding a second brand-new email AND the pre-existing account on a subsequent startup grants EX-DEMO facilitator access
+    # Adding a second brand-new email, the pre-existing viewer, and the persisted facilitator on startup grants access
     monkeypatch.setenv(
         "FACILITATOR_EMAILS",
-        "facilitator@demo.local,sso.facilitator@demo.local,  Second.Facilitator@Demo.Local ,preexisting.member@demo.local",
+        "facilitator@demo.local,sso.facilitator@demo.local,  Second.Facilitator@Demo.Local ,preexisting.member@demo.local,persisted.fac@demo.local",
     )
     iw_restarted = TestClient(
         create_app(
@@ -742,6 +750,7 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
     )
     second_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "second.facilitator@demo.local"}
     pre_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "preexisting.member@demo.local"}
+    persisted_fac_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "persisted.fac@demo.local"}
     r_second = iw_restarted.get("/api/v1/auth/me", headers=second_hdr)
     assert r_second.status_code == 200, r_second.text
     assert any(m["exercise_id"] == "EX-DEMO" and m["role"] == "facilitator" for m in r_second.json()["memberships"])
@@ -756,12 +765,20 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
         ).status_code
         == 200
     )
+    assert (
+        iw_restarted.patch(
+            "/api/v1/exercises/EX-DEMO/write-through",
+            json={"twin_write_through": True},
+            headers=persisted_fac_hdr,
+        ).status_code
+        == 200
+    )
 
-    # Removing sso.facilitator@demo.local AND preexisting.member@demo.local from FACILITATOR_EMAILS
-    # immediately revokes global, maintenance, exercise-level EX-DEMO facilitator, and Twin privileges
-    # (both live and after restart), while preserving preexisting.member's explicit viewer grant on other_ex_id.
+    # Removing sso.facilitator, preexisting.member, and persisted.fac from FACILITATOR_EMAILS immediately revokes
+    # global, maintenance, exercise-level EX-DEMO facilitator, and Twin privileges (both live and after restart),
+    # while preserving preexisting.member's explicit viewer grant on other_ex_id.
     monkeypatch.setenv("FACILITATOR_EMAILS", "second.facilitator@demo.local")
-    for revoked_hdr in (sso_hdr, pre_hdr):
+    for revoked_hdr in (sso_hdr, pre_hdr, persisted_fac_hdr):
         assert (
             iw.post(
                 "/api/v1/exercises",
@@ -850,6 +867,16 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
         == 403
     )
     assert iw_revoked.get("/api/v1/work-requests?exercise_id=EX-DEMO", headers=pre_hdr).status_code == 403
+    assert iw_revoked.get("/api/v1/auth/me", headers=persisted_fac_hdr).status_code == 403
+    assert (
+        iw_revoked.patch(
+            "/api/v1/exercises/EX-DEMO/write-through",
+            json={"twin_write_through": False},
+            headers=persisted_fac_hdr,
+        ).status_code
+        == 403
+    )
+    assert iw_revoked.get("/api/v1/auth/me", headers=sso_hdr).status_code == 403
     from sqlmodel import Session, select
 
     from impactweb.models import ExerciseMembership, UserAccount

@@ -13,6 +13,7 @@ from fastapi import HTTPException, Request, status
 from sqlmodel import Session, select
 
 from impactweb.models import ExerciseMembership, UserAccount
+from impactweb.planning import is_active_persisted_membership, is_global_facilitator
 
 
 def hash_password(password: str, salt: str = "tar-twin-demo-salt") -> str:
@@ -97,6 +98,10 @@ def resolve_caller(
         user = session.exec(select(UserAccount).where(UserAccount.email == email)).first()
         if user is None:
             raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No membership for this exe.dev account")
+        if not is_global_facilitator(user, auth_mode="exe"):
+            mems = session.exec(select(ExerciseMembership).where(ExerciseMembership.user_id == user.id)).all()
+            if not any(is_active_persisted_membership(user, m, auth_mode="exe") for m in mems):
+                raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="No membership for this exe.dev account")
         return Caller(kind="user", user=user)
 
     raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")

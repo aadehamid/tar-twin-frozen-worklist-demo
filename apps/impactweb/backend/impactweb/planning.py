@@ -156,15 +156,14 @@ def is_global_facilitator(user: UserAccount, *, auth_mode: str = "local") -> boo
 
 
 def is_active_persisted_membership(user: UserAccount, mem: ExerciseMembership, *, auth_mode: str = "local") -> bool:
-    """Return False for the seeded demo superuser's EX-DEMO grant in AUTH_MODE=exe.
+    """In AUTH_MODE=exe, facilitator privileges are strictly governed by FACILITATOR_EMAILS.
 
-    In AUTH_MODE=exe, facilitator privileges for FACILITATOR_EMAILS (including the seeded
-    demo facilitator if listed) are derived dynamically from the allowlist rather than
-    persisted ExerciseMembership rows, so allowlist removal revokes access immediately for
-    both new and pre-existing accounts.
+    Per docs/hosting.md, the facilitator console is open only to emails listed in
+    FACILITATOR_EMAILS. Persisted facilitator memberships (seeded or manually added) do not
+    grant facilitator access in AUTH_MODE=exe once the email is not in FACILITATOR_EMAILS.
     """
-    if auth_mode == "exe" and user.id == "usr-facilitator" and mem.exercise_id == "EX-DEMO" and mem.role == "facilitator":
-        return False
+    if auth_mode == "exe" and mem.role == "facilitator":
+        return user.email.strip().lower() in facilitator_email_allowlist()
     return True
 
 
@@ -177,6 +176,8 @@ def is_facilitator(
 ) -> bool:
     if is_global_facilitator(user, auth_mode=auth_mode):
         return True
+    if auth_mode == "exe":
+        return False
     if exercise_id is not None:
         mem = session.exec(
             select(ExerciseMembership).where(
@@ -185,7 +186,7 @@ def is_facilitator(
                 ExerciseMembership.role == "facilitator",
             )
         ).first()
-        return mem is not None and is_active_persisted_membership(user, mem, auth_mode=auth_mode)
+        return mem is not None
     # Creating a new exercise or listing users requires global facilitator privilege
     return False
 
