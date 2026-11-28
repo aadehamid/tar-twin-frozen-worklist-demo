@@ -311,6 +311,18 @@ def test_detects_process_equipment_in_no_envelope_while_kt201_exempt(tmp_path: P
     assert any("C-202" in e and "envelope" in e.lower() for e in payload["errors"])
     assert not any("KT-201" in e for e in payload["errors"])
 
+    # Adversarial probe: adding the exemption prose phrase for a process vessel must NOT exempt it
+    bypass = broken.replace(
+        "hydrocarbon isolation envelopes.",
+        "hydrocarbon isolation envelopes. C-202 is the amine scrubber and stays outside the hydrocarbon isolation envelopes.",
+        1,
+    )
+    spec.write_text(bypass, encoding="utf-8")
+    res_bypass = _run_tg(repo, "check", "--json")
+    assert res_bypass.returncode != 0
+    errs_bypass = json.loads(res_bypass.stdout)["errors"]
+    assert any("C-202" in e and "exemption" in e.lower() for e in errs_bypass)
+
 
 def test_detects_empty_envelope(tmp_path: Path):
     repo = _copy_doc_repo(tmp_path)
@@ -341,6 +353,17 @@ def test_detects_rule_without_decision(tmp_path: Path):
     assert res.returncode != 0
     payload = json.loads(res.stdout)
     assert any("Orphan_rule" in e and "decision" in e.lower() for e in payload["errors"])
+
+    # Adversarial probe: top-level bullet in section 2 outside Plant/Scope must also be parsed and checked
+    sec2_target = "- Plant\n"
+    assert sec2_target in text
+    ver.write_text(
+        text.replace(sec2_target, "- Every twin sync is one transaction with no decision link.\n" + sec2_target, 1),
+        encoding="utf-8",
+    )
+    res_sec2 = _run_tg(repo, "check", "--json")
+    assert res_sec2.returncode != 0
+    assert any("one transaction" in e for e in json.loads(res_sec2.stdout)["errors"])
 
 
 def test_detects_spike_sheet_title_clash_and_neo4j_snapshot_mismatch(tmp_path: Path):
@@ -433,3 +456,37 @@ def test_full_mode_passes_clean_data_and_catches_valve_wr_category_and_problem_d
     r_pp = _run_tg(repo, "check", "--json")
     assert r_pp.returncode != 0
     assert any("nozzle" in e.lower() or "c-201" in e.lower() for e in json.loads(r_pp.stdout)["errors"])
+
+    # Restore late-scope and test shared boundary valve between two envelopes passes, while compensating swap fails
+    ls["live_walkthrough_add"] = {
+        "id": "CR-LIVE-N3",
+        "equipment_tag": "C-201",
+        "envelope_id": "ENV-200-06",
+        "title": "Add nozzle N3 on C-201",
+        "in_late_scope_simulation": False,
+    }
+    ls_path.write_text(json.dumps(ls, indent=2), encoding="utf-8")
+
+    env_path = data_dir / "isolation-envelopes.json"
+    env_doc = json.loads(env_path.read_text(encoding="utf-8"))
+    shared_v = env_doc["envelopes"][4]["boundary_valves"][0]  # ENV-200-05 valve
+    replaced_v = env_doc["envelopes"][5]["boundary_valves"][0]  # ENV-200-06 valve
+    env_doc["envelopes"][5]["boundary_valves"][0] = shared_v
+    # Remove the replaced valve from master so it is not an orphan block valve
+    master = json.loads(master_path.read_text(encoding="utf-8"))
+    master["valves"] = [v for v in master["valves"] if v["tag"] != replaced_v]
+    master_path.write_text(json.dumps(master, indent=2), encoding="utf-8")
+    env_path.write_text(json.dumps(env_doc, indent=2), encoding="utf-8")
+
+    r_shared = _run_tg(repo, "check", "--json")
+    assert r_shared.returncode == 0, r_shared.stdout + r_shared.stderr
+
+    # Compensating per-envelope swap (move one valve from ENV-200-06 to ENV-200-05: sum stays 112, per-envelope breaks)
+    moved_v = env_doc["envelopes"][5]["boundary_valves"].pop()
+    env_doc["envelopes"][4]["boundary_valves"].append(moved_v)
+    env_path.write_text(json.dumps(env_doc, indent=2), encoding="utf-8")
+    r_swap = _run_tg(repo, "check", "--json")
+    assert r_swap.returncode != 0
+    swap_errs = json.loads(r_swap.stdout)["errors"]
+    assert any("ENV-200-05" in e and "11" in e for e in swap_errs)
+    assert any("ENV-200-06" in e and "21" in e for e in swap_errs)

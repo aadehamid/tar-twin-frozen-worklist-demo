@@ -21,10 +21,7 @@ MAJOR_TAG_RE = re.compile(r"\b(?:FL|D|P|R|E|H|A|C|K|KT)-2\d{2}(?:[A-Z](?:/[A-Z])
 SLASH_TAG_RE = re.compile(r"^([A-Z]+-\d+)([A-Z](?:/[A-Z])+)$")
 ENV_ID_RE = re.compile(r"\b(ENV-200-\d{2})\b")
 DECISION_REF_RE = re.compile(r"\b(D\d+)\b")
-EXEMPT_DRIVER_RE = re.compile(
-    r"`?((?:FL|D|P|R|E|H|A|C|K|KT)-2\d{2}[A-Z]?)`?[^.\n]*\boutside the hydrocarbon isolation envelopes\b",
-    re.IGNORECASE,
-)
+EXEMPT_PHRASE = "outside the hydrocarbon isolation envelopes"
 
 LOAD_CYPHER = """
 UNWIND $payload.sheets AS s
@@ -118,7 +115,8 @@ MATCH (e:Equipment) WHERE e.in_master = true RETURN 'metric' AS kind, 'equipment
 MATCH (s:Sheet) RETURN 'metric' AS kind, 'sheets' AS k, count(s) AS n;
 MATCH (e:Envelope) RETURN 'metric' AS kind, 'envelopes' AS k, count(e) AS n;
 MATCH (e:Envelope) RETURN 'metric' AS kind, 'boundary_valves_target' AS k, sum(e.target_boundary_valves) AS n;
-MATCH (:Envelope)-[:BOUNDED_BY]->(v:Valve) RETURN 'metric' AS kind, 'boundary_valves' AS k, count(DISTINCT v) AS n;
+MATCH (:Envelope)-[r:BOUNDED_BY]->(:Valve) RETURN 'metric' AS kind, 'boundary_valves' AS k, count(r) AS n;
+MATCH (en:Envelope) OPTIONAL MATCH (en)-[r:BOUNDED_BY]->(:Valve) RETURN 'env_valves' AS kind, en.id AS id, en.target_boundary_valves AS target, count(r) AS actual ORDER BY en.id;
 MATCH (w:WorkRequest) RETURN 'metric' AS kind, 'work_requests' AS k, count(w) AS n;
 MATCH (d:Decision) RETURN 'metric' AS kind, 'decisions' AS k, count(d) AS n;
 MATCH (r:Rule) RETURN 'metric' AS kind, 'rules' AS k, count(r) AS n;
@@ -224,6 +222,16 @@ def _parse_rules(repo: Path) -> list[dict[str, object]]:
                 rules.append({
                     "id": f"RULE-ENG-{rule_idx:02d}",
                     "layer": f"engineering:{current_sub}",
+                    "text": body,
+                    "decisions": sorted(set(DECISION_REF_RE.findall(body))),
+                    "source": "docs/verification.md",
+                })
+            elif line.startswith("- "):
+                body = line[2:].strip()
+                rule_idx += 1
+                rules.append({
+                    "id": f"RULE-ENG-{rule_idx:02d}",
+                    "layer": "engineering:general",
                     "text": body,
                     "decisions": sorted(set(DECISION_REF_RE.findall(body))),
                     "source": "docs/verification.md",
@@ -336,10 +344,30 @@ def extract_model(repo: Path, mode: str = "auto") -> dict[str, object]:
 
     _env_h, env_body = repo_facts._section_lines(spec_text, "### 2.4 Isolation envelopes")
     env_rows = repo_facts._parse_first_table(env_body)
-    exempt_drivers = set(EXEMPT_DRIVER_RE.findall("\n".join(env_body)))
-    for tag in exempt_drivers:
-        if tag in equipment_map:
+    extra_errors: list[str] = []
+    exempt_candidates: set[str] = set()
+    for sentence in re.split(r"(?<=[.!?])\s+|\n+", "\n".join(env_body)):
+        if EXEMPT_PHRASE in sentence.lower():
+            for tok in MAJOR_TAG_RE.findall(sentence):
+                for tag in _expand_tag_token(tok):
+                    exempt_candidates.add(tag)
+    for tag in sorted(exempt_candidates):
+        if tag not in equipment_map:
+            continue
+        desc_low = str(equipment_map[tag]["description"]).lower()
+        if "driver" in desc_low and "turbine" in desc_low:
             equipment_map[tag]["non_process_driver"] = True
+        elif tag not in {
+            t
+            for row in env_rows
+            if len(row) >= 3
+            for tok in MAJOR_TAG_RE.findall(row[1])
+            for t in _expand_tag_token(tok)
+        }:
+            extra_errors.append(
+                f"equipment {tag} claims non-process driver exemption in docs/scenario-spec.md section 2.4 "
+                f"but section 2.2 describes it as {equipment_map[tag]['description']!r}"
+            )
 
     envelopes: list[dict[str, object]] = []
     isolates: list[dict[str, str]] = []
@@ -402,7 +430,6 @@ def extract_model(repo: Path, mode: str = "auto") -> dict[str, object]:
     problem_reaches_envelope: list[dict[str, str]] = []
     problem_reaches_wr: list[dict[str, str]] = []
     pending_phase_1: list[str] = []
-    extra_errors: list[str] = []
 
     def _add_clash(kind: str, entity: str, details: str) -> None:
         clashes.append({
@@ -717,6 +744,7 @@ def run_check(repo: Path, mode: str = "auto", neo4j_snapshot: Path | None = None
     metrics: dict[str, int] = {}
     clash_rows: list[dict[str, object]] = []
     wr_rows: list[dict[str, object]] = []
+    env_valve_rows: list[dict[str, object]] = []
 
     with tempfile.TemporaryDirectory(prefix="twin-graph-") as td:
         db = _build_temp_relate_db(Path(td), payload)
@@ -724,6 +752,8 @@ def run_check(repo: Path, mode: str = "auto", neo4j_snapshot: Path | None = None
             kind = row.get("kind")
             if kind == "metric":
                 metrics[str(row["k"])] = int(row["n"] or 0)
+            elif kind == "env_valves":
+                env_valve_rows.append(row)
             elif kind == "no_sheet":
                 errors.append(f"equipment {row['val']} is on no P&ID sheet")
             elif kind == "no_env":
@@ -769,6 +799,11 @@ def run_check(repo: Path, mode: str = "auto", neo4j_snapshot: Path | None = None
     if model["mode"] == "full":
         if bv_actual != sc["boundary_valve_total"]:
             errors.append(f"materialized boundary valve count {bv_actual} disagrees with repo_facts ({sc['boundary_valve_total']})")
+        for ev in env_valve_rows:
+            if int(ev["actual"]) != int(ev["target"]):
+                errors.append(
+                    f"envelope {ev['id']} has {ev['actual']} boundary valves, expected {ev['target']}"
+                )
         if wr_count != sc["work_request_total"]:
             errors.append(f"materialized work request count {wr_count} disagrees with repo_facts ({sc['work_request_total']})")
 
