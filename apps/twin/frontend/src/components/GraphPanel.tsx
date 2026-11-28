@@ -174,6 +174,7 @@ export const GraphPanel: React.FC<GraphPanelProps> = ({
   const [mode, setMode] = useState<NamedQueryId>(initialMode);
   const [stats, setStats] = useState<WorkerStats | null>(null);
   const [workerError, setWorkerError] = useState<string | null>(null);
+  const [seedNonce, setSeedNonce] = useState<number>(0);
   const [queryOutput, setQueryOutput] = useState<QueryRunOutput | null>(null);
   const [clickedNode, setClickedNode] = useState<{ id: string; label: string; kind: string } | null>(null);
 
@@ -243,7 +244,7 @@ export const GraphPanel: React.FC<GraphPanelProps> = ({
       w.terminate();
       workerRef.current = null;
     };
-  }, [exerciseId]);
+  }, [exerciseId, seedNonce]);
 
   const matchedRequests = useMemo(
     () => scopeItems.filter((s) => s.match_status === "accepted" && s.resolved_tag),
@@ -489,8 +490,11 @@ export const GraphPanel: React.FC<GraphPanelProps> = ({
       </div>
 
       {workerError && (
-        <div className="notice err" role="alert">
-          {workerError}
+        <div className="notice err" role="alert" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: "0.75rem" }}>
+          <span>{workerError}</span>
+          <button type="button" className="btn-subtle" onClick={() => setSeedNonce((n) => n + 1)}>
+            Retry graph load
+          </button>
         </div>
       )}
 

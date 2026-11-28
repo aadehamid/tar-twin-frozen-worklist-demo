@@ -7,6 +7,7 @@ import { NAMED_QUERIES, runNamedQuery } from "./relateQueries";
 
 let db: RelateDb | null = null;
 let seeded = false;
+let seedingInFlight = false;
 
 const EXERCISE_ID_RE = /^[A-Za-z0-9_-]{1,40}$/;
 
@@ -27,53 +28,70 @@ async function doSeed(prefix: string, exerciseId: string) {
   if (seeded) {
     throw new Error("Relate worker is already seeded; respawn worker to reload");
   }
-  seeded = true;
-  const t0 = performance.now();
-  await init();
-  const t1 = performance.now();
-
-  const url = buildExportUrl(prefix, exerciseId);
-  const resp = await fetch(url);
-  if (!resp.ok) {
-    throw new Error(`Export fetch failed (${resp.status})`);
+  if (seedingInFlight) {
+    throw new Error("Relate worker seed is already in progress");
   }
-  const script = await resp.text();
-  const t2 = performance.now();
-
-  db = new RelateDb();
-  const out = db.executeScript(script, null);
-  const errors = out
-    .map((line: string) => {
-      const parsed = JSON.parse(line) as { error?: string | null };
-      return parsed.error;
-    })
-    .filter((e: string | null | undefined): e is string => e != null);
-  const t3 = performance.now();
-
-  const countEnv = JSON.parse(db.execute("MATCH (n) RETURN count(n) AS c", null)) as {
-    rows: { c: number }[];
-  };
-  const nodeCount = countEnv.rows?.[0]?.c ?? 0;
-
-  // Warm up named queries (docs/design.md section 5.7)
+  seedingInFlight = true;
   try {
-    runNamedQuery(db, "equipment_neighborhood", { tag: "E-201B" });
-    runNamedQuery(db, "envelope_subgraph", { envelope_id: "ENV-200-02" });
-    runNamedQuery(db, "work_request_chain", { request_id: "WR-200-0001" });
-  } catch {
-    // Warmup ignores missing sample keys on empty exercises
-  }
-  const t4 = performance.now();
+    const t0 = performance.now();
+    await init();
+    const t1 = performance.now();
 
-  return {
-    nodes: nodeCount,
-    script_bytes: script.length,
-    errors,
-    init_ms: Math.round(t1 - t0),
-    fetch_ms: Math.round(t2 - t1),
-    seed_ms: Math.round(t3 - t2),
-    warmup_ms: Math.round(t4 - t3),
-  };
+    const url = buildExportUrl(prefix, exerciseId);
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      throw new Error(`Export fetch failed (${resp.status})`);
+    }
+    const script = await resp.text();
+    const t2 = performance.now();
+
+    const candidateDb = new RelateDb();
+    const out = candidateDb.executeScript(script, null);
+    const errors = out
+      .map((line: string) => {
+        const parsed = JSON.parse(line) as { error?: string | null };
+        return parsed.error;
+      })
+      .filter((e: string | null | undefined): e is string => e != null);
+    if (errors.length > 0) {
+      throw new Error(`Graph export had ${errors.length} Cypher error(s): ${errors[0]}`);
+    }
+    const t3 = performance.now();
+
+    const countEnv = JSON.parse(candidateDb.execute("MATCH (n) RETURN count(n) AS c", null)) as {
+      rows: { c: number }[];
+    };
+    const nodeCount = countEnv.rows?.[0]?.c ?? 0;
+
+    // Warm up named queries (docs/design.md section 5.7)
+    try {
+      runNamedQuery(candidateDb, "equipment_neighborhood", { tag: "E-201B" });
+      runNamedQuery(candidateDb, "envelope_subgraph", { envelope_id: "ENV-200-02" });
+      runNamedQuery(candidateDb, "work_request_chain", { request_id: "WR-200-0001" });
+    } catch {
+      // Warmup ignores missing sample keys on empty exercises
+    }
+    const t4 = performance.now();
+
+    db = candidateDb;
+    seeded = true;
+
+    return {
+      nodes: nodeCount,
+      script_bytes: script.length,
+      errors: [],
+      init_ms: Math.round(t1 - t0),
+      fetch_ms: Math.round(t2 - t1),
+      seed_ms: Math.round(t3 - t2),
+      warmup_ms: Math.round(t4 - t3),
+    };
+  } catch (err) {
+    db = null;
+    seeded = false;
+    throw err;
+  } finally {
+    seedingInFlight = false;
+  }
 }
 
 function doQuery(name: string, params: Record<string, unknown>) {
