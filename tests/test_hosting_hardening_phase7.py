@@ -179,3 +179,64 @@ def test_paired_watermark_maintenance_export_import_and_mismatch_rejection(tmp_p
     restored_item = fresh_twin.get(f"/api/v1/scope-items/{target_req}?exercise_id=EX-DEMO").json()
     assert restored_item["match_status"] == "accepted"
     assert restored_item["mapping_trace"]["decision"]["reason"] == "Backup test review"
+
+    # 6. Restore onto a NON-EMPTY Twin whose cursor moved ahead of the backup cutoff:
+    #    calling reset-scope rewinds cursor to 0 so replaying the older feed and importing succeeds cleanly.
+    r_post = iw.post(
+        "/api/v1/work-requests/WR-200-0002/decisions?exercise_id=EX-DEMO",
+        json={"stage": "challenge", "kind": "recommendation", "decision": "accept", "reason": "Post-backup write"},
+        headers=ta_hdr,
+    )
+    assert r_post.status_code == 201
+    assert fresh_twin.post("/api/v1/sync?exercise_id=EX-DEMO").status_code == 200
+    # Without reset-scope, importing the older bundle is rejected with 409
+    assert fresh_twin.post("/api/v1/backup/import", json=bundle, headers={"Authorization": "Bearer sync-p7"}).status_code == 409
+    # Reset-scope clears Twin cursor back to 0 cleanly
+    r_rst = fresh_twin.post("/api/v1/backup/reset-scope?exercise_id=EX-DEMO", headers={"Authorization": "Bearer sync-p7"})
+    assert r_rst.status_code == 200 and r_rst.json()["cursor_seq"] == 0
+
+
+def test_maintenance_mode_write_barrier_drains_in_flight_writes(tmp_path: Path):
+    """Maintenance activation blocks new writes and waits for an in-flight write to finish before returning."""
+    import threading
+    import time
+
+    iw_app = create_iw_app(
+        database_url=f"sqlite:///{tmp_path / 'iw-barrier.db'}",
+        scenario_dir=REPO_ROOT / "data" / "scenario",
+        auth_mode="local",
+    )
+    iw = TestClient(iw_app)
+    fac_tok = iw.post("/api/v1/auth/login", json={"email": "facilitator@demo.local", "password": "demo-pass-2028"}).json()["access_token"]
+    fac_hdr = {"Authorization": f"Bearer {fac_tok}"}
+
+    # Simulate an active in-flight write holding the barrier counter
+    with iw_app.state.write_barrier_cond:
+        iw_app.state.in_flight_writes = 1
+
+    done_event = threading.Event()
+    result_box: dict = {}
+
+    def _activate():
+        r = iw.post("/api/v1/admin/maintenance", json={"enabled": True}, headers=fac_hdr)
+        result_box["status"] = r.status_code
+        result_box["json"] = r.json()
+        done_event.set()
+
+    t = threading.Thread(target=_activate, daemon=True)
+    t.start()
+    time.sleep(0.15)
+    # Maintenance activation MUST still be waiting while the in-flight write has not drained
+    assert not done_event.is_set()
+    assert iw_app.state.maintenance_mode is True
+
+    # Release the in-flight write -> maintenance activation drains and completes cleanly
+    with iw_app.state.write_barrier_cond:
+        iw_app.state.in_flight_writes = 0
+        iw_app.state.write_barrier_cond.notify_all()
+    t.join(timeout=5.0)
+    assert done_event.is_set()
+    assert result_box["status"] == 200
+    assert result_box["json"]["maintenance_mode"] is True
+    assert result_box["json"]["in_flight_writes"] == 0
+

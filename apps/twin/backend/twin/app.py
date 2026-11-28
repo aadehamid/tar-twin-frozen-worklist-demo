@@ -466,6 +466,11 @@ def create_app(
         if member.role != "facilitator":
             raise HTTPException(status_code=403, detail="Backup endpoints require sync token or facilitator role")
 
+    @api.post("/api/v1/backup/reset-scope")
+    def backup_reset_scope(request: Request, exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        _require_backup_auth(request)
+        return sync_engine.reset_exercise_scope(exercise_id)
+
     @api.get("/api/v1/backup/export")
     def backup_export(request: Request) -> dict:
         _require_backup_auth(request)

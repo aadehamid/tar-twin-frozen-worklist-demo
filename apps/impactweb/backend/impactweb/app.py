@@ -344,22 +344,34 @@ def create_app(
         allow_headers=["*"],
     )
     app.state.maintenance_mode = False
+    app.state.write_barrier_cond = threading.Condition()
+    app.state.in_flight_writes = 0
 
     @app.middleware("http")
     async def maintenance_mode_guard(request: Request, call_next):
-        if app.state.maintenance_mode and request.method in {"POST", "PUT", "PATCH", "DELETE"}:
-            p = request.url.path
-            if not (
-                p.endswith("/api/v1/admin/maintenance")
-                or p.endswith("/api/v1/auth/login")
-            ):
+        is_guarded_write = request.method in {"POST", "PUT", "PATCH", "DELETE"} and not (
+            request.url.path.endswith("/api/v1/admin/maintenance")
+            or request.url.path.endswith("/api/v1/auth/login")
+        )
+        if not is_guarded_write:
+            return await call_next(request)
+
+        with app.state.write_barrier_cond:
+            if app.state.maintenance_mode:
                 from fastapi.responses import JSONResponse
 
                 return JSONResponse(
                     status_code=503,
                     content={"detail": "IMPACT Web is in maintenance mode for paired backup"},
                 )
-        return await call_next(request)
+            app.state.in_flight_writes += 1
+        try:
+            return await call_next(request)
+        finally:
+            with app.state.write_barrier_cond:
+                app.state.in_flight_writes -= 1
+                if app.state.in_flight_writes == 0:
+                    app.state.write_barrier_cond.notify_all()
     app.state.engine = engine
     app.state.scenario_dir = scen_dir
     app.state.exercise_locks = locks
@@ -1412,8 +1424,16 @@ def create_app(
         user = _require_user(caller)
         if not user.is_superuser:
             raise HTTPException(status_code=403, detail="Facilitator/superuser role required for maintenance mode")
-        app.state.maintenance_mode = body.enabled
-        return {"maintenance_mode": app.state.maintenance_mode}
+        with app.state.write_barrier_cond:
+            app.state.maintenance_mode = body.enabled
+            if body.enabled:
+                drained = app.state.write_barrier_cond.wait_for(
+                    lambda: app.state.in_flight_writes == 0,
+                    timeout=15.0,
+                )
+                if not drained:
+                    raise HTTPException(status_code=503, detail="Timed out waiting for in-flight writes to drain")
+        return {"maintenance_mode": app.state.maintenance_mode, "in_flight_writes": app.state.in_flight_writes}
 
     @api.get("/api/v1/admin/watermarks")
     def get_watermarks(

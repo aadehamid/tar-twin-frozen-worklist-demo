@@ -12,34 +12,34 @@ FACILITATOR_EMAIL="${FACILITATOR_EMAIL:-facilitator@demo.local}"
 POSTGRES_USER="${POSTGRES_USER:-impactweb}"
 POSTGRES_DB="${POSTGRES_DB:-impactweb}"
 
-STAMP=$(date -u +"%Y%m%dT%H%M%SZ")
-OUT_DIR="${BACKUP_DIR}/${STAMP}"
-mkdir -p "$OUT_DIR"
-
 auth_admin_headers=()
 if [[ -n "$FACILITATOR_TOKEN" ]]; then
   auth_admin_headers=(-H "Authorization: Bearer ${FACILITATOR_TOKEN}")
 elif [[ -n "$EDGE_AUTH_SECRET" ]]; then
   auth_admin_headers=(-H "X-Edge-Auth: ${EDGE_AUTH_SECRET}" -H "X-ExeDev-Email: ${FACILITATOR_EMAIL}")
+else
+  echo "ERROR: FACILITATOR_TOKEN or EDGE_AUTH_SECRET is required to activate maintenance mode before backup." >&2
+  exit 1
 fi
 
-cleanup() {
-  if [[ ${#auth_admin_headers[@]} -gt 0 ]]; then
-    curl -fsS -X POST "${IMPACTWEB_URL}/api/v1/admin/maintenance" \
-      -H "Content-Type: application/json" \
-      "${auth_admin_headers[@]}" \
-      -d '{"enabled": false}' >/dev/null 2>&1 || true
-  fi
-}
-trap cleanup EXIT
+STAMP=$(date -u +"%Y%m%dT%H%M%SZ")
+OUT_DIR="${BACKUP_DIR}/${STAMP}"
+mkdir -p "$OUT_DIR"
 
-# 1. Enter maintenance mode (refuse IMPACT Web writes)
-if [[ ${#auth_admin_headers[@]} -gt 0 ]]; then
+cleanup() {
   curl -fsS -X POST "${IMPACTWEB_URL}/api/v1/admin/maintenance" \
     -H "Content-Type: application/json" \
     "${auth_admin_headers[@]}" \
-    -d '{"enabled": true}' >/dev/null
-fi
+    -d '{"enabled": false}' >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+
+# 1. Enter maintenance mode (atomically blocks new writes and drains in-flight writes)
+MAINT_RESP=$(curl -fsS -X POST "${IMPACTWEB_URL}/api/v1/admin/maintenance" \
+  -H "Content-Type: application/json" \
+  "${auth_admin_headers[@]}" \
+  -d '{"enabled": true}')
+python3 -c 'import json,sys; d=json.loads(sys.argv[1]); assert d.get("maintenance_mode") is True and d.get("in_flight_writes", 0) == 0, d' "$MAINT_RESP"
 
 # 2. Record per-exercise change-feed cutoffs
 WM_JSON=$(curl -fsS -H "Authorization: Bearer ${TWIN_SYNC_TOKEN}" "${IMPACTWEB_URL}/api/v1/admin/watermarks")

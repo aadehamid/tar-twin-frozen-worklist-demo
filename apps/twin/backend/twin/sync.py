@@ -867,6 +867,20 @@ class SyncEngine:
             "default_driver": "operations",
         }
 
+    def reset_exercise_scope(self, exercise_id: str) -> dict[str, Any]:
+        """Rewind and clear Twin synced scope for exercise_id so restore can replay cleanly from seq 0."""
+        with self._locks[exercise_id]:
+            fresh = ExerciseSyncState(exercise_id)
+            self._states[exercise_id] = fresh
+            if hasattr(self.plant_store, "set_scope_graph"):
+                self.plant_store.set_scope_graph(
+                    exercise_id,
+                    [],
+                    [],
+                    sync_snapshot=self._serialize_state(fresh),
+                )
+            return {"exercise_id": exercise_id, "cursor_seq": 0, "reset": True}
+
     def export_twin_only_backup(self) -> dict[str, Any]:
         """Export twin-only state + per-exercise cursor watermarks (docs/hosting.md section 5)."""
         exercise_ids = sorted(set(self._states.keys()) | {"EX-DEMO"})
