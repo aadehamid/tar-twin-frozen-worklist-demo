@@ -6,12 +6,13 @@ import os
 from pathlib import Path
 from typing import Literal
 
-from fastapi import APIRouter, FastAPI, HTTPException, Query
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
 
+from twin.auth import resolve_authenticated_member
 from twin.clients import CmmsClient, ImpactWebClient
 from twin.explorer import STARTER_PROMPTS, run_explore_query
 from twin.graph_store import MemoryPlantStore
@@ -33,7 +34,6 @@ class ReviewDecisionPayload(BaseModel):
 
     action: Literal["accept", "reject", "pick_another"]
     tag: str | None = None
-    reviewer: str = Field(min_length=1, max_length=120)
     reason: str = Field(default="", max_length=1000)
 
 
@@ -56,6 +56,9 @@ def create_app(
     impactweb_url: str | None = None,
     twin_sync_token: str | None = None,
     twin_raise_token: str | None = None,
+    auth_mode: str | None = None,
+    jwt_secret: str | None = None,
+    edge_auth_secret: str | None = None,
     impactweb_client: ImpactWebClient | None = None,
     cmms_client: CmmsClient | None = None,
     frontend_dist_dir: Path | None = None,
@@ -69,6 +72,9 @@ def create_app(
     iw_url = impactweb_url or os.environ.get("IMPACTWEB_URL", "")
     sync_tok = twin_sync_token or os.environ.get("TWIN_SYNC_TOKEN", "demo-twin-sync-token")
     raise_tok = twin_raise_token or os.environ.get("TWIN_RAISE_TOKEN", "")
+    mode = auth_mode or os.environ.get("AUTH_MODE", "local")
+    j_secret = jwt_secret or os.environ.get("JWT_SECRET", "tar-twin-local-dev-jwt-secret")
+    e_secret = edge_auth_secret or os.environ.get("EDGE_AUTH_SECRET", "")
     dist_dir = frontend_dist_dir or (Path(__file__).resolve().parent / "frontend")
 
     if n_uri:
@@ -213,14 +219,28 @@ def create_app(
     def matching_review_decide(
         request_id: str,
         body: ReviewDecisionPayload,
+        request: Request,
         exercise_id: str = Query(default="EX-DEMO"),
     ) -> dict:
+        member = resolve_authenticated_member(
+            request,
+            exercise_id=exercise_id,
+            auth_mode=mode,
+            jwt_secret=j_secret,
+            edge_auth_secret=e_secret,
+            impactweb_client=iw_cli,
+        )
+        if member.role not in {"planner", "ta_manager"}:
+            raise HTTPException(
+                status_code=403,
+                detail="Only planner or TA manager roles may accept or reject equipment matches",
+            )
         try:
             return sync_engine.decide_review(
                 exercise_id=exercise_id,
                 request_id=request_id,
                 action=body.action,
-                reviewer=body.reviewer,
+                reviewer=member.full_name,
                 reason=body.reason,
                 tag=body.tag,
             )

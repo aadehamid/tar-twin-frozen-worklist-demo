@@ -101,9 +101,48 @@ class SyncEngine:
             rows.append({**inact, "equipment_class": "exchanger" if inact["tag"].startswith("E-") else ("pump" if inact["tag"].startswith("P-") else "psv"), "shacl_class": "Asset", "area": f"{inact['unit']}-X", "sheet": ""})
         return rows
 
+    def _serialize_state(self, state: ExerciseSyncState) -> dict[str, Any]:
+        return {
+            "exercise_id": state.exercise_id,
+            "cursor_seq": state.cursor_seq,
+            "epoch": state.epoch,
+            "exercise_meta": state.exercise_meta,
+            "scope_items": state.scope_items,
+            "manual_reviews": state.manual_reviews,
+            "baseline_freeze_id": state.baseline_freeze_id,
+            "baseline_items": state.baseline_items,
+            "change_events": state.change_events,
+            "all_change_requests": state.all_change_requests,
+            "saved_cut_line_runs": state.saved_cut_line_runs,
+            "last_synced_at": state.last_synced_at,
+        }
+
+    def _hydrate_state(self, snap: dict[str, Any]) -> ExerciseSyncState:
+        st = ExerciseSyncState(snap["exercise_id"])
+        st.cursor_seq = int(snap.get("cursor_seq", 0))
+        st.epoch = int(snap.get("epoch", 1))
+        st.exercise_meta = dict(snap.get("exercise_meta", {}))
+        st.scope_items = dict(snap.get("scope_items", {}))
+        st.manual_reviews = dict(snap.get("manual_reviews", {}))
+        st.baseline_freeze_id = snap.get("baseline_freeze_id")
+        st.baseline_items = list(snap.get("baseline_items", []))
+        st.change_events = dict(snap.get("change_events", {}))
+        st.all_change_requests = list(snap.get("all_change_requests", []))
+        st.saved_cut_line_runs = list(snap.get("saved_cut_line_runs", []))
+        st.last_synced_at = snap.get("last_synced_at")
+        return st
+
     def _get_state(self, exercise_id: str) -> ExerciseSyncState:
         if exercise_id not in self._states:
-            self._states[exercise_id] = ExerciseSyncState(exercise_id)
+            persisted = (
+                self.plant_store.load_exercise_state(exercise_id)
+                if hasattr(self.plant_store, "load_exercise_state")
+                else None
+            )
+            if persisted is not None:
+                self._states[exercise_id] = self._hydrate_state(persisted)
+            else:
+                self._states[exercise_id] = ExerciseSyncState(exercise_id)
         return self._states[exercise_id]
 
     def _push_scope_to_graph_store(self, state: ExerciseSyncState) -> None:
@@ -127,8 +166,8 @@ class SyncEngine:
                         "source_group": it["source_group"],
                         "area": it["area"],
                         "ript": it["ript_score"],
-                        "estimate_hours": it["estimate_hours"],
-                        "estimate_cost_usd": it["estimate_cost_usd"],
+                        "estimate_hours": max(1, int(it["estimate_hours"])),
+                        "estimate_cost_usd": max(1, int(it["estimate_cost_usd"])),
                         "status": it["status"],
                         "match_status": it["match_status"],
                         "resolved_tag": it["resolved_tag"] or "",
@@ -151,7 +190,12 @@ class SyncEngine:
                             },
                         }
                     )
-        self.plant_store.set_scope_graph(ex, scope_nodes, scope_rels)
+        self.plant_store.set_scope_graph(
+            ex,
+            scope_nodes,
+            scope_rels,
+            sync_snapshot=self._serialize_state(state),
+        )
 
     def _asset_key_for_tag(self, tag: str) -> str | None:
         if self.plant_store.get_equipment(tag) is not None:

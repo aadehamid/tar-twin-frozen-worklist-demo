@@ -58,7 +58,13 @@ def _make_pair(tmp_path: Path):
 
 
 def test_deterministic_matching_exact_146_and_193_post_review(tmp_path: Path):
-    _iw, twin = _make_pair(tmp_path)
+    iw, twin = _make_pair(tmp_path)
+
+    # Login planner and viewer against IMPACT Web (shared JWT_SECRET)
+    planner_tok = iw.post("/api/v1/auth/login", json={"email": "j.planner@demo.local", "password": "demo-pass-2028"}).json()["access_token"]
+    viewer_tok = iw.post("/api/v1/auth/login", json={"email": "viewer@demo.local", "password": "demo-pass-2028"}).json()["access_token"]
+    planner_hdr = {"Authorization": f"Bearer {planner_tok}"}
+    viewer_hdr = {"Authorization": f"Bearer {viewer_tok}"}
 
     # Sync EX-DEMO from IMPACT Web (idempotent!)
     r1 = twin.post("/api/v1/sync?exercise_id=EX-DEMO")
@@ -92,23 +98,28 @@ def test_deterministic_matching_exact_146_and_193_post_review(tmp_path: Path):
             assert it["resolved_tag"] == truth, f"Wrong auto-accept on {it['request_id']}: got {it['resolved_tag']} want {truth}"
             assert it["match_method"] in {"exact", "alias"}
         else:
-            # Candidate recall: every resolvable row's true tag is offered in candidates or pickable
             if truth != "none":
                 cand_tags = [c["tag"] for c in trace["candidates"]]
                 assert truth in cand_tags, f"True tag {truth} missing from candidates on {it['request_id']}: {cand_tags}"
 
     # Check specific planted cases:
-    # WR-200-0015 (E-301B wrong unit) -> Finding present, E-301B excluded from candidates
     wr15 = twin.get("/api/v1/scope-items/WR-200-0015?exercise_id=EX-DEMO").json()
     assert wr15["match_status"] != "accepted"
     assert any(f["kind"] == "wrong_unit" for f in wr15["mapping_trace"]["findings"])
     assert "E-301B" not in [c["tag"] for c in wr15["mapping_trace"]["candidates"]]
 
-    # WR-200-0014 (instruction injection) -> TWO eligible tags parsed, instruction warning flagged, NOT auto-accepted
     wr14 = twin.get("/api/v1/scope-items/WR-200-0014?exercise_id=EX-DEMO").json()
     assert wr14["match_status"] != "accepted"
     assert wr14["mapping_trace"]["instruction_warning"] is True
     assert {"E-201A", "E-201C"} <= {c["tag"] for c in wr14["mapping_trace"]["candidates"]}
+
+    # Auth & role checks on match review endpoint:
+    # 1) Unauthenticated -> 401
+    assert twin.post("/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO", json={"action": "reject", "reason": "No auth"}).status_code == 401
+    # 2) Viewer role -> 403
+    assert twin.post("/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO", json={"action": "reject", "reason": "Viewer"}, headers=viewer_hdr).status_code == 403
+    # 3) Caller-supplied reviewer field rejected with 422
+    assert twin.post("/api/v1/matching/review/WR-200-0015?exercise_id=EX-DEMO", json={"action": "reject", "reviewer": "Forged Name", "reason": "Spoof"}, headers=planner_hdr).status_code == 422
 
     # Scripted planner review following answer key reaches EXACTLY 193 of 200 (96.5% >= 95% gate)
     queue = twin.get("/api/v1/matching/review-queue?exercise_id=EX-DEMO").json()
@@ -119,20 +130,33 @@ def test_deterministic_matching_exact_146_and_193_post_review(tmp_path: Path):
         if truth == "none":
             r_dec = twin.post(
                 f"/api/v1/matching/review/{rid}?exercise_id=EX-DEMO",
-                json={"action": "reject", "reviewer": "J. Planner", "reason": "Area general work, no single tag"},
+                json={"action": "reject", "reason": "Area general work, no single tag"},
+                headers=planner_hdr,
             )
             assert r_dec.status_code == 200
+            assert r_dec.json()["mapping_trace"]["decision"]["decided_by"] == "J. Planner"
         else:
             r_dec = twin.post(
                 f"/api/v1/matching/review/{rid}?exercise_id=EX-DEMO",
-                json={"action": "pick_another", "tag": truth, "reviewer": "J. Planner", "reason": "Verified against P&ID"},
+                json={"action": "pick_another", "tag": truth, "reason": "Verified against P&ID"},
+                headers=planner_hdr,
             )
             assert r_dec.status_code == 200, r_dec.text
+            assert r_dec.json()["mapping_trace"]["decision"]["decided_by"] == "J. Planner"
 
     post_summary = twin.get("/api/v1/matching/summary?exercise_id=EX-DEMO").json()
     assert post_summary["accepted_count"] == 193
     assert abs(post_summary["match_rate"] - 0.965) < 1e-6
     assert post_summary["gate_passed"] is True
+
+    # Recreating SyncEngine over the persisted store recovers all 200 scope items + 193 reviews + cursor
+    from twin.sync import SyncEngine
+
+    restarted = SyncEngine(plant_store=twin.app.state.store, scenario_dir=SCENARIO_DIR)
+    rec_summary = restarted.matching_summary("EX-DEMO")
+    assert rec_summary["total_active"] == 200
+    assert rec_summary["accepted_count"] == 193
+    assert restarted._get_state("EX-DEMO").cursor_seq == sync1["cursor_seq"]
 
     # Relate Cypher export now carries synced ScopeItems and RESOLVES_TO links
     cypher = twin.get("/api/v1/graph/export.cypher?exercise_id=EX-DEMO").text
@@ -459,3 +483,51 @@ def test_natural_language_twin_explorer_safe_read_only_intents(tmp_path: Path):
     assert r_eq.status_code == 200
     assert r_eq.json()["intent"] == "equipment_neighborhood"
     assert r_eq.json()["highlight"]["sheet_no"] == "200-PID-005"
+
+
+@pytest.mark.skipif(not __import__("os").environ.get("NEO4J_TEST_URI"), reason="Live Neo4j 5.26 + n10s + APOC not configured")
+def test_live_neo4j_sync_scope_persistence_and_restart_recovery():
+    """Verify production Neo4jPlantStore persists ScopeItems, RESOLVES_TO, and SyncState cursor across restart."""
+    import os
+
+    _ensure_paths()
+    from twin.neo4j_store import Neo4jPlantStore
+    from twin.plant_loader import build_plant_graph
+    from twin.sync import SyncEngine
+
+    uri = os.environ["NEO4J_TEST_URI"]
+    user = os.environ.get("NEO4J_TEST_USER", "neo4j")
+    password = os.environ.get("NEO4J_TEST_PASSWORD", "testpassword123")
+    store1 = Neo4jPlantStore(uri=uri, user=user, password=password, shapes_path=SHAPES_PATH)
+    try:
+        store1.ensure_constraints()
+        store1.install_shacl_guard()
+        store1.load_plant_graph(build_plant_graph(SCENARIO_DIR))
+
+        eng1 = SyncEngine(plant_store=store1, scenario_dir=SCENARIO_DIR)
+        res = eng1.sync_exercise("EX-DEMO")
+        assert res["synced_count"] == 200
+        eng1.decide_review(
+            exercise_id="EX-DEMO",
+            request_id="WR-200-0147",
+            action="pick_another",
+            tag="E-201B",
+            reviewer="J. Planner",
+            reason="Verified middle shell",
+        )
+    finally:
+        store1.close()
+
+    # Fresh store + fresh SyncEngine (simulating Twin container restart) recovers everything from Neo4j!
+    store2 = Neo4jPlantStore(uri=uri, user=user, password=password, shapes_path=SHAPES_PATH)
+    try:
+        eng2 = SyncEngine(plant_store=store2, scenario_dir=SCENARIO_DIR)
+        summary2 = eng2.matching_summary("EX-DEMO")
+        assert summary2["total_active"] == 200
+        assert summary2["accepted_count"] == 147  # 146 auto + 1 manual review!
+        wr147 = eng2.get_scope_item("EX-DEMO", "WR-200-0147")
+        assert wr147 is not None and wr147["resolved_tag"] == "E-201B"
+        cypher = store2.export_cypher("EX-DEMO")
+        assert "WR-200-0147" in cypher and "RESOLVES_TO" in cypher
+    finally:
+        store2.close()

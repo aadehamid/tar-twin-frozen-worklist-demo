@@ -73,6 +73,7 @@ class MemoryPlantStore:
         self._scope_by_exercise: dict[str, tuple[list[dict[str, Any]], list[dict[str, Any]]]] = {
             "EX-DEMO": ([], [])
         }
+        self._sync_state_by_exercise: dict[str, dict[str, Any]] = {}
 
     def has_exercise(self, exercise_id: str) -> bool:
         return exercise_id in self._scope_by_exercise
@@ -82,9 +83,17 @@ class MemoryPlantStore:
         exercise_id: str,
         scope_nodes: list[dict[str, Any]],
         scope_rels: list[dict[str, Any]],
+        sync_snapshot: dict[str, Any] | None = None,
     ) -> None:
         with self._lock:
             self._scope_by_exercise[exercise_id] = (copy.deepcopy(scope_nodes), copy.deepcopy(scope_rels))
+            if sync_snapshot is not None:
+                self._sync_state_by_exercise[exercise_id] = copy.deepcopy(sync_snapshot)
+
+    def load_exercise_state(self, exercise_id: str) -> dict[str, Any] | None:
+        with self._lock:
+            snap = self._sync_state_by_exercise.get(exercise_id)
+            return copy.deepcopy(snap) if snap is not None else None
 
     def guard_ready(self) -> bool:
         return self.shapes_path.is_file()
