@@ -72,6 +72,12 @@ class ImpactWebClient:
         r.raise_for_status()
         return r.json()
 
+    def get_watermarks(self) -> dict[str, Any]:
+        """Read per-exercise change-feed cutoff sequence numbers (docs/hosting.md section 5)."""
+        r = self._client.get("/api/v1/admin/watermarks", headers=self._sync_headers())
+        r.raise_for_status()
+        return r.json()
+
     def verify_user_token(self, bearer_token: str) -> dict[str, Any] | None:
         """Ask IMPACT Web to verify a caller's user bearer token via GET /api/v1/auth/me."""
         r = self._client.get("/api/v1/auth/me", headers={"Authorization": f"Bearer {bearer_token}"})

@@ -16,6 +16,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ConfigDict, Field
+from sqlalchemy import func
 from sqlmodel import Session, SQLModel, create_engine, select
 
 from impactweb.auth import Caller, get_membership, issue_jwt, resolve_caller, verify_password
@@ -169,6 +170,12 @@ class WriteThroughToggleBody(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     twin_write_through: bool
+
+
+class MaintenanceToggleBody(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    enabled: bool
 
 
 def _compute_hours_and_cost(by_craft: dict[str, int]) -> tuple[int, int]:
@@ -336,6 +343,35 @@ def create_app(
         allow_methods=["*"],
         allow_headers=["*"],
     )
+    app.state.maintenance_mode = False
+    app.state.write_barrier_cond = threading.Condition()
+    app.state.in_flight_writes = 0
+
+    @app.middleware("http")
+    async def maintenance_mode_guard(request: Request, call_next):
+        is_guarded_write = request.method in {"POST", "PUT", "PATCH", "DELETE"} and not (
+            request.url.path.endswith("/api/v1/admin/maintenance")
+            or request.url.path.endswith("/api/v1/auth/login")
+        )
+        if not is_guarded_write:
+            return await call_next(request)
+
+        with app.state.write_barrier_cond:
+            if app.state.maintenance_mode:
+                from fastapi.responses import JSONResponse
+
+                return JSONResponse(
+                    status_code=503,
+                    content={"detail": "IMPACT Web is in maintenance mode for paired backup"},
+                )
+            app.state.in_flight_writes += 1
+        try:
+            return await call_next(request)
+        finally:
+            with app.state.write_barrier_cond:
+                app.state.in_flight_writes -= 1
+                if app.state.in_flight_writes == 0:
+                    app.state.write_barrier_cond.notify_all()
     app.state.engine = engine
     app.state.scenario_dir = scen_dir
     app.state.exercise_locks = locks
@@ -1374,6 +1410,49 @@ def create_app(
         _forbid_delegate_token(caller)
         rows = session.exec(select(CmmsFunctionalLocation).order_by(CmmsFunctionalLocation.code)).all()
         return [r.model_dump() for r in rows]
+
+    # --- Maintenance mode & paired backup watermarks (docs/hosting.md section 5) ---
+
+    @api.post("/api/v1/admin/maintenance")
+    def set_maintenance_mode(
+        body: MaintenanceToggleBody,
+        caller: Caller = Depends(get_caller),
+    ) -> dict:
+        _forbid_delegate_token(caller)
+        if caller.kind == "twin_sync":
+            raise HTTPException(status_code=403, detail="Read-only sync token cannot toggle maintenance mode")
+        user = _require_user(caller)
+        if not user.is_superuser:
+            raise HTTPException(status_code=403, detail="Facilitator/superuser role required for maintenance mode")
+        with app.state.write_barrier_cond:
+            app.state.maintenance_mode = body.enabled
+            if body.enabled:
+                drained = app.state.write_barrier_cond.wait_for(
+                    lambda: app.state.in_flight_writes == 0,
+                    timeout=15.0,
+                )
+                if not drained:
+                    raise HTTPException(status_code=503, detail="Timed out waiting for in-flight writes to drain")
+        return {"maintenance_mode": app.state.maintenance_mode, "in_flight_writes": app.state.in_flight_writes}
+
+    @api.get("/api/v1/admin/watermarks")
+    def get_watermarks(
+        caller: Caller = Depends(get_caller),
+        session: Session = Depends(get_session),
+    ) -> dict:
+        _forbid_delegate_token(caller)
+        if caller.kind == "user":
+            user = _require_user(caller)
+            if not user.is_superuser:
+                raise HTTPException(status_code=403, detail="Facilitator or sync token required to read watermarks")
+        exs = session.exec(select(Exercise).order_by(Exercise.id)).all()
+        cutoffs: dict[str, int] = {}
+        for ex in exs:
+            max_seq = session.exec(
+                select(func.max(ChangeFeedEntry.seq)).where(ChangeFeedEntry.exercise_id == ex.id)
+            ).one()
+            cutoffs[ex.id] = int(max_seq or 0)
+        return {"maintenance_mode": app.state.maintenance_mode, "cutoffs": cutoffs}
 
     app.include_router(api)
     app.include_router(api, prefix="/impactweb")

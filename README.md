@@ -1,94 +1,129 @@
 # TAR digital twin: frozen work list demo
 
-A working demo of the 3.1 Frozen Work List MVP from the turnaround (TAR) digital twin proposal. It runs on synthetic data for a made-up diesel hydrotreater, Unit 200, and is built like production software so the audience sees how the real thing would behave.
-
-> Status: Phase 0 spikes and Phase 1 Unit 200 scenario generator and artifacts are built (pending scenario sign-off). Application services build next (Phases 2 to 8 in [docs/design.md](docs/design.md)).
+A working demo of the 3.1 Frozen Work List MVP from the turnaround (TAR) digital twin proposal. It runs on synthetic data for a made-up diesel hydrotreater, Unit 200, and is built like production software so planners and architects see how the real system behaves.
 
 ## What the demo shows
 
-The 3.1 MVP ships five things in release one. The demo walks through each of them on one screen flow:
+The 3.1 MVP ships five capabilities in release one. The demo walks through each of them in one flow:
 
-1. **Tag registry and match rate.** Scope items in IMPACT Web name their equipment in free text, because a code freeze stops IMPACT Web from adding a tag lookup. The twin resolves each item to an equipment tag and reports the match rate per site. Weak matches go to a review queue. A mapping trace shows every step from the IMPACT Web entry to the equipment in the twin.
-2. **IMPACT Web read, and change requests raised from the twin.** The twin reads each work request's description, driver, RIPT score and estimate. After freeze, a planner can raise a change request from the twin. It goes through IMPACT Web's own change request step, as that planner, and waits for the DRB there. That is the only write. IMPACT Web, not the twin, checks the planner's role, the freeze and a per-exercise switch. Write-through is a demo choice; the real write-back boundary is still open (see [D9](docs/decisions.md)).
-3. **Scope on the plant.** Jobs appear on a 2D plot plan. Jobs that share scaffold, isolation or access are grouped, and each group is costed once.
-4. **Cut line by location.** A budget target splits scope above and below the line, shown on the plant, ready for the DRB review.
-5. **Frozen baseline.** The list is snapshotted at freeze. Every later add or delete is logged with hours and a reason, and scope growth after freeze is tracked in man-hours.
+1. **Tag registry and match rate.** Scope items in IMPACT Web name their equipment in free text because a code freeze keeps IMPACT Web from adding a tag lookup. The twin resolves each item to a Unit 200 equipment tag, reports the match rate per site, area, and source group, and sends weak or AI-proposed matches to a review queue. A 7-step mapping trace shows every step from raw IMPACT Web text to the equipment in the twin.
+2. **IMPACT Web read, and change requests raised from the twin.** The twin reads each work request's description, driver, RIPT score, and estimate through IMPACT Web's public API. After freeze, a planner can raise a change request from the twin. That call goes through IMPACT Web's own change request handler, as that planner, and waits for DRB approval there. That is the only write. IMPACT Web checks the planner role, the freeze, and the exercise's write-through switch. Write-through is a demo choice; the real write-back boundary stays open (see [D9](docs/decisions.md)).
+3. **Scope on the plant and natural-language exploration.** Jobs appear on a 2D plot plan, real DEXPI 2.0.1 P&ID SVGs, and an in-browser Relate WASM graph panel. Planners can also type plain-English questions into the native Explore command bar to highlight shared isolation envelopes, duplicates, clusters, or budget cut-line options directly on the workspace.
+4. **Shared-cost clusters and cut line by location.** Jobs sharing scaffold, isolation, or crane access are grouped so each shared setup is counted once. A budget slider ranks mandatory drivers first and shows above and below the cut line by location.
+5. **Frozen baseline and post-freeze growth.** Freeze happens in IMPACT Web. The twin snapshots the immutable baseline, tracks 3.1 readiness separately against the 95% match-rate gate, logs approved post-freeze adds and deletes in man-hours, and displays focus-area brief value assumptions labeled as unvalidated.
 
-## Two modes
+## Running the demo with one command
 
-- **Demo mode** runs the scripted 11-minute walkthrough on seeded data.
-- **Planning mode** lets a team rehearse a Unit 200 turnaround. People log in with roles (TA manager, planner, source groups, DRB), raise and challenge requests in IMPACT Web, and watch the twin respond, while a facilitator moves the clock and adds surprises. See [docs/interactive-planning.md](docs/interactive-planning.md).
+Prerequisites: Docker Desktop (or OrbStack) with Docker Compose v2.
 
-## How it works
+1. Copy the example environment file (optional, defaults work locally):
 
-```
-                 reads every change; after freeze, the twin
-                 can raise a pending change request (D9)
- IMPACT Web  ◄─────────────────────────────►  Digital twin
- (mock, Postgres)        sync job               (Neo4j)
-       ▲                                           ▲   │
-       │ planners raise and                        │   │ Cypher export
-       │ edit work requests          DEXPI P&IDs ──┘   ▼
-       │                             (pyDEXPI)     Twin front end
- IMPACT Web UI                                     plot plan, P&ID,
-                                                   graph panel (Relate in WASM)
- CMMS / TLM (mock) ── equipment master ──► twin
- AI matcher (OpenRouter, Perplexity Decider) ──► match proposals ──► review queue
+```bash
+cp .env.example .env
 ```
 
-- **IMPACT Web (mock)** is the system of record for scope. FastAPI, SQLModel and PostgreSQL, with its own React front end.
-- **CMMS / TLM (mock)** holds the equipment master: tags, functional locations and classes.
-- **The digital twin** is a second FastAPI service on Neo4j. It builds the plant graph from DEXPI P&IDs, mirrors IMPACT Web scope, and computes matches, isolation envelopes, clusters, the cut line and the baseline.
-- **The twin front end** shows the plot plan, the P&ID sheets and a graph panel. The graph panel runs Relate, Neo4j's embedded Cypher engine, in the browser as WebAssembly. It holds a read-only copy of the twin graph, so a click on a job runs real Cypher in the page and shows the chain from work request to equipment, piping, block valves, isolation envelope and neighbouring jobs.
-- **The AI matcher** handles the tag matches that rules and fuzzy matching can't settle. It calls Perplexity Decider, a decision model, through OpenRouter's Decisions API. Decider picks one of code's candidate tags or none and returns a probability for each. It writes no text, so there's nothing to parse. Other decision models on OpenRouter take the same request, and Decider's weights are open, so a client could host it. Inkling 2 Mini then writes a one-line reason for the planner. It never changes the pick.
+2. Start the full stack (PostgreSQL 16, Neo4j 5.26 with n10s and APOC, IMPACT Web, Digital Twin, and Caddy edge proxy):
 
-Both services start from the [full-stack FastAPI template](https://github.com/fastapi/full-stack-fastapi-template).
-
-## Repository layout (planned)
-
-```
-apps/
-  impactweb/          IMPACT Web mock: backend (FastAPI, Postgres) and frontend (React)
-  twin/               Digital twin: backend (FastAPI, Neo4j) and frontend (React, Relate WASM)
-jobs/                 Ingest and sync jobs: DEXPI to Neo4j, IMPACT Web to twin, browser graph export
-data/scenario/        Synthetic Unit 200: DEXPI sheets, plot plan layout, equipment master, work list
-specs/                Quint workflow spec and SHACL shapes
-docs/                 Design, scenario spec, verification plan and decision records
-compose.yml           Postgres, Neo4j, both services
+```bash
+docker compose up --build
 ```
 
-## Documents
+3. Open the landing page in your browser:
 
-- [docs/design.md](docs/design.md) covers the architecture, components, graph model, data flows, AI matching, the Relate browser graph, extension to 4.1 and 4.2, testing and build phases.
-- [docs/scenario-spec.md](docs/scenario-spec.md) covers Unit 200, the turnaround event, the candidate work list, the problems planted in the data and the demo walkthrough.
-- [docs/verification.md](docs/verification.md) covers how everything is checked as it is written: schemas, SHACL engineering rules in Neo4j, property tests, and a Quint (TLA) model of the sync, review and freeze workflow.
-- [docs/matching-showcase.md](docs/matching-showcase.md) covers which equipment references plain code resolves, where AI tells similar names apart, how code checks the AI, and how the demo compares the two.
-- [docs/interactive-planning.md](docs/interactive-planning.md) covers planning mode: roles, the exercise clock, injects, the debrief, and the checks it must pass.
-- [docs/hosting.md](docs/hosting.md) covers the exe.dev VM for team exercises: what runs where, the 4 GB memory budget, sign-in, deploys, backups and the hosting checks.
-- [docs/decisions.md](docs/decisions.md) records the technology choices and the reasons for them.
+- Landing page: `http://127.0.0.1:8000/`
+- IMPACT Web (system of record): `http://127.0.0.1:8000/impactweb/`
+- Unit 200 Digital Twin: `http://127.0.0.1:8000/twin/`
 
-## How we work
+To expose Neo4j Browser locally on `http://127.0.0.1:7474` without changing the hardened default stack, run:
 
-Two rules from [CONTRIBUTING.md](CONTRIBUTING.md) apply to every change. First, decide and write down how a change will be validated before writing it. Second, a different AI model from the author reviews every PR before it merges.
+```bash
+docker compose -f compose.yml -f compose.local.yml up --build
+```
 
-## Ground rules
+### Demo accounts (local mode)
 
-- **All data is synthetic.** Unit 200, its tags and its people are invented. No client data, screens or tags appear anywhere in this repo.
-- **The twin only writes to IMPACT Web through IMPACT Web's own workflow.** It can raise a change request after freeze, as the signed-in planner, and nothing else. It can't approve, edit a request, or touch the freeze or the frozen copy. Each exercise has a switch that turns this off, and then the twin is read only. This is a demo choice ([D9](docs/decisions.md)). Every other change is made at the source and the twin picks it up on the next sync.
-- **Value figures are the focus-area brief's default assumptions** and are labeled as unvalidated wherever they appear.
-- **Out of scope for release one:** set-level what-if (31-f3) and remote estimating (31-f6). They wait for standardized Phase 3 estimates and craft-level actual hours.
+All local demo accounts share password `demo-pass-2028`:
 
-## Running it
+| Account | Role | Purpose |
+|---|---|---|
+| `ta.manager@demo.local` | `ta_manager` | Challenge, DRB decisions, freeze list, approve or reject change requests, toggle write-through |
+| `j.planner@demo.local` | `planner` | Accept or reject equipment matches in the twin, raise change requests from IMPACT Web or the twin |
+| `fixed.lead@demo.local` | `source_group` | Create and edit fixed-equipment work requests |
+| `rotating.lead@demo.local` | `source_group` | Create and edit rotating-equipment work requests |
+| `drb.member@demo.local` | `drb_member` | Record DRB recommendations |
+| `facilitator@demo.local` | `facilitator` | Administer exercises and maintenance mode |
+| `viewer@demo.local` | `viewer` | Read-only observer |
 
-There's nothing to run yet. Once phase 0 lands, `docker compose up` will start Postgres, Neo4j and both services, and seed Unit 200. The README will then list the URLs and demo logins. Team exercises will run on an exe.dev VM (see [docs/hosting.md](docs/hosting.md)).
+### Running the scripted late-scope simulation
 
-## Configuration (planned)
+After freezing `TAR-200-2028` in IMPACT Web, run the 29 scripted post-freeze changes (18 approved adds, 6 approved deletes, 5 rejected; +4,020 net man-hours) through IMPACT Web's public API and sync the twin:
+
+```bash
+uv run --no-project --with httpx python jobs/simulate_late_scope.py \
+  --impactweb-url http://127.0.0.1:18001 \
+  --twin-url http://127.0.0.1:18002
+```
+
+## Architecture
+
+- **Edge (`deploy/caddy/Caddyfile`).** Runs in host network mode on `127.0.0.1:8000`, serves the landing page, routes `/impactweb/` and `/twin/`, strips forged headers, and injects `X-Edge-Auth` only for loopback proxy traffic.
+- **IMPACT Web (`apps/impactweb/`).** FastAPI, SQLModel, PostgreSQL 16, and a plain enterprise React UI. Includes the CMMS/TLM equipment master module.
+- **Digital Twin (`apps/twin/`).** FastAPI, Neo4j 5.26 with neosemantics (n10s) SHACL validation and APOC triggers, pyDEXPI, and a React UI with 2D SVG plot plan (`d3-zoom`), DEXPI SVG P&ID viewer, Cytoscape.js, and `@relate/relate-wasm` running in a dedicated Web Worker.
+- **AI matcher.** Uses Perplexity Decider v1.3 via OpenRouter's Decisions API (`DECIDER_API_KEY`) plus Inkling 2 Mini for one-sentence fact summaries. Runs offline on recorded fixtures or deterministic rules when `DECIDER_API_KEY` is unset.
+
+## Repository layout
+
+```text
+apps/impactweb/     IMPACT Web API, CMMS module, React UI, and Dockerfile
+apps/twin/          Digital Twin API, Neo4j SHACL store, React UI (Relate WASM), and Dockerfile
+deploy/             Caddy reverse proxy config, landing page, and Neo4j + n10s + APOC Dockerfile
+jobs/               Scenario generator, DEXPI loader, matcher evaluator, late-scope simulator
+data/scenario/      Synthetic Unit 200 DEXPI sheets, plot plan, equipment master, work list, fixtures
+specs/              SHACL shapes and Quint workflow specifications
+scripts/            Validation checks, paired backup/restore, deploy, and project memory helpers
+tests/              Unit, contract, Hypothesis property, Neo4j integration, and Playwright E2E tests
+docs/               Design, scenario spec, verification plan, hosting guide, and decision records
+compose.yml         Hardened 5-container stack (Postgres, Neo4j, IMPACT Web, Twin, Caddy edge)
+```
+
+## Backups and exe.dev VM deployment
+
+See [docs/hosting.md](docs/hosting.md) for the 4 GB exe.dev VM layout, security checks, and restore runbook:
+
+- Deploy to VM: `scripts/deploy.sh main`
+- Paired watermark backup: `scripts/backup.sh /opt/tar-twin/backups`
+- Paired restore with cutoff check: `scripts/restore.sh /opt/tar-twin/backups/<timestamp>`
+- Copy backups off VM: `scripts/pull-backup.sh`
+
+## Configuration
 
 | Variable | Purpose | Default |
 |---|---|---|
-| `DECIDER_URL` | Decisions endpoint for the AI matcher | `https://openrouter.ai/api/alpha/decisions` |
+| `AUTH_MODE` | `local` (JWT login) or `exe` (edge headers) | `local` |
+| `EDGE_AUTH_SECRET` | Shared secret between Caddy edge and backend services | local dev value |
+| `TWIN_SYNC_TOKEN` | Read-only machine token for twin sync and CMMS reads | local dev value |
+| `TWIN_RAISE_TOKEN` | Delegated machine token restricted to `POST /api/v1/twin/change-requests` | local dev value |
+| `DECIDER_API_KEY` | OpenRouter API key; leave empty for rules plus recorded fixtures | empty |
+| `DECIDER_URL` | Decisions endpoint for Perplexity Decider | `https://openrouter.ai/api/alpha/decisions` |
 | `DECIDER_MODEL` | Decision model ID | `perplexity/pplx-decider-v1.3:free` |
-| `DECIDER_API_KEY` | OpenRouter key; leave empty to run rules-only matching | empty |
-| `REASON_MODEL` | Chat model that writes the planner-facing reason; leave empty for no reasons | `thinkingmachines/inkling-2-mini` |
+| `REASON_MODEL` | Summary model for planner-facing fact sentence | `thinkingmachines/inkling-2-mini` |
 | `NEO4J_URI` | Twin graph store | `bolt://neo4j:7687` |
-| `POSTGRES_*` | IMPACT Web and CMMS mock database | from the template |
+| `DATABASE_URL` | IMPACT Web PostgreSQL connection string | Compose Postgres URL |
+
+## Ground rules
+
+- **Synthetic data only.** Unit 200 tags, equipment, personas, costs, and hours are invented.
+- **Write-through is demo only.** IMPACT Web stays the system of record ([D9](docs/decisions.md)).
+- **Value figures are unvalidated assumptions.** Focus-area brief defaults are labeled as unvalidated everywhere they appear.
+- **Release-one scope.** Work packages (4.1) and execution plan/logistics (4.2) are reserved as null schema slots only.
+- **Validation and review.** Run `scripts/check.sh` before pushing; every PR receives cross-model review ([CONTRIBUTING.md](CONTRIBUTING.md)).
+
+## Documents
+
+- [docs/design.md](docs/design.md)
+- [docs/scenario-spec.md](docs/scenario-spec.md)
+- [docs/verification.md](docs/verification.md)
+- [docs/matching-showcase.md](docs/matching-showcase.md)
+- [docs/interactive-planning.md](docs/interactive-planning.md)
+- [docs/hosting.md](docs/hosting.md)
+- [docs/decisions.md](docs/decisions.md)

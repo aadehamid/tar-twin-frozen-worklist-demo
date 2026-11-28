@@ -157,10 +157,15 @@ class Neo4jPlantStore:
     def guard_ready(self) -> bool:
         with self._driver.session(database=self.database) as s:
             cfg_count = s.run("MATCH (n:_n10sValidatorConfig) RETURN count(n) AS c").single()["c"]
-            raw_listed = [dict(r) for r in s.run("CALL n10s.validation.shacl.listShapes()")]
+            if cfg_count != 1:
+                return False
+            try:
+                raw_listed = [dict(r) for r in s.run("CALL n10s.validation.shacl.listShapes()")]
+            except Exception:
+                return False
             triggers = [dict(r) for r in s.run("CALL apoc.trigger.list()")]
         shacl = [t for t in triggers if t.get("name") == "shacl"]
-        if cfg_count != 1 or not raw_listed or len(shacl) != 1:
+        if not raw_listed or len(shacl) != 1:
             return False
         if not shapes_match_expected(raw_listed, self._expected_shape_keys, self._expected_shape_values):
             return False

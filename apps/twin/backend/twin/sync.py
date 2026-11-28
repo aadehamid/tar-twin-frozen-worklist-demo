@@ -6,6 +6,7 @@ import copy
 import json
 import threading
 from collections import defaultdict
+from contextlib import ExitStack
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -866,3 +867,110 @@ class SyncEngine:
             "default_source_group": "operations",
             "default_driver": "operations",
         }
+
+    def reset_exercise_scope(self, exercise_id: str) -> dict[str, Any]:
+        """Rewind and clear Twin synced scope for exercise_id so restore can replay cleanly from seq 0."""
+        with self._locks[exercise_id]:
+            fresh = ExerciseSyncState(exercise_id)
+            self._states[exercise_id] = fresh
+            if hasattr(self.plant_store, "set_scope_graph"):
+                self.plant_store.set_scope_graph(
+                    exercise_id,
+                    [],
+                    [],
+                    sync_snapshot=self._serialize_state(fresh),
+                )
+            return {"exercise_id": exercise_id, "cursor_seq": 0, "reset": True}
+
+    def export_twin_only_backup(self) -> dict[str, Any]:
+        """Export twin-only state + per-exercise cursor watermarks (docs/hosting.md section 5)."""
+        exercise_ids = sorted(set(self._states.keys()) | {"EX-DEMO"})
+        cutoffs: dict[str, int] = {}
+        exercises: dict[str, dict[str, Any]] = {}
+        for ex_id in exercise_ids:
+            st = self._get_state(ex_id)
+            cutoffs[ex_id] = int(st.cursor_seq)
+            exercises[ex_id] = {
+                "cursor_seq": int(st.cursor_seq),
+                "epoch": int(st.epoch),
+                "manual_reviews": copy.deepcopy(st.manual_reviews),
+                "saved_cut_line_runs": copy.deepcopy(st.saved_cut_line_runs),
+                "match_by_version": copy.deepcopy(st.match_by_version),
+            }
+        return {
+            "format_version": 1,
+            "exported_at": datetime.now(timezone.utc).isoformat(),
+            "cutoffs": cutoffs,
+            "exercises": exercises,
+        }
+
+    def import_twin_only_backup(self, bundle: dict[str, Any]) -> dict[str, Any]:
+        """Restore twin-only state after fail-closed watermark verification held under per-exercise locks."""
+        if not isinstance(bundle, dict):
+            raise RuntimeError("Backup bundle must be a JSON object")
+        bundle_cutoffs = bundle.get("cutoffs")
+        exercises_data = bundle.get("exercises")
+        if not isinstance(bundle_cutoffs, dict) or not bundle_cutoffs:
+            raise RuntimeError("Backup bundle is missing required non-empty 'cutoffs' map")
+        if not isinstance(exercises_data, dict) or not exercises_data:
+            raise RuntimeError("Backup bundle is missing required non-empty 'exercises' map")
+
+        missing_cutoffs = sorted(set(exercises_data.keys()) - set(bundle_cutoffs.keys()))
+        if missing_cutoffs:
+            raise RuntimeError(f"Backup exercises omitted from cutoffs map: {', '.join(missing_cutoffs)}")
+
+        live_cutoffs: dict[str, int] | None = None
+        if self.impactweb_client is not None:
+            try:
+                wm_resp = self.impactweb_client.get_watermarks()
+                raw_cutoffs = wm_resp.get("cutoffs")
+                if not isinstance(raw_cutoffs, dict):
+                    raise RuntimeError("IMPACT Web watermarks payload missing cutoffs map")
+                live_cutoffs = {str(k): int(v) for k, v in raw_cutoffs.items()}
+            except Exception as exc:
+                raise RuntimeError(f"Failed to verify IMPACT Web watermarks before restore: {exc}") from exc
+
+        # Pre-validate IMPACT Web cutoffs for every exercise before mutating any exercise state
+        for ex_id in sorted(exercises_data.keys()):
+            exp_int = int(bundle_cutoffs[ex_id])
+            if live_cutoffs is not None:
+                if ex_id not in live_cutoffs:
+                    raise RuntimeError(f"Exercise {ex_id} not present in IMPACT Web watermarks")
+                if live_cutoffs[ex_id] != exp_int:
+                    raise RuntimeError(
+                        f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, IMPACT Web={live_cutoffs[ex_id]}"
+                    )
+
+        # Acquire ALL per-exercise locks in deterministic order so validation and restore are all-or-nothing
+        ordered_ex_ids = sorted(exercises_data.keys())
+        restored_exercises: list[str] = []
+        with ExitStack() as stack:
+            for ex_id in ordered_ex_ids:
+                stack.enter_context(self._locks[ex_id])
+
+            # Phase 1: validate EVERY exercise's twin cursor BEFORE mutating any exercise
+            states_to_restore: list[tuple[str, ExerciseSyncState, dict[str, Any]]] = []
+            for ex_id in ordered_ex_ids:
+                exp_int = int(bundle_cutoffs[ex_id])
+                st = self._get_state(ex_id)
+                if st.cursor_seq != exp_int:
+                    raise RuntimeError(
+                        f"Backup cutoff mismatch for {ex_id}: bundle={exp_int}, twin cursor={st.cursor_seq}"
+                    )
+                states_to_restore.append((ex_id, st, exercises_data[ex_id]))
+
+            # Phase 2: all cutoffs verified; now apply every exercise's restored state
+            for ex_id, st, payload in states_to_restore:
+                st.manual_reviews = copy.deepcopy(payload.get("manual_reviews") or {})
+                st.saved_cut_line_runs = copy.deepcopy(payload.get("saved_cut_line_runs") or [])
+                if payload.get("match_by_version"):
+                    st.match_by_version.update(copy.deepcopy(payload["match_by_version"]))
+                for rid, manual in st.manual_reviews.items():
+                    item = st.scope_items.get(rid)
+                    if item is not None and item.get("equipment_text") == manual.get("equipment_text"):
+                        self._apply_manual_decision_to_item(item, manual)
+                        st.match_by_version[f"{rid}@v{item['version']}"] = self._match_snapshot(item)
+                self._push_scope_to_graph_store(st)
+                restored_exercises.append(ex_id)
+
+        return {"restored_exercises": restored_exercises, "cutoffs": bundle_cutoffs}
