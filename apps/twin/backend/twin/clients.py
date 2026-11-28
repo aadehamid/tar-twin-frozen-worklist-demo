@@ -79,6 +79,13 @@ class ImpactWebClient:
             return None
         return r.json()
 
+    def login_user(self, email: str, password: str) -> dict[str, Any] | None:
+        """Forward local-mode credentials to IMPACT Web /api/v1/auth/login so IMPACT Web stays identity authority."""
+        r = self._client.post("/api/v1/auth/login", json={"email": email, "password": password})
+        if r.status_code != 200:
+            return None
+        return r.json()
+
     def raise_twin_change_request(self, payload: dict[str, Any]) -> dict[str, Any]:
         """Delegated write-through call (design.md section 5.8). Uses ONLY TWIN_RAISE_TOKEN."""
         if not self._raise_token:

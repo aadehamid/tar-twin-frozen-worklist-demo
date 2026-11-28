@@ -188,7 +188,11 @@ def run_explore_query(
         eq_tags = env["equipment_tags"]
         matching_wrs = [it for it in active_items if it.get("resolved_tag") in set(eq_tags)]
         total_hrs = sum(it["estimate_hours"] for it in matching_wrs)
-        first_sheet = eq_by_tag[eq_tags[0]]["sheet"] if eq_tags and eq_tags[0] in eq_by_tag else "200-PID-002"
+        first_sheet = (
+            eq_by_tag[tag]["sheet"]
+            if tag and tag in eq_by_tag and tag in eq_tags
+            else (eq_by_tag[eq_tags[0]]["sheet"] if eq_tags and eq_tags[0] in eq_by_tag else "200-PID-002")
+        )
         return {
             "query": q_clean,
             "intent": intent,
