@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from impactweb.auth import hash_password
@@ -16,6 +18,11 @@ from impactweb.models import (
     TurnaroundEvent,
     UserAccount,
     WorkRequest,
+)
+from impactweb.planning import (
+    BOOTSTRAP_FACILITATOR_ID_PREFIX,
+    SSO_DISABLED_PASSWORD_HASH,
+    facilitator_email_allowlist,
 )
 
 DEMO_PASSWORD = "demo-pass-2028"
@@ -218,7 +225,51 @@ def seed_exercise_work_requests(
     session.commit()
 
 
-def seed_demo_exercise(session: Session, scenario_dir: Path) -> None:
+def seed_facilitator_emails(session: Session, *, auth_mode: str = "local") -> None:
+    """Ensure every email in FACILITATOR_EMAILS has a UserAccount for SSO login.
+
+    Facilitator privileges for FACILITATOR_EMAILS are derived dynamically from the allowlist
+    rather than persisted ExerciseMembership rows, so removing any email (new or pre-existing)
+    from FACILITATOR_EMAILS revokes global and EX-DEMO facilitator access immediately.
+    Bootstrapped accounts use a disabled password hash (never usable for local password login)
+    and keep is_superuser=False.
+    """
+    allowlist = sorted(facilitator_email_allowlist())
+    changed = False
+
+    for email in allowlist:
+        user = session.exec(select(UserAccount).where(func.lower(UserAccount.email) == email)).first()
+        if user is None:
+            uid = f"{BOOTSTRAP_FACILITATOR_ID_PREFIX}{hashlib.sha256(email.encode('utf-8')).hexdigest()[:10]}"
+            user = UserAccount(
+                id=uid,
+                email=email,
+                full_name=email.split("@")[0] or email,
+                password_hash=SSO_DISABLED_PASSWORD_HASH,
+                is_superuser=False,
+            )
+            session.add(user)
+            changed = True
+
+    # In AUTH_MODE=exe, remove any seeded demo superuser EX-DEMO grant so usr-facilitator
+    # cannot bypass FACILITATOR_EMAILS via persisted membership rows.
+    if auth_mode == "exe":
+        demo_fac_mem = session.exec(
+            select(ExerciseMembership).where(
+                ExerciseMembership.exercise_id == "EX-DEMO",
+                ExerciseMembership.user_id == "usr-facilitator",
+                ExerciseMembership.role == "facilitator",
+            )
+        ).first()
+        if demo_fac_mem is not None:
+            session.delete(demo_fac_mem)
+            changed = True
+
+    if changed:
+        session.commit()
+
+
+def seed_demo_exercise(session: Session, scenario_dir: Path, *, auth_mode: str = "local") -> None:
     seed_cmms(session, scenario_dir)
     seed_users(session)
     if session.get(Exercise, "EX-DEMO") is None:
@@ -240,7 +291,10 @@ def seed_demo_exercise(session: Session, scenario_dir: Path) -> None:
         for m in session.exec(select(ExerciseMembership).where(ExerciseMembership.exercise_id == "EX-DEMO")).all()
     }
     for uid, _email, _name, role, sg in DEMO_USERS:
+        if auth_mode == "exe" and uid == "usr-facilitator":
+            continue
         if uid not in existing_mems:
             session.add(ExerciseMembership(exercise_id="EX-DEMO", user_id=uid, role=role, source_group=sg))
     session.commit()
+    seed_facilitator_emails(session, auth_mode=auth_mode)
     seed_exercise_work_requests(session, scenario_dir, "EX-DEMO", starting_fixture="seeded")

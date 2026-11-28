@@ -419,9 +419,13 @@ export const FacilitatorConsole: React.FC<FacilitatorConsoleProps> = ({
                     <td>{labelize(m.role)}</td>
                     <td>{m.source_group ? labelize(m.source_group) : "All"}</td>
                     <td>
-                      <button type="button" className="btn btn-sm" onClick={() => handleRemoveMember(m.user_id, m.email)}>
-                        Remove
-                      </button>
+                      {m.managed_by_allowlist ? (
+                        <span className="field-hint">Managed by FACILITATOR_EMAILS</span>
+                      ) : (
+                        <button type="button" className="btn btn-sm" onClick={() => handleRemoveMember(m.user_id, m.email)}>
+                          Remove
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}

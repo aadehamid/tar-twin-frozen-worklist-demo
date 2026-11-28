@@ -55,6 +55,7 @@ export interface MembershipDetail {
   full_name: string;
   role: string;
   source_group: string | null;
+  managed_by_allowlist?: boolean;
 }
 
 export interface LibraryInject {

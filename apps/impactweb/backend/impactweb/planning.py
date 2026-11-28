@@ -139,18 +139,45 @@ LIBRARY_INJECTS: list[dict[str, Any]] = [
 LIBRARY_INJECTS_BY_ID: dict[str, dict[str, Any]] = {row["inject_id"]: row for row in LIBRARY_INJECTS}
 
 
+SSO_DISABLED_PASSWORD_HASH = "!sso-only-disabled"
+BOOTSTRAP_FACILITATOR_ID_PREFIX = "usr-fac-"
+
+
 def facilitator_email_allowlist() -> set[str]:
     raw = os.environ.get("FACILITATOR_EMAILS", "")
     return {e.strip().lower() for e in raw.split(",") if e.strip()}
 
 
-def is_global_facilitator(user: UserAccount) -> bool:
-    return bool(user.is_superuser or user.email.strip().lower() in facilitator_email_allowlist())
+def is_global_facilitator(user: UserAccount, *, auth_mode: str = "local") -> bool:
+    email = user.email.strip().lower()
+    if auth_mode == "exe":
+        return email in facilitator_email_allowlist()
+    return bool(user.is_superuser or email in facilitator_email_allowlist())
 
 
-def is_facilitator(session: Session, user: UserAccount, exercise_id: str | None = None) -> bool:
-    if is_global_facilitator(user):
+def is_active_persisted_membership(user: UserAccount, mem: ExerciseMembership, *, auth_mode: str = "local") -> bool:
+    """In AUTH_MODE=exe, facilitator privileges are strictly governed by FACILITATOR_EMAILS.
+
+    Per docs/hosting.md, the facilitator console is open only to emails listed in
+    FACILITATOR_EMAILS. Persisted facilitator memberships (seeded or manually added) do not
+    grant facilitator access in AUTH_MODE=exe once the email is not in FACILITATOR_EMAILS.
+    """
+    if auth_mode == "exe" and mem.role == "facilitator":
+        return user.email.strip().lower() in facilitator_email_allowlist()
+    return True
+
+
+def is_facilitator(
+    session: Session,
+    user: UserAccount,
+    exercise_id: str | None = None,
+    *,
+    auth_mode: str = "local",
+) -> bool:
+    if is_global_facilitator(user, auth_mode=auth_mode):
         return True
+    if auth_mode == "exe":
+        return False
     if exercise_id is not None:
         mem = session.exec(
             select(ExerciseMembership).where(
