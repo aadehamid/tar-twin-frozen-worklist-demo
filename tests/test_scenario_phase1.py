@@ -716,3 +716,12 @@ class TestShaclValidation:
         ]
         errs_nz = verify_engineering_rules(SCENARIO_DIR, m_nz)
         assert any("E-204" in e and "nozzles" in e for e in errs_nz), errs_nz
+
+        # Mutant C: duplicating an OPC on the same sheet fails duplicate-OPC check
+        m_opc = json.loads(json.dumps(clean_graph))
+        orig_opc = next(n for n in m_opc["nodes"] if "OffPageConnector" in n["labels"] and n["props"]["number"] == "OPC-21")
+        dup_opc = json.loads(json.dumps(orig_opc))
+        dup_opc["key"] = orig_opc["key"] + "_dup"
+        m_opc["nodes"].append(dup_opc)
+        errs_opc = verify_engineering_rules(SCENARIO_DIR, m_opc)
+        assert any("duplicate off-page connector" in e and "OPC-21" in e for e in errs_opc), errs_opc

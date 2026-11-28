@@ -68,10 +68,13 @@ def _load_dexpi_topology(dexpi_dir: Path) -> tuple[dict[str, list[dict]], list[d
                 direction = "in" if "In" in cname else "out"
                 ref = getattr(obj.connectorReference, "referencedDrawingNumber", "") or ""
                 okey = f"opc:{sheet_no}:{obj.pipeConnectorNumber}"
-                item_key[id(obj)] = okey
+                inst_key = f"{okey}:{obj.id}"
+                item_key[id(obj)] = inst_key
                 opc_records.append(
                     {
                         "key": okey,
+                        "obj_id": obj.id,
+                        "inst_key": inst_key,
                         "sheet": sheet_no,
                         "number": obj.pipeConnectorNumber,
                         "direction": direction,
@@ -90,17 +93,19 @@ def _load_dexpi_topology(dexpi_dir: Path) -> tuple[dict[str, list[dict]], list[d
                         pipe_edges.append({"from": src, "to": dst, "sheet": sheet_no})
 
     # Stitch matching cross-sheet OPCs (out on sheet A referencing B <-> in on sheet B referencing A)
-    out_by_pair: dict[tuple[str, str, str], str] = {}
-    in_by_pair: dict[tuple[str, str, str], str] = {}
+    out_by_pair: dict[tuple[str, str, str], list[str]] = defaultdict(list)
+    in_by_pair: dict[tuple[str, str, str], list[str]] = defaultdict(list)
     for rec in opc_records:
         if rec["ref_sheet"] in INTERNAL_SHEETS:
             if rec["direction"] == "out":
-                out_by_pair[(rec["sheet"], rec["ref_sheet"], rec["number"])] = rec["key"]
+                out_by_pair[(rec["sheet"], rec["ref_sheet"], rec["number"])].append(rec["inst_key"])
             else:
-                in_by_pair[(rec["ref_sheet"], rec["sheet"], rec["number"])] = rec["key"]
-    for pair_key, out_k in out_by_pair.items():
+                in_by_pair[(rec["ref_sheet"], rec["sheet"], rec["number"])].append(rec["inst_key"])
+    for pair_key, out_ks in out_by_pair.items():
         if pair_key in in_by_pair:
-            pipe_edges.append({"from": out_k, "to": in_by_pair[pair_key], "sheet": "cross_sheet"})
+            for ok in out_ks:
+                for ik in in_by_pair[pair_key]:
+                    pipe_edges.append({"from": ok, "to": ik, "sheet": "cross_sheet"})
 
     return nozzles_by_eq, opc_records, pipe_edges
 
@@ -172,7 +177,7 @@ def build_scenario_graph(scenario_dir: Path) -> dict:
             rels.append({"type": "HAS_NOZZLE", "from": key, "to": nz["key"]})
 
     for opc in opc_records:
-        add_node({"key": opc["key"], "labels": ["OffPageConnector"], "props": {"number": opc["number"], "sheet": opc["sheet"], "ref_sheet": opc["ref_sheet"], "direction": opc["direction"]}})
+        add_node({"key": f"{opc['key']}:{opc['obj_id']}", "labels": ["OffPageConnector"], "props": {"number": opc["number"], "sheet": opc["sheet"], "ref_sheet": opc["ref_sheet"], "direction": opc["direction"], "canonical_key": opc["key"]}})
 
     for edge in pipe_edges:
         for endpoint in (edge["from"], edge["to"]):
@@ -258,7 +263,9 @@ def verify_engineering_rules(scenario_dir: Path, graph_override: dict | None = N
                     f"exchanger {nd['props']['tag']} missing tube/shell nozzles: {dict(ch_counts)}"
                 )
 
-    # 2. Cross-sheet OPC consistency: zero self-sheet OPCs and 1-to-1 pairing across internal sheets
+    # 2. Cross-sheet OPC consistency: zero duplicate (sheet, number) OPCs, zero self-sheet OPCs,
+    #    and 1-to-1 pairing across internal sheets
+    seen_sheet_opc: dict[tuple[str, str], int] = defaultdict(int)
     outs: dict[tuple[str, str, str], int] = defaultdict(int)
     ins: dict[tuple[str, str, str], int] = defaultdict(int)
     for nd in graph["nodes"]:
@@ -266,6 +273,9 @@ def verify_engineering_rules(scenario_dir: Path, graph_override: dict | None = N
             sh = nd["props"]["sheet"]
             ref = nd["props"]["ref_sheet"]
             num = nd["props"]["number"]
+            seen_sheet_opc[(sh, num)] += 1
+            if seen_sheet_opc[(sh, num)] > 1:
+                errors.append(f"duplicate off-page connector {num} on {sh}")
             if ref == sh:
                 errors.append(f"off-page connector {num} on {sh} references its own drawing")
             elif ref in INTERNAL_SHEETS:
