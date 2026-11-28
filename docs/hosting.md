@@ -64,7 +64,7 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 
 - Both services get an auth adapter with two modes:
   - `AUTH_MODE=local` uses the template's normal JWT login, for development and tests.
-  - `AUTH_MODE=exe` reads `X-ExeDev-Email` (from the edge only), finds the person's `exercise_membership`, and refuses anyone without one. Demo logins and password login are turned off.
+  - `AUTH_MODE=exe` reads `X-ExeDev-Email` (from the edge only), checks for an active `exercise_membership` or an email listed in `FACILITATOR_EMAILS`, and refuses anyone else. Demo logins and password login are turned off.
 - The facilitator console is open only to emails listed in `FACILITATOR_EMAILS`.
 
 ### Machines
@@ -77,7 +77,7 @@ If the soak test in section 6 fails, capacity can go to 4 vCPU and 8 GB with `bi
 ## 4. Secrets
 
 - The OpenRouter key, the twin's two IMPACT Web tokens (the read-only sync token and `TWIN_RAISE_TOKEN`) and the database passwords live in `/opt/tar-twin/.env` on the VM, owned by root with mode 600. They are never committed.
-- Each participant's exe.dev email is stored only in `exercise_membership`.
+- Each participant's exe.dev email is stored only in Postgres (`user_account` and `exercise_membership`), plus `FACILITATOR_EMAILS` in `/opt/tar-twin/.env` for operators.
 
 ## 5. Deploying and backups
 
@@ -122,7 +122,7 @@ The data lives in two places, and both are backed up:
 | Only shared users get in | Test with an unshared exe.dev account on `/`, `/impactweb/` and `/twin/`. Each gets the exe.dev login and no app content |
 | Web-only participants reach only the app | Gate H13 in the [spike](spikes/exe-hosting.md), run before each new group is invited: a Web-only share reaches port 8000 with its own identity and nothing else, Shelley included |
 | A forged identity header doesn't work | From outside: a client-sent `X-ExeDev-Email` or `X-Edge-Auth` on `/impactweb/` and `/twin/` doesn't change who the app sees. From inside: a container calling an app directly with `X-ExeDev-Email` is anonymous, with no secret or a wrong one. A container can't open a connection to the edge at all, because it listens on loopback only. A local request to 18001 or 18002 that skips the edge is anonymous, with no secret |
-| Users without a membership are refused | API test in `AUTH_MODE=exe` with a known email and no membership |
+| Users without a membership or allowlist entry are refused | API test in `AUTH_MODE=exe` with an unlisted email and no active membership |
 | Machine sync works without a person and can't write | Test that the twin sync and a CMMS master read run on its token with no user session, that each allowed read endpoint answers, and that every IMPACT Web write endpoint and every other endpoint refuses that token |
 | The twin has no database access to IMPACT Web | Check that the twin container's environment holds no Postgres credentials, and that Postgres refuses a connection from the twin container |
 | Demo logins are off when hosted | Test that password login returns 404 in `AUTH_MODE=exe` |

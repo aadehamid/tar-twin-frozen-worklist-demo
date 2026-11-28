@@ -774,6 +774,28 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
         == 200
     )
 
+    # Allowlist-managed rows are flagged managed_by_allowlist=True and DELETE refuses (409) without deleting
+    # underlying explicit memberships or returning a false 200 for allowlist-granted creators.
+    other_mems = iw_restarted.get(f"/api/v1/exercises/{other_ex_id}/memberships", headers=sso_hdr).json()
+    pre_row = next(m for m in other_mems if m["email"] == "preexisting.member@demo.local")
+    sso_row = next(m for m in other_mems if m["email"] == "sso.facilitator@demo.local")
+    assert pre_row["managed_by_allowlist"] is True
+    assert sso_row["managed_by_allowlist"] is True
+    assert (
+        iw_restarted.delete(
+            f"/api/v1/exercises/{other_ex_id}/memberships/{pre_row['user_id']}",
+            headers=sso_hdr,
+        ).status_code
+        == 409
+    )
+    assert (
+        iw_restarted.delete(
+            f"/api/v1/exercises/{other_ex_id}/memberships/{sso_row['user_id']}",
+            headers=sso_hdr,
+        ).status_code
+        == 409
+    )
+
     # Removing sso.facilitator, preexisting.member, and persisted.fac from FACILITATOR_EMAILS immediately revokes
     # global, maintenance, exercise-level EX-DEMO facilitator, and Twin privileges (both live and after restart),
     # while preserving preexisting.member's explicit viewer grant on other_ex_id.
@@ -816,12 +838,25 @@ def test_facilitator_emails_bootstrap_for_exe_auth_and_revocation(tmp_path: Path
         assert iw.get("/api/v1/work-requests?exercise_id=EX-DEMO", headers=revoked_hdr).status_code == 403
         assert twin.get("/api/v1/auth/me?exercise_id=EX-DEMO", headers=revoked_hdr).status_code == 403
 
-    # Pre-existing account keeps its explicit viewer membership on other_ex_id
+    # Pre-existing account keeps its explicit viewer membership on other_ex_id (even after earlier 409 delete attempt)
     r_pre_after = iw.get("/api/v1/auth/me", headers=pre_hdr)
     assert r_pre_after.status_code == 200
     assert r_pre_after.json()["memberships"] == [
         {"exercise_id": other_ex_id, "role": "viewer", "source_group": None}
     ]
+    # Once no longer allowlisted, its row is managed_by_allowlist=False and explicit removal now succeeds and ends access
+    other_mems_after = iw.get(f"/api/v1/exercises/{other_ex_id}/memberships", headers=second_hdr).json()
+    pre_row_after = next(m for m in other_mems_after if m["email"] == "preexisting.member@demo.local")
+    assert pre_row_after["role"] == "viewer"
+    assert pre_row_after["managed_by_allowlist"] is False
+    assert (
+        iw.delete(
+            f"/api/v1/exercises/{other_ex_id}/memberships/{pre_row_after['user_id']}",
+            headers=second_hdr,
+        ).status_code
+        == 200
+    )
+    assert iw.get("/api/v1/auth/me", headers=pre_hdr).status_code == 403
 
     # Seeded demo superuser (facilitator@demo.local) also cannot bypass FACILITATOR_EMAILS in AUTH_MODE=exe
     demo_fac_hdr = {"X-Edge-Auth": "edge-secret-boot", "X-ExeDev-Email": "facilitator@demo.local"}

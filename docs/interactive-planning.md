@@ -62,7 +62,7 @@ Every exercise-owned row and node carries an `exercise_id`. The read-only plant 
 
 ### 3.2 Membership
 
-The facilitator adds and removes people and sets their roles. Removing someone ends their access on the next request. Their past actions stay in the log under their name.
+The facilitator adds and removes people and sets their roles. Removing an exercise member ends their access on the next request. Facilitators listed in `FACILITATOR_EMAILS` are managed through that environment allowlist rather than per-exercise removal. Past actions stay in the log under the actor's name.
 
 ### 3.3 The clock
 

@@ -869,6 +869,7 @@ def create_app(
                 "full_name": u.full_name if u is not None else "",
                 "role": m.role,
                 "source_group": m.source_group,
+                "managed_by_allowlist": False,
             }
         for u in users.values():
             if is_global_facilitator(u, auth_mode=mode):
@@ -879,6 +880,7 @@ def create_app(
                     "full_name": u.full_name,
                     "role": "facilitator",
                     "source_group": None,
+                    "managed_by_allowlist": True,
                 }
         return list(rows_by_uid.values())
 
@@ -954,6 +956,12 @@ def create_app(
             ex = session.get(Exercise, exercise_id)
             if ex is None:
                 raise HTTPException(status_code=404, detail="Exercise not found")
+            target_user = session.get(UserAccount, user_id)
+            if target_user is not None and is_global_facilitator(target_user, auth_mode=mode):
+                raise HTTPException(
+                    status_code=409,
+                    detail="Facilitator access is managed by FACILITATOR_EMAILS; remove the email from FACILITATOR_EMAILS to revoke access",
+                )
             mem = get_membership(session, exercise_id, user_id)
             if mem is None:
                 raise HTTPException(status_code=404, detail="Membership not found")
