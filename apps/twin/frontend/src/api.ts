@@ -1,18 +1,23 @@
 import type {
   ActiveTagOption,
   AuthMember,
+  BaselineSummary,
+  ChangeRequestPrefill,
+  ChangeRequestRecord,
   ClustersPayload,
   CutLineResult,
   EquipmentDetail,
   ExploreResponse,
   ExploreSuggestion,
   IsolationEnvelope,
+  KpisSummary,
   LabCompareResponse,
   LabStepResponse,
   MatchingSummary,
   PidSheet,
   PlotPlanData,
   ScopeItem,
+  ValuePanelData,
 } from "./types";
 
 export function apiPrefix(): string {
@@ -117,5 +122,22 @@ export const twinApi = {
     apiFetch<ExploreResponse>("/api/v1/explore/query", {
       method: "POST",
       body: { exercise_id: exerciseId, query, allow_external_ai: false },
+    }),
+
+  baseline: (exerciseId = "EX-DEMO") =>
+    apiFetch<BaselineSummary>(`/api/v1/baseline?exercise_id=${encodeURIComponent(exerciseId)}`),
+  kpis: (exerciseId = "EX-DEMO") =>
+    apiFetch<KpisSummary>(`/api/v1/kpis?exercise_id=${encodeURIComponent(exerciseId)}`),
+  valuePanel: (exerciseId = "EX-DEMO") =>
+    apiFetch<ValuePanelData>(`/api/v1/value?exercise_id=${encodeURIComponent(exerciseId)}`),
+  changeRequestPrefill: (tag: string, exerciseId = "EX-DEMO") =>
+    apiFetch<ChangeRequestPrefill>(
+      `/api/v1/change-requests/prefill?exercise_id=${encodeURIComponent(exerciseId)}&tag=${encodeURIComponent(tag)}`
+    ),
+  raiseFromTwin: (payload: Record<string, unknown>, token: string | null) =>
+    apiFetch<ChangeRequestRecord>("/api/v1/change-requests/raise-from-twin", {
+      method: "POST",
+      body: payload,
+      token,
     }),
 };

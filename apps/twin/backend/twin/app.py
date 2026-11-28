@@ -6,6 +6,7 @@ import os
 from pathlib import Path
 from typing import Literal
 
+import httpx
 from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse, PlainTextResponse
@@ -51,6 +52,33 @@ class CutLineEvaluatePayload(BaseModel):
     budget_usd: int = Field(ge=0)
     save_name: str | None = None
     saved_by: str = ""
+
+
+class RaiseFromTwinPayload(BaseModel):
+    """Browser payload for delegated write-through (docs/design.md section 5.8).
+
+    Extra fields such as on_behalf_of, raised_by, or raised_via are forbidden (422);
+    caller identity comes strictly from the verified session.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    exercise_id: str = "EX-DEMO"
+    request_id: str | None = None
+    change_type: Literal["add", "delete", "change"] = "add"
+    mandatory: bool = False
+    schedule_impact_days: float = 0.0
+    risk_if_not_done: str = Field(default="", max_length=2000)
+    hours_delta: int
+    cost_delta_usd: int
+    title: str = Field(min_length=3, max_length=240)
+    equipment_text: str | None = None
+    category: str | None = None
+    driver: Literal["inspection", "reliability", "regulatory", "capital", "operations"] | None = "operations"
+    source_group: Literal["fixed_equipment", "rotating", "inspection", "operations", "projects", "instrumentation"] | None = "operations"
+    area: str | None = None
+    evidence: str = Field(default="", max_length=2000)
+    reason: str = Field(min_length=3, max_length=4000)
 
 
 def create_app(
@@ -352,6 +380,71 @@ def create_app(
             )
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+    # --- Baseline, KPIs, Value Panel, and Delegated Write-Through (Phase 6) ---
+
+    @api.get("/api/v1/baseline")
+    def get_baseline(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.baseline_summary(exercise_id)
+
+    @api.get("/api/v1/kpis")
+    def get_kpis(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.kpis_summary(exercise_id)
+
+    @api.get("/api/v1/value")
+    def get_value_panel(exercise_id: str = Query(default="EX-DEMO")) -> dict:
+        return sync_engine.value_panel(exercise_id)
+
+    @api.get("/api/v1/change-requests/prefill")
+    def get_change_request_prefill(
+        tag: str = Query(min_length=2),
+        exercise_id: str = Query(default="EX-DEMO"),
+    ) -> dict:
+        try:
+            return sync_engine.change_request_prefill(exercise_id, tag)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+    @api.post("/api/v1/change-requests/raise-from-twin", status_code=201)
+    def post_raise_from_twin(body: RaiseFromTwinPayload, request: Request) -> dict:
+        """Delegated write-through proxy (docs/design.md section 5.8, D9).
+
+        Resolves caller strictly from verified session and forwards to IMPACT Web
+        POST /api/v1/twin/change-requests under TWIN_RAISE_TOKEN.
+        """
+        member = resolve_authenticated_member(
+            request,
+            exercise_id=body.exercise_id,
+            auth_mode=mode,
+            jwt_secret=j_secret,
+            edge_auth_secret=e_secret,
+            impactweb_client=iw_cli,
+        )
+        if member.role != "planner":
+            raise HTTPException(
+                status_code=403,
+                detail="Delegated twin change requests require the planner role in the named exercise",
+            )
+        if iw_cli is None:
+            raise HTTPException(status_code=503, detail="IMPACT Web client is not configured")
+
+        delegate_payload = {
+            **body.model_dump(),
+            "on_behalf_of": member.user_id,
+        }
+        try:
+            return iw_cli.raise_twin_change_request(delegate_payload)
+        except httpx.HTTPStatusError as exc:
+            detail = f"IMPACT Web refused delegated change request ({exc.response.status_code})"
+            try:
+                err_json = exc.response.json()
+                if isinstance(err_json, dict) and err_json.get("detail"):
+                    detail = str(err_json["detail"])
+            except Exception:
+                pass
+            raise HTTPException(status_code=exc.response.status_code, detail=detail) from exc
+        except RuntimeError as exc:
+            raise HTTPException(status_code=503, detail=str(exc)) from exc
 
     app.include_router(api)
     app.include_router(api, prefix="/twin")

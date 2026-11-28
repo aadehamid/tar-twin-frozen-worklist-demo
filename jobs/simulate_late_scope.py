@@ -1,0 +1,193 @@
+#!/usr/bin/env python3
+"""Run the scripted Unit 200 post-freeze late-scope simulation through IMPACT Web's public API.
+
+Raises 18 approved adds, 6 approved deletes, and 5 rejected adds from data/scenario/late-scope.json
+using J. Planner (raise) and M. Turnaround (TA manager approve/reject), then triggers a normal Twin
+sync so scope growth appears on the KPI panel. Never writes directly to the Twin database.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+import sys
+from pathlib import Path
+from typing import Any
+
+import httpx
+
+
+def _find_delete_target(
+    work_requests: list[dict[str, Any]],
+    *,
+    equipment_tag: str,
+    abs_hours: int,
+    used_ids: set[str],
+) -> dict[str, Any] | None:
+    tag_upper = equipment_tag.upper()
+    # First pass: exact tag mention in equipment_text or title with enough hours
+    for wr in work_requests:
+        if wr["id"] in used_ids or wr["status"] == "deleted":
+            continue
+        hay = f"{wr.get('equipment_text', '')} {wr.get('title', '')}".upper()
+        if tag_upper in hay and int(wr["estimate_hours"]) >= abs_hours:
+            return wr
+    # Second pass: any non-deleted discretionary request with enough hours
+    for wr in work_requests:
+        if wr["id"] in used_ids or wr["status"] == "deleted" or wr.get("mandatory"):
+            continue
+        if int(wr["estimate_hours"]) >= abs_hours:
+            return wr
+    # Fallback: any non-deleted request with enough hours
+    for wr in work_requests:
+        if wr["id"] in used_ids or wr["status"] == "deleted":
+            continue
+        if int(wr["estimate_hours"]) >= abs_hours:
+            return wr
+    return None
+
+
+def run_late_scope_simulation(
+    *,
+    impactweb_client: Any,
+    twin_client: Any | None = None,
+    scenario_dir: Path,
+    exercise_id: str = "EX-DEMO",
+    planner_email: str = "j.planner@demo.local",
+    ta_email: str = "ta.manager@demo.local",
+    password: str = "demo-pass-2028",
+) -> dict[str, Any]:
+    """Execute the 29 scripted changes idempotently via IMPACT Web public API and sync Twin."""
+    late_path = scenario_dir / "late-scope.json"
+    data = json.loads(late_path.read_text(encoding="utf-8"))
+    scripted = data["scripted_changes"]
+
+    r_pl = impactweb_client.post("/api/v1/auth/login", json={"email": planner_email, "password": password})
+    r_pl.raise_for_status()
+    pl_hdr = {"Authorization": f"Bearer {r_pl.json()['access_token']}"}
+
+    r_ta = impactweb_client.post("/api/v1/auth/login", json={"email": ta_email, "password": password})
+    r_ta.raise_for_status()
+    ta_hdr = {"Authorization": f"Bearer {r_ta.json()['access_token']}"}
+
+    ex = impactweb_client.get(f"/api/v1/exercises/{exercise_id}", headers=ta_hdr)
+    ex.raise_for_status()
+    if not ex.json().get("frozen"):
+        raise RuntimeError(f"Exercise {exercise_id} must be frozen in IMPACT Web before running late-scope simulation")
+
+    existing_crs = impactweb_client.get(f"/api/v1/change-requests?exercise_id={exercise_id}", headers=ta_hdr)
+    existing_crs.raise_for_status()
+    existing_titles = {c["title"] for c in existing_crs.json()}
+
+    wrs_resp = impactweb_client.get(f"/api/v1/work-requests?exercise_id={exercise_id}", headers=ta_hdr)
+    wrs_resp.raise_for_status()
+    work_requests = wrs_resp.json()
+    used_delete_targets: set[str] = set()
+
+    # Map equipment tag -> area for newly added scope
+    master = json.loads((scenario_dir / "equipment-master.json").read_text(encoding="utf-8"))
+    area_by_tag = {e["tag"]: e["area"] for e in master["major_equipment"]}
+
+    adds_approved = 0
+    deletes_approved = 0
+    rejected = 0
+    skipped_existing = 0
+
+    for item in scripted:
+        title = item["title"]
+        if title in existing_titles:
+            skipped_existing += 1
+            continue
+
+        ctype = item["type"]
+        target_id: str | None = None
+        if ctype == "delete":
+            target = _find_delete_target(
+                work_requests,
+                equipment_tag=item["equipment_tag"],
+                abs_hours=abs(int(item["hours_delta"])),
+                used_ids=used_delete_targets,
+            )
+            if target is None:
+                raise RuntimeError(f"Could not find delete target for {item['change_id']} ({item['equipment_tag']})")
+            target_id = target["id"]
+            used_delete_targets.add(target_id)
+
+        payload = {
+            "exercise_id": exercise_id,
+            "request_id": target_id,
+            "change_type": ctype,
+            "mandatory": bool(item["mandatory"]),
+            "schedule_impact_days": float(item.get("schedule_impact_days", 0.0)),
+            "risk_if_not_done": item["reason"],
+            "hours_delta": int(item["hours_delta"]),
+            "cost_delta_usd": int(item["cost_delta_usd"]),
+            "title": title,
+            "equipment_text": item["equipment_tag"],
+            "category": "Late Scope" if ctype == "add" else "Scope Removal",
+            "driver": "inspection" if item["source_group"] == "inspection" else "reliability",
+            "source_group": item["source_group"],
+            "area": area_by_tag.get(item["equipment_tag"], "200-C"),
+            "evidence": f"Scripted checkpoint {item['checkpoint']} ({item['change_id']}).",
+            "reason": item["reason"],
+        }
+
+        r_cr = impactweb_client.post("/api/v1/change-requests", json=payload, headers=pl_hdr)
+        r_cr.raise_for_status()
+        cr_id = r_cr.json()["id"]
+
+        decision = item["decision"]
+        r_dec = impactweb_client.post(
+            f"/api/v1/change-requests/{cr_id}/decide?exercise_id={exercise_id}",
+            json={"decision": decision, "reason": f"{item['checkpoint']} DRB review: {item['reason']}"},
+            headers=ta_hdr,
+        )
+        r_dec.raise_for_status()
+
+        if decision == "approved" and ctype == "add":
+            adds_approved += 1
+        elif decision == "approved" and ctype == "delete":
+            deletes_approved += 1
+        else:
+            rejected += 1
+
+    sync_result = None
+    if twin_client is not None:
+        r_sync = twin_client.post(f"/api/v1/sync?exercise_id={exercise_id}")
+        r_sync.raise_for_status()
+        sync_result = r_sync.json()
+
+    return {
+        "exercise_id": exercise_id,
+        "adds_approved": adds_approved,
+        "deletes_approved": deletes_approved,
+        "rejected": rejected,
+        "skipped_existing": skipped_existing,
+        "sync_result": sync_result,
+    }
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description="Run scripted Unit 200 late-scope simulation against IMPACT Web + Twin.")
+    parser.add_argument("--impactweb-url", default=os.environ.get("IMPACTWEB_URL", "http://127.0.0.1:8001"))
+    parser.add_argument("--twin-url", default=os.environ.get("TWIN_URL", "http://127.0.0.1:8002"))
+    parser.add_argument("--exercise-id", default="EX-DEMO")
+    parser.add_argument("--scenario-dir", type=Path, default=Path(__file__).resolve().parents[1] / "data" / "scenario")
+    args = parser.parse_args(argv)
+
+    with httpx.Client(base_url=args.impactweb_url, timeout=20.0) as iw_cli, httpx.Client(
+        base_url=args.twin_url, timeout=20.0
+    ) as twin_cli:
+        summary = run_late_scope_simulation(
+            impactweb_client=iw_cli,
+            twin_client=twin_cli,
+            scenario_dir=args.scenario_dir,
+            exercise_id=args.exercise_id,
+        )
+    print(json.dumps(summary, indent=2))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

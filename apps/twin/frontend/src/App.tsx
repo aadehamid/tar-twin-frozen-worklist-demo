@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { twinApi } from "./api";
+import { BaselineKpisView } from "./components/BaselineKpisView";
 import { ClustersCutLineView } from "./components/ClustersCutLineView";
 import { ExploreBar } from "./components/ExploreBar";
 import { GraphPanel } from "./components/GraphPanel";
@@ -8,10 +9,12 @@ import { MatchingLabView } from "./components/MatchingLabView";
 import { MatchReviewView } from "./components/MatchReviewView";
 import { PidViewer } from "./components/PidViewer";
 import { PlotPlanView } from "./components/PlotPlanView";
+import { RaiseChangeRequestModal } from "./components/RaiseChangeRequestModal";
 import type { NamedQueryId } from "./relateQueries";
 import type {
   ActiveTagOption,
   AuthMember,
+  BaselineSummary,
   ClustersPayload,
   CutLineResult,
   EquipmentDetail,
@@ -19,12 +22,14 @@ import type {
   ExploreResponse,
   ExploreSuggestion,
   IsolationEnvelope,
+  KpisSummary,
   MatchingSummary,
   PidSheet,
   PlotLayer,
   PlotPlanData,
   ScopeItem,
   TwinView,
+  ValuePanelData,
 } from "./types";
 
 const EXERCISE_ID = "EX-DEMO";
@@ -48,6 +53,10 @@ export default function App() {
   const [reviewQueue, setReviewQueue] = useState<ScopeItem[]>([]);
   const [clusters, setClusters] = useState<ClustersPayload | null>(null);
   const [cutLine, setCutLine] = useState<CutLineResult | null>(null);
+  const [baseline, setBaseline] = useState<BaselineSummary | null>(null);
+  const [kpis, setKpis] = useState<KpisSummary | null>(null);
+  const [valuePanel, setValuePanel] = useState<ValuePanelData | null>(null);
+  const [raiseModalTag, setRaiseModalTag] = useState<string | null>(null);
   const [budgetUsd, setBudgetUsd] = useState<number>(22_000_000);
 
   // Shared cross-view selection and highlights
@@ -80,18 +89,24 @@ export default function App() {
 
   const refreshScopeData = useCallback(
     async (targetBudget: number) => {
-      const [items, summary, queue, cl, clEval] = await Promise.all([
+      const [items, summary, queue, cl, clEval, bl, kp, vp] = await Promise.all([
         twinApi.scopeItems(EXERCISE_ID),
         twinApi.matchingSummary(EXERCISE_ID),
         twinApi.reviewQueue(EXERCISE_ID),
         twinApi.clusters(EXERCISE_ID),
         twinApi.evaluateCutLine(targetBudget, EXERCISE_ID),
+        twinApi.baseline(EXERCISE_ID),
+        twinApi.kpis(EXERCISE_ID),
+        twinApi.valuePanel(EXERCISE_ID),
       ]);
       setScopeItems(items);
       setMatchingSummary(summary);
       setReviewQueue(queue);
       setClusters(cl);
       setCutLine(clEval);
+      setBaseline(bl);
+      setKpis(kp);
+      setValuePanel(vp);
     },
     []
   );
@@ -231,7 +246,7 @@ export default function App() {
       if (typeof hl.budget_usd === "number") {
         await handleBudgetChange(hl.budget_usd);
       }
-      if (hl.view && (["plot", "pid", "graph", "trace", "review", "lab", "clusters"] as string[]).includes(hl.view)) {
+      if (hl.view && (["plot", "pid", "graph", "trace", "review", "lab", "clusters", "kpis"] as string[]).includes(hl.view)) {
         setView(hl.view as TwinView);
       }
     } catch (err) {
@@ -310,6 +325,7 @@ export default function App() {
     { id: "review", label: "Review" },
     { id: "lab", label: "Matching lab" },
     { id: "clusters", label: "Clusters & cut line" },
+    { id: "kpis", label: "Baseline & KPIs" },
   ];
 
   return (
@@ -415,6 +431,7 @@ export default function App() {
               setSelectedRequestId(reqId);
               setView("trace");
             }}
+            onRaiseChangeRequest={(tag) => setRaiseModalTag(tag)}
           />
         )}
 
@@ -539,7 +556,32 @@ export default function App() {
             }}
           />
         )}
+
+        {view === "kpis" && (
+          <BaselineKpisView
+            baseline={baseline}
+            kpis={kpis}
+            valuePanel={valuePanel}
+            onOpenRaiseModal={(tag) => setRaiseModalTag(tag)}
+          />
+        )}
       </main>
+
+      {raiseModalTag && (
+        <RaiseChangeRequestModal
+          exerciseId={EXERCISE_ID}
+          tag={raiseModalTag}
+          authMember={authMember}
+          authMode={authMode}
+          token={token}
+          onQuickPlannerLogin={handleQuickPlannerLogin}
+          onRaised={async () => {
+            await twinApi.sync(EXERCISE_ID, true);
+            await refreshScopeData(budgetUsd);
+          }}
+          onClose={() => setRaiseModalTag(null)}
+        />
+      )}
 
       {loginModalOpen && (
         <div className="modal-backdrop" role="dialog" aria-modal="true" aria-label="Sign in to Twin">

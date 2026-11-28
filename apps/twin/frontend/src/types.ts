@@ -5,7 +5,8 @@ export type TwinView =
   | "trace"
   | "review"
   | "lab"
-  | "clusters";
+  | "clusters"
+  | "kpis";
 
 export type PlotLayer = "match_status" | "clusters" | "cut_line" | "changes";
 
@@ -340,4 +341,115 @@ export interface AuthMember {
   full_name: string;
   role: string;
   exercise_id: string;
+}
+
+export interface BaselineSummary {
+  exercise_id: string;
+  event_id: string;
+  frozen: boolean;
+  freeze_id: string | null;
+  frozen_at: string | null;
+  list_version: number;
+  baseline_item_count: number;
+  baseline_hours: number;
+  baseline_cost_usd: number;
+  frozen_matched_count: number;
+  frozen_match_rate: number | null;
+  gate_threshold: number;
+  ready_for_use: boolean;
+  outcome_counts: Record<string, number>;
+  reserved_slots: {
+    work_packages_4_1: { status: string; work_packages: null; standards: null; materials: null; redlines: null };
+    execution_plan_4_2: { status: string; activities: null; logistics_objects: null; permits: null };
+  };
+}
+
+export interface ChangeRequestRecord {
+  id: string;
+  request_id: string | null;
+  change_type: string;
+  mandatory: boolean;
+  hours_delta: number;
+  cost_delta_usd: number;
+  title: string;
+  source_group?: string;
+  reason: string;
+  raised_by_name?: string;
+  raised_via: string;
+  status: string;
+  decided_at?: string | null;
+  created_at?: string | null;
+}
+
+export interface KpisSummary {
+  exercise_id: string;
+  frozen: boolean;
+  freeze_id: string | null;
+  ready_for_use: boolean;
+  twin_write_through: boolean;
+  baseline_hours: number;
+  baseline_item_count: number;
+  growth_hours: number;
+  growth_cost_usd: number;
+  growth_pct_of_baseline: number;
+  mandatory_growth_hours: number;
+  discretionary_growth_hours: number;
+  adds_approved: number;
+  deletes_approved: number;
+  changes_approved: number;
+  pending_count: number;
+  rejected_count: number;
+  change_events: Record<string, unknown>[];
+  all_change_requests: ChangeRequestRecord[];
+  tag_match_rate: number | null;
+  hours_bundled: number;
+  duplicate_hours_flagged: number;
+  duplicate_pair_count: number;
+  last_synced_at: string | null;
+}
+
+export interface ValuePanelData {
+  exercise_id: string;
+  unvalidated_assumption: boolean;
+  assumption_notice: string;
+  levers: {
+    lever: string;
+    default_usd: number;
+    display_amount: string;
+    unvalidated_assumption: boolean;
+    basis: string;
+  }[];
+  total_default_usd: number;
+  total_display: string;
+  measured_in_demo: {
+    hours_bundled: number;
+    duplicate_pair_count: number;
+    duplicate_hours_flagged: number;
+    baseline_hours: number;
+    post_freeze_growth_hours: number;
+    tag_match_rate: number | null;
+  };
+}
+
+export interface ChangeRequestPrefill {
+  exercise_id: string;
+  equipment_tag: string;
+  equipment_description: string;
+  area: string;
+  sheet: string;
+  frozen: boolean;
+  twin_write_through: boolean;
+  already_open_job_count: number;
+  already_open_jobs: { request_id: string; title: string }[];
+  shared_envelopes: string[];
+  shared_scaffolds: string[];
+  shared_access: string[];
+  shared_setup_hours_saved: number;
+  prefilled_title: string;
+  prefilled_equipment_text: string;
+  prefilled_reason: string;
+  default_hours_delta: number;
+  default_cost_delta_usd: number;
+  default_source_group: string;
+  default_driver: string;
 }

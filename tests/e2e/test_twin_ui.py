@@ -221,3 +221,149 @@ def test_twin_all_frontend_interactions(tmp_path: Path):
             srv.should_exit = True
         for t in threads:
             t.join(timeout=5)
+
+
+@pytest.mark.skipif(not (TWIN_FRONTEND_DIST / "index.html").exists(), reason="Built Twin frontend not present")
+def test_twin_phase6_baseline_kpis_and_writethrough_step7(tmp_path: Path):
+    """End-to-end walkthrough steps 6-8: freeze, late-scope sim, C-201 N3 write-through, and switch-off fallback."""
+    from playwright.sync_api import sync_playwright
+
+    jobs_dir = str(REPO_ROOT / "jobs")
+    if jobs_dir not in sys.path:
+        sys.path.insert(0, jobs_dir)
+    from simulate_late_scope import run_late_scope_simulation
+
+    screenshot_dir_env = os.environ.get("SCREENSHOT_DIR", "")
+    screenshot_dir = Path(screenshot_dir_env) if screenshot_dir_env else tmp_path / "shots"
+    screenshot_dir.mkdir(parents=True, exist_ok=True)
+
+    servers, threads, iw_url, twin_url = _start_servers(tmp_path)
+    console_errors: list[str] = []
+    page_errors: list[str] = []
+
+    try:
+        # Freeze in IMPACT Web and run scripted late-scope simulation (step 6)
+        with httpx.Client(base_url=iw_url, timeout=20.0) as iw_cli, httpx.Client(
+            base_url=twin_url, timeout=20.0
+        ) as twin_cli:
+            ta_tok = iw_cli.post(
+                "/api/v1/auth/login", json={"email": "ta.manager@demo.local", "password": "demo-pass-2028"}
+            ).json()["access_token"]
+            ta_hdr = {"Authorization": f"Bearer {ta_tok}"}
+            wrs = iw_cli.get("/api/v1/work-requests?exercise_id=EX-DEMO", headers=ta_hdr).json()
+            assert (
+                iw_cli.post(
+                    "/api/v1/work-requests/bulk-decisions",
+                    json={
+                        "exercise_id": "EX-DEMO",
+                        "request_ids": [w["id"] for w in wrs],
+                        "stage": "drb",
+                        "decision": "accept",
+                        "reason": "DRB freeze batch",
+                    },
+                    headers=ta_hdr,
+                ).status_code
+                == 201
+            )
+            assert (
+                iw_cli.post(
+                    "/api/v1/freezes",
+                    json={"exercise_id": "EX-DEMO", "event_id": "TAR-200-2028"},
+                    headers=ta_hdr,
+                ).status_code
+                == 201
+            )
+            assert twin_cli.post("/api/v1/sync?exercise_id=EX-DEMO&use_ai=true").status_code == 200
+            sim = run_late_scope_simulation(
+                impactweb_client=iw_cli,
+                twin_client=twin_cli,
+                scenario_dir=REPO_ROOT / "data" / "scenario",
+                exercise_id="EX-DEMO",
+            )
+            assert sim["adds_approved"] == 18 and sim["deletes_approved"] == 6 and sim["rejected"] == 5
+
+        with sync_playwright() as p:
+            browser = _launch_chromium(p)
+            context = browser.new_context(viewport={"width": 1440, "height": 900})
+            page = context.new_page()
+            page.on("console", lambda msg: console_errors.append(msg.text) if msg.type == "error" else None)
+            page.on("pageerror", lambda err: page_errors.append(str(err)))
+
+            page.goto(twin_url, wait_until="networkidle")
+            page.get_by_role("tab", name="Baseline & KPIs").click()
+            page.get_by_role("heading", name="Baseline, KPIs, and value").wait_for(timeout=10_000)
+            growth_before = page.locator("[data-testid='growth-hours-value']").text_content()
+            assert growth_before and "+4," in growth_before
+            assert page.get_by_text("Unvalidated assumption", exact=False).first.is_visible()
+            assert page.get_by_text("$1.13M").is_visible()
+            assert page.get_by_text("4.1 Work packages").is_visible()
+            assert page.get_by_text("4.2 Execution plan and logistics").is_visible()
+            page.screenshot(path=str(screenshot_dir / "twin-baseline-kpis.png"))
+
+            # Walkthrough step 7: Click C-201 on Plot Plan -> Raise change request -> submit N3 from Twin
+            page.get_by_role("tab", name="Plot plan").click()
+            page.locator("svg[aria-label='Unit 200 2D plot plan'] g[data-tag='C-201']").click()
+            page.get_by_role("button", name="Raise change request").click()
+            dlg = page.get_by_role("dialog", name="Raise change request for C-201")
+            dlg.wait_for(timeout=10_000)
+            dlg.get_by_text("ENV-200-06", exact=False).first.wait_for(timeout=10_000)
+            dlg.get_by_role("button", name="Sign in as J. Planner").click()
+            page.screenshot(path=str(screenshot_dir / "twin-raise-cr-modal.png"))
+            dlg.get_by_role("button", name="Submit to IMPACT Web").click()
+            dlg.get_by_text("raised_via = twin", exact=False).wait_for(timeout=10_000)
+            dlg.get_by_role("button", name="Done").click()
+
+            # Approve the twin-raised CR in IMPACT Web as TA manager, then Sync now in Twin UI
+            with httpx.Client(base_url=iw_url, timeout=20.0) as iw_cli:
+                ta_tok = iw_cli.post(
+                    "/api/v1/auth/login", json={"email": "ta.manager@demo.local", "password": "demo-pass-2028"}
+                ).json()["access_token"]
+                ta_hdr = {"Authorization": f"Bearer {ta_tok}"}
+                crs = iw_cli.get("/api/v1/change-requests?exercise_id=EX-DEMO", headers=ta_hdr).json()
+                twin_crs = [c for c in crs if c["raised_via"] == "twin" and c["status"] == "pending"]
+                assert len(twin_crs) == 1
+                assert twin_crs[0]["raised_by_name"] == "J. Planner"
+                assert (
+                    iw_cli.post(
+                        f"/api/v1/change-requests/{twin_crs[0]['id']}/decide?exercise_id=EX-DEMO",
+                        json={"decision": "approved", "reason": "Shared column window approved"},
+                        headers=ta_hdr,
+                    ).status_code
+                    == 200
+                )
+
+            page.get_by_role("tab", name="Baseline & KPIs").click()
+            page.get_by_role("button", name="Sync now").click()
+            page.locator("[data-testid='growth-hours-value']", has_text="+4,160 hrs").wait_for(timeout=10_000)
+            assert page.get_by_text("Raised from twin", exact=False).first.is_visible()
+
+            # Turn write-through OFF and verify read-only copyable fallback in Twin modal
+            with httpx.Client(base_url=iw_url, timeout=20.0) as iw_cli:
+                ta_tok = iw_cli.post(
+                    "/api/v1/auth/login", json={"email": "ta.manager@demo.local", "password": "demo-pass-2028"}
+                ).json()["access_token"]
+                assert (
+                    iw_cli.patch(
+                        "/api/v1/exercises/EX-DEMO/write-through",
+                        json={"twin_write_through": False},
+                        headers={"Authorization": f"Bearer {ta_tok}"},
+                    ).status_code
+                    == 200
+                )
+
+            page.get_by_role("button", name="Raise change request (C-201 N3)").click()
+            dlg_off = page.get_by_role("dialog", name="Raise change request for C-201")
+            dlg_off.get_by_text("Write-through is off for this exercise", exact=False).wait_for(timeout=10_000)
+            assert dlg_off.get_by_role("button", name="Copy prefilled text").is_visible()
+            dlg_off.get_by_role("button", name="Close").click()
+
+            browser.close()
+
+        assert not console_errors, f"Browser console errors: {console_errors}"
+        assert not page_errors, f"Browser page errors: {page_errors}"
+    finally:
+        for srv in servers:
+            srv.should_exit = True
+        for t in threads:
+            t.join(timeout=5)
+
