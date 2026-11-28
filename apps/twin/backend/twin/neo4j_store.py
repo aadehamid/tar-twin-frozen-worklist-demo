@@ -118,9 +118,6 @@ class Neo4jPlantStore:
         self._expected_shape_keys, self._expected_shape_values = _expected_shapes_from_ttl(shapes_path)
         self._pinned_shapes: set[tuple[str, str, str, str]] | None = None
         self._known_exercises: set[str] = {"EX-DEMO"}
-        self._cached_plot_plan: dict[str, Any] = {"areas": [], "equipment": []}
-        self._cached_envelopes: list[dict[str, Any]] = []
-        self._cached_sheets: list[dict[str, Any]] = []
 
     def close(self) -> None:
         self._driver.close()
@@ -227,10 +224,6 @@ class Neo4jPlantStore:
             with self._driver.session(database=self.database) as s:
                 s.execute_write(_tx_load)
 
-            self._cached_plot_plan = plant_graph.get("plot_plan", {"areas": [], "equipment": []})
-            self._cached_envelopes = plant_graph.get("computed_envelopes", [])
-            self._cached_sheets = plant_graph.get("sheets", [])
-
     def summary(self) -> dict[str, Any]:
         with self._driver.session(database=self.database) as s:
             row = s.run(
@@ -284,17 +277,50 @@ class Neo4jPlantStore:
         return None
 
     def list_sheets(self) -> list[dict[str, Any]]:
-        if self._cached_sheets:
-            return list(self._cached_sheets)
         with self._driver.session(database=self.database) as s:
-            return [dict(r["props"]) for r in s.run("MATCH (p:PidSheet) RETURN properties(p) AS props ORDER BY p.number")]
+            return [
+                {k: v for k, v in dict(r["props"]).items() if k != "key"}
+                for r in s.run("MATCH (p:PidSheet) RETURN properties(p) AS props ORDER BY p.number")
+            ]
 
     def plot_plan(self) -> dict[str, Any]:
-        return self._cached_plot_plan
+        with self._driver.session(database=self.database) as s:
+            meta_row = s.run("MATCH (m:PlotPlanMeta) RETURN properties(m) AS props LIMIT 1").single()
+            meta = dict(meta_row["props"]) if meta_row else {}
+            areas = [
+                {
+                    "code": r["props"]["code"],
+                    "name": r["props"]["name"],
+                    "x_min_m": r["props"]["x_min_m"],
+                    "x_max_m": r["props"]["x_max_m"],
+                    "y_min_m": r["props"]["y_min_m"],
+                    "y_max_m": r["props"]["y_max_m"],
+                }
+                for r in s.run("MATCH (a:Area) RETURN properties(a) AS props ORDER BY a.code")
+            ]
+            equipment = [
+                {
+                    "tag": r["props"]["tag"],
+                    "area": r["props"]["area"],
+                    "x_m": r["props"]["x"],
+                    "y_m": r["props"]["y"],
+                    "elevation_m": r["props"]["elevation"],
+                    "width_m": r["props"]["width_m"],
+                    "depth_m": r["props"]["depth_m"],
+                }
+                for r in s.run("MATCH (p:PlotPosition) RETURN properties(p) AS props ORDER BY p.tag")
+            ]
+        return {
+            "unit": meta.get("unit", "Unit 200 Diesel Hydrotreater"),
+            "width_m": float(meta.get("width_m", 120.0)),
+            "height_m": float(meta.get("height_m", 80.0)),
+            "pipe_rack_y_range_m": json.loads(meta.get("pipe_rack_y_range_json", "[36.0, 44.0]")),
+            "reactor_structure_elevations_m": json.loads(meta.get("elevations_json", "[0.0, 12.0, 24.0]")),
+            "areas": areas,
+            "equipment": equipment,
+        }
 
     def list_envelopes(self) -> list[dict[str, Any]]:
-        if self._cached_envelopes:
-            return list(self._cached_envelopes)
         with self._driver.session(database=self.database) as s:
             rows = s.run(
                 """
@@ -307,14 +333,26 @@ class Neo4jPlantStore:
                 ORDER BY props.id
                 """
             )
-            return [
-                {
-                    **dict(r["props"]),
-                    "equipment_tags": sorted(x for x in r["eqs"] if x),
-                    "boundary_valves": sorted(x for x in r["valves"] if x),
-                }
-                for r in rows
-            ]
+            out: list[dict[str, Any]] = []
+            for r in rows:
+                p = dict(r["props"])
+                eq_tags = sorted(x for x in r["eqs"] if x)
+                bv_tags = sorted(x for x in r["valves"] if x)
+                out.append(
+                    {
+                        "id": p["id"],
+                        "name": p["name"],
+                        "equipment_tags": eq_tags,
+                        "boundary_sides": json.loads(p.get("boundary_sides_json", "{}")),
+                        "boundary_valves": bv_tags,
+                        "boundary_valve_count": int(p.get("boundary_valve_count", len(bv_tags))),
+                        "reached_piping_valves": json.loads(p.get("reached_piping_valves_json", "[]")),
+                        "blind_estimate": int(p.get("blind_estimate", len(bv_tags) + 2)),
+                        "closed": bool(p.get("closed", True)),
+                        "leaked_targets": json.loads(p.get("leaked_targets_json", "[]")),
+                    }
+                )
+            return out
 
     def get_envelope(self, env_id: str) -> dict[str, Any] | None:
         for env in self.list_envelopes():

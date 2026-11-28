@@ -269,10 +269,21 @@ def test_live_neo4j_guarded_load_and_mutant_rejection():
         with pytest.raises(Exception):
             store.run_write("CREATE (:Equipment:Asset:Exchanger {tag: 'E201X'})")
         assert len(store.export_snapshot()["equipment_tags"]) == 32
-        # Fresh store instance derives pinned shapes from specs/shapes.ttl and passes readiness
+        # Fresh store instance (simulating separate Twin API process after load_dexpi.py exits)
+        # must serve full plot plan, sheets, envelopes, and pinned SHACL readiness straight from Neo4j.
         fresh = Neo4jPlantStore(uri=uri, user=user, password=password, shapes_path=SHAPES_PATH)
         try:
             assert fresh.guard_ready() is True
+            fresh_plot = fresh.plot_plan()
+            assert len(fresh_plot["areas"]) == 7
+            assert len(fresh_plot["equipment"]) == 32
+            assert len(fresh.list_sheets()) == 5
+            fresh_envs = fresh.list_envelopes()
+            assert len(fresh_envs) == 6
+            assert all(
+                {"boundary_sides", "reached_piping_valves", "leaked_targets", "closed", "boundary_valves"} <= set(e)
+                for e in fresh_envs
+            )
             # Weakening loaded shapes causes fresh instance readiness check to fail closed
             with fresh._driver.session(database="neo4j") as s:
                 s.run(

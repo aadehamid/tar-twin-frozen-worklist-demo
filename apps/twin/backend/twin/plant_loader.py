@@ -303,6 +303,20 @@ def build_plant_graph(scenario_dir: Path) -> dict[str, Any]:
             }
         )
 
+    add_node(
+        {
+            "key": "plotmeta:unit-200",
+            "labels": ["PlotPlanMeta"],
+            "props": {
+                "unit": plot.get("unit", "Unit 200 Diesel Hydrotreater"),
+                "width_m": float(plot.get("width_m", 120.0)),
+                "height_m": float(plot.get("height_m", 80.0)),
+                "pipe_rack_y_range_json": json.dumps(plot.get("pipe_rack_y_range_m", [36.0, 44.0])),
+                "elevations_json": json.dumps(plot.get("reactor_structure_elevations_m", [0.0, 12.0, 24.0])),
+            },
+        }
+    )
+
     for area in plot["areas"]:
         add_node(
             {
@@ -506,6 +520,8 @@ def build_plant_graph(scenario_dir: Path) -> dict[str, Any]:
                     "blind_estimate": env["blind_estimate"],
                     "closed": env["closed"],
                     "boundary_sides_json": json.dumps(env["boundary_sides"], sort_keys=True),
+                    "reached_piping_valves_json": json.dumps(env["reached_piping_valves"]),
+                    "leaked_targets_json": json.dumps(env["leaked_targets"]),
                 },
             }
         )
